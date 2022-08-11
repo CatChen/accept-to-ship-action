@@ -11354,6 +11354,36 @@ exports.getOctokit = getOctokit;
 
 /***/ }),
 
+/***/ 9283:
+/***/ (function(__unused_webpack_module, exports) {
+
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getPullRequest = void 0;
+function getPullRequest(owner, repo, pullRequestNumber, octokit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield octokit.rest.pulls.get({
+            owner,
+            repo,
+            pull_number: pullRequestNumber,
+        });
+        return response.data;
+    });
+}
+exports.getPullRequest = getPullRequest;
+
+
+/***/ }),
+
 /***/ 6144:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -11371,10 +11401,19 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github_1 = __nccwpck_require__(5438);
 const core_1 = __nccwpck_require__(2186);
 const getOcktokit_1 = __nccwpck_require__(3193);
+const getPullRequest_1 = __nccwpck_require__(9283);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
+        if (github_1.context.eventName !== "pull_request") {
+            (0, core_1.setFailed)("This action is for pull_request event only.");
+        }
         (0, core_1.info)(`This is the Action context: ${JSON.stringify(github_1.context)}`);
         const octokit = (0, getOcktokit_1.getOctokit)();
+        const owner = github_1.context.repo.owner;
+        const repo = github_1.context.repo.repo;
+        const pullRequestNumber = github_1.context.payload.pull_request
+            .number;
+        const pullRequest = yield (0, getPullRequest_1.getPullRequest)(owner, repo, pullRequestNumber, octokit);
         (0, core_1.error)("Action needs to be implemented.");
     });
 }
