@@ -1,7 +1,7 @@
 {
-  "name": "typescript-github-action-template",
+  "name": "accept-to-ship-action",
   "version": "0.1.0",
-  "description": "A template to create custom GitHub Action with TypeScript/JavaScript.",
+  "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.js",
   "type": "module",
@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CatChen/typescript-github-action-template.git"
+    "url": "git+https://github.com/CatChen/accept-to-ship-action.git"
   },
   "author": "Cat Chen",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/CatChen/typescript-github-action-template/issues"
+    "url": "https://github.com/CatChen/accept-to-ship-action/issues"
   },
-  "homepage": "https://github.com/CatChen/typescript-github-action-template#readme",
+  "homepage": "https://github.com/CatChen/accept-to-ship-action#readme",
   "devDependencies": {
     "@types/node": "^18.7.1",
     "@typescript-eslint/eslint-plugin": "^5.33.0",
