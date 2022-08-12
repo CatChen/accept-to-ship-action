@@ -155,26 +155,24 @@ async function run(): Promise<void> {
         }`
       );
     }
-    const checksCompleted = checkRuns.every(
-      (checkRun) =>
-        checkRun.name ===
-          job /* Ignoring the Workflow job that's running this Action */ ||
-        checkRun.status === COMPLETED
+    const incompleteChecks = checkRuns.filter(
+      (checkRun) => checkRun.status !== COMPLETED
     );
+    info(`Incomplete checks: ${incompleteChecks.length}`);
+    const checksCompleted = incompleteChecks.length <= 1;
     if (checksCompleted) {
-      const checksPassed = checkRuns.every(
+      const failedCheckes = checkRuns.filter(
         (checkRun) =>
-          checkRun.name ===
-            job /* Ignoring the Workflow job that's running this Action */ ||
-          (checkRun.status === COMPLETED &&
-            checkRun.conclusion !== null &&
-            [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion))
+          checkRun.status === COMPLETED &&
+          (checkRun.conclusion === null ||
+            ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion))
       );
+      info(`Failed checks: ${failedCheckes.length}`);
 
-      if (!checksPassed) {
-        return;
-      } else {
+      if (failedCheckes.length === 0) {
         break;
+      } else {
+        return;
       }
     } else {
       info(`Sleeping: ${SLEEP_INTERVAL}`);
