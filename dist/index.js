@@ -11610,8 +11610,8 @@ function run() {
         if (!approved) {
             return;
         }
-        const workflow = github_1.context.workflow;
-        (0, core_1.notice)(`Current Workflow: ${workflow}`);
+        const job = github_1.context.job;
+        (0, core_1.notice)(`Current job: ${job}`);
         while (true) {
             const checkRuns = yield (0, getCheckRuns_1.getCheckRuns)(owner, repo, pullRequest.head.sha, octokit);
             (0, core_1.info)(`Checks:`);
@@ -11620,10 +11620,11 @@ function run() {
             }
             const checksCompleted = checkRuns.every((checkRun) => checkRun.status === COMPLETED);
             if (checksCompleted) {
-                const checksPassed = checkRuns.every((checkRun) => checkRun.name !== workflow &&
-                    checkRun.status === COMPLETED &&
-                    checkRun.conclusion !== null &&
-                    [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion));
+                const checksPassed = checkRuns.every((checkRun) => checkRun.name !==
+                    job /* Ignoring the Workflow job that's running this Action */ ||
+                    (checkRun.status === COMPLETED &&
+                        checkRun.conclusion !== null &&
+                        [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
                 if (!checksPassed) {
                     return;
                 }
