@@ -8,6 +8,7 @@ import { getPullRequestReviewRequests } from "./getPullRequestReviewRequests";
 import { getPullRequestReviews } from "./getPullRequestReviews";
 import { getCheckRuns } from "./getCheckRuns";
 import { mergePullRequest } from "./mergePullRequest";
+import { sleep } from "./sleep";
 import { components } from "@octokit/openapi-types/types";
 
 const APPROVED = "APPROVED";
@@ -15,6 +16,8 @@ const COMPLETED = "completed";
 const SUCCESS = "success";
 const NEUTRAL = "neutral";
 const SKIPPED = "skipped";
+
+const SLEEP_INTERVAL = 10 * 1000; // 10 seconds
 
 async function run(): Promise<void> {
   if (context.eventName !== "pull_request") {
@@ -135,29 +138,41 @@ async function run(): Promise<void> {
     return;
   }
 
-  const checkRuns = await getCheckRuns(
-    owner,
-    repo,
-    pullRequest.head.sha,
-    octokit
-  );
-  info(`Last checks:`);
-  for (const checkRun of checkRuns) {
-    info(
-      `  ${checkRun.name}: ${
-        checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status
-      }`
+  while (true) {
+    const checkRuns = await getCheckRuns(
+      owner,
+      repo,
+      pullRequest.head.sha,
+      octokit
     );
-  }
-  const checksDone = checkRuns.every(
-    (checkRun) =>
-      checkRun.status === COMPLETED &&
-      checkRun.conclusion !== null &&
-      [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)
-  );
+    info(`Checks:`);
+    for (const checkRun of checkRuns) {
+      info(
+        `  ${checkRun.name}: ${
+          checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status
+        }`
+      );
+    }
+    const checksCompleted = checkRuns.every(
+      (checkRun) => checkRun.status === COMPLETED
+    );
+    if (checksCompleted) {
+      const checksPassed = checkRuns.every(
+        (checkRun) =>
+          checkRun.status === COMPLETED &&
+          checkRun.conclusion !== null &&
+          [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)
+      );
 
-  if (!checksDone) {
-    return;
+      if (!checksPassed) {
+        return;
+      } else {
+        break;
+      }
+    } else {
+      info(`Sleeping: ${SLEEP_INTERVAL}`);
+      await sleep(SLEEP_INTERVAL);
+    }
   }
 
   await mergePullRequest(owner, repo, pullRequestNumber, octokit);
