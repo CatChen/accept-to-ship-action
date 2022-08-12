@@ -20,14 +20,13 @@ async function run(): Promise<void> {
     pullRequestNumber,
     octokit
   );
-  info(`This is the Pull Request: ${JSON.stringify(pullRequest)}`);
   const accept2shipTitle = pullRequest.title
-    .toLowerCase()
-    .includes("#accept2ship");
+    ?.toLowerCase()
+    ?.includes("#accept2ship");
   info(`#accept2ship ${accept2shipTitle ? "" : "not "}found in title`);
   const accept2shipBody = pullRequest.body
-    .toLowerCase()
-    .includes("#accept2ship");
+    ?.toLowerCase()
+    ?.includes("#accept2ship");
   info(`#accept2ship ${accept2shipBody ? "" : "not "}found in body`);
   const accept2shipLabel = pullRequest.labels.some(
     (label) => label.name.toLowerCase() === "accept2ship"
