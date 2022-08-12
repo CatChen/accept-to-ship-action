@@ -11438,13 +11438,13 @@ function run() {
         if (github_1.context.eventName !== "pull_request") {
             (0, core_1.setFailed)("This action is for pull_request event only.");
         }
-        (0, core_1.info)(`This is the Action context: ${JSON.stringify(github_1.context)}`);
         const octokit = (0, getOcktokit_1.getOctokit)();
         const owner = github_1.context.repo.owner;
         const repo = github_1.context.repo.repo;
         const pullRequestNumber = github_1.context.payload.pull_request
             .number;
         const pullRequest = yield (0, getPullRequest_1.getPullRequest)(owner, repo, pullRequestNumber, octokit);
+        (0, core_1.info)(`This is the Pull Request: ${JSON.stringify(pullRequest)}`);
         const accept2shipTitle = pullRequest.title
             .toLowerCase()
             .includes("#accept2ship");

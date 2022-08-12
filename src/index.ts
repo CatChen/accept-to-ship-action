@@ -9,7 +9,6 @@ async function run(): Promise<void> {
   if (context.eventName !== "pull_request") {
     setFailed("This action is for pull_request event only.");
   }
-  info(`This is the Action context: ${JSON.stringify(context)}`);
   const octokit = getOctokit();
   const owner = context.repo.owner;
   const repo = context.repo.repo;
@@ -21,6 +20,7 @@ async function run(): Promise<void> {
     pullRequestNumber,
     octokit
   );
+  info(`This is the Pull Request: ${JSON.stringify(pullRequest)}`);
   const accept2shipTitle = pullRequest.title
     .toLowerCase()
     .includes("#accept2ship");
