@@ -6,6 +6,8 @@ on:
 
 jobs:
   eslint:
+    name: ESLint
+    if: ${{ !startsWith(github.head_ref, 'workflows/tests/') }}
     runs-on: ubuntu-latest
 
     steps:
