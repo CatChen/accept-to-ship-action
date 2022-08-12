@@ -29,15 +29,17 @@ async function run(): Promise<void> {
   const pullRequestNumber = (context.payload.pull_request as PullRequest)
     .number;
 
-  const merged = await checkIfPullRequestMerged(
-    owner,
-    repo,
-    pullRequestNumber,
-    octokit
-  );
-  if (merged) {
-    error(`This Pull Request has been merged already.`);
-    return;
+  {
+    const merged = await checkIfPullRequestMerged(
+      owner,
+      repo,
+      pullRequestNumber,
+      octokit
+    );
+    if (merged) {
+      error(`This Pull Request has been merged already.`);
+      return;
+    }
   }
 
   const pullRequest = await getPullRequest(
@@ -190,6 +192,19 @@ async function run(): Promise<void> {
       info(`Incomplete checks: ${incompleteChecks.length}`);
       info(`Sleeping: ${SLEEP_INTERVAL}`);
       await sleep(SLEEP_INTERVAL);
+    }
+  }
+
+  {
+    const merged = await checkIfPullRequestMerged(
+      owner,
+      repo,
+      pullRequestNumber,
+      octokit
+    );
+    if (merged) {
+      error(`This Pull Request has been merged already.`);
+      return;
     }
   }
 
