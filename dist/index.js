@@ -11545,6 +11545,11 @@ function run() {
         const repo = github_1.context.repo.repo;
         const pullRequestNumber = github_1.context.payload.pull_request
             .number;
+        const merged = yield (0, mergePullRequest_1.checkIfPullRequestMerged)(owner, repo, pullRequestNumber, octokit);
+        if (merged) {
+            (0, core_1.error)(`This Pull Request has been merged already.`);
+            return;
+        }
         const pullRequest = yield (0, getPullRequest_1.getPullRequest)(owner, repo, pullRequestNumber, octokit);
         const accept2shipTitle = (_b = (_a = pullRequest.title) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === null || _b === void 0 ? void 0 : _b.includes("#accept2ship");
         (0, core_1.info)(`#accept2ship ${accept2shipTitle ? "" : "not "}found in title`);
@@ -11671,7 +11676,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.mergePullRequest = void 0;
+exports.mergePullRequest = exports.checkIfPullRequestMerged = void 0;
+function checkIfPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield octokit.rest.pulls.checkIfMerged({
+            owner,
+            repo,
+            pull_number: pullRequestNumber,
+        });
+        if (response.status === 204) {
+            return true;
+        }
+        else if (response.status === 404) {
+            return false;
+        }
+        else {
+            throw new Error(`Failed to check if pull request is merged: ${response.status}`);
+        }
+    });
+}
+exports.checkIfPullRequestMerged = checkIfPullRequestMerged;
 function mergePullRequest(owner, repo, pullRequestNumber, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield octokit.rest.pulls.merge({
@@ -11680,7 +11704,7 @@ function mergePullRequest(owner, repo, pullRequestNumber, octokit) {
             pull_number: pullRequestNumber,
         });
         if (response.status !== 200) {
-            throw new Error(`Failed to merge pull request: ${pullRequestNumber}`);
+            throw new Error(`Failed to merge pull request: ${response.status}`);
         }
     });
 }
