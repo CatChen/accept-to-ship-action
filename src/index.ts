@@ -140,7 +140,8 @@ async function run(): Promise<void> {
 
   const job = context.job;
   notice(`Current job: ${job}`);
-  while (true) {
+  let checksCompleted = false;
+  while (!checksCompleted) {
     const checkRuns = await getCheckRuns(
       owner,
       repo,
@@ -158,8 +159,7 @@ async function run(): Promise<void> {
     const incompleteChecks = checkRuns.filter(
       (checkRun) => checkRun.status !== COMPLETED
     );
-    info(`Incomplete checks: ${incompleteChecks.length}`);
-    const checksCompleted = incompleteChecks.length <= 1;
+    checksCompleted = incompleteChecks.length <= 1;
     if (checksCompleted) {
       const failedCheckes = checkRuns.filter(
         (checkRun) =>
@@ -167,14 +167,15 @@ async function run(): Promise<void> {
           (checkRun.conclusion === null ||
             ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion))
       );
-      info(`Failed checks: ${failedCheckes.length}`);
 
       if (failedCheckes.length === 0) {
         break;
       } else {
+        info(`Failed checks: ${failedCheckes.length}`);
         return;
       }
     } else {
+      info(`Incomplete checks: ${incompleteChecks.length}`);
       info(`Sleeping: ${SLEEP_INTERVAL}`);
       await sleep(SLEEP_INTERVAL);
     }
