@@ -11307,6 +11307,36 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 3530:
+/***/ (function(__unused_webpack_module, exports) {
+
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getCheckRuns = void 0;
+function getCheckRuns(owner, repo, ref, octokit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield octokit.rest.checks.listForRef({
+            owner,
+            repo,
+            ref,
+        });
+        return response.data.check_runs;
+    });
+}
+exports.getCheckRuns = getCheckRuns;
+
+
+/***/ }),
+
 /***/ 3193:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -11495,7 +11525,13 @@ const getPullRequest_1 = __nccwpck_require__(9283);
 const getPullRequestComments_1 = __nccwpck_require__(1795);
 const getPullRequestReviewRequests_1 = __nccwpck_require__(9685);
 const getPullRequestReviews_1 = __nccwpck_require__(2706);
+const getCheckRuns_1 = __nccwpck_require__(3530);
+const mergePullRequest_1 = __nccwpck_require__(8867);
 const APPROVED = "APPROVED";
+const COMPLETED = "completed";
+const SUCCESS = "success";
+const NEUTRAL = "neutral";
+const SKIPPED = "skipped";
 function run() {
     var _a, _b, _c, _d, _e, _f;
     return __awaiter(this, void 0, void 0, function* () {
@@ -11572,6 +11608,14 @@ function run() {
         if (!approved) {
             return;
         }
+        const checkRuns = yield (0, getCheckRuns_1.getCheckRuns)(owner, repo, pullRequest.head.sha, octokit);
+        const checksDone = checkRuns.every((checkRun) => checkRun.status === COMPLETED &&
+            checkRun.conclusion !== null &&
+            [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion));
+        if (!checksDone) {
+            return;
+        }
+        yield (0, mergePullRequest_1.mergePullRequest)(owner, repo, pullRequestNumber, octokit);
     });
 }
 function cleanup() {
@@ -11585,6 +11629,38 @@ if (!process.env["STATE_isPost"]) {
 else {
     cleanup();
 }
+
+
+/***/ }),
+
+/***/ 8867:
+/***/ (function(__unused_webpack_module, exports) {
+
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.mergePullRequest = void 0;
+function mergePullRequest(owner, repo, pullRequestNumber, octokit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield octokit.rest.pulls.merge({
+            owner,
+            repo,
+            pull_number: pullRequestNumber,
+        });
+        if (response.status !== 200) {
+            throw new Error(`Failed to merge pull request: ${pullRequestNumber}`);
+        }
+    });
+}
+exports.mergePullRequest = mergePullRequest;
 
 
 /***/ }),
