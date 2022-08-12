@@ -11620,10 +11620,11 @@ function run() {
             }
             const checksCompleted = checkRuns.every((checkRun) => checkRun.status === COMPLETED);
             if (checksCompleted) {
-                const checksPassed = checkRuns.every((checkRun) => checkRun.name !== workflow &&
-                    checkRun.status === COMPLETED &&
-                    checkRun.conclusion !== null &&
-                    [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion));
+                const checksPassed = checkRuns.every((checkRun) => checkRun.name !==
+                    workflow /* Ignoring the Workflow that's running this Action */ ||
+                    (checkRun.status === COMPLETED &&
+                        checkRun.conclusion !== null &&
+                        [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
                 if (!checksPassed) {
                     return;
                 }
