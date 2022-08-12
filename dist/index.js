@@ -11527,11 +11527,13 @@ const getPullRequestReviewRequests_1 = __nccwpck_require__(9685);
 const getPullRequestReviews_1 = __nccwpck_require__(2706);
 const getCheckRuns_1 = __nccwpck_require__(3530);
 const mergePullRequest_1 = __nccwpck_require__(8867);
+const sleep_1 = __nccwpck_require__(986);
 const APPROVED = "APPROVED";
 const COMPLETED = "completed";
 const SUCCESS = "success";
 const NEUTRAL = "neutral";
 const SKIPPED = "skipped";
+const SLEEP_INTERVAL = 10 * 1000; // 10 seconds
 function run() {
     var _a, _b, _c, _d, _e, _f;
     return __awaiter(this, void 0, void 0, function* () {
@@ -11608,16 +11610,28 @@ function run() {
         if (!approved) {
             return;
         }
-        const checkRuns = yield (0, getCheckRuns_1.getCheckRuns)(owner, repo, pullRequest.head.sha, octokit);
-        (0, core_1.info)(`Last checks:`);
-        for (const checkRun of checkRuns) {
-            (0, core_1.info)(`  ${checkRun.name}: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`);
-        }
-        const checksDone = checkRuns.every((checkRun) => checkRun.status === COMPLETED &&
-            checkRun.conclusion !== null &&
-            [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion));
-        if (!checksDone) {
-            return;
+        while (true) {
+            const checkRuns = yield (0, getCheckRuns_1.getCheckRuns)(owner, repo, pullRequest.head.sha, octokit);
+            (0, core_1.info)(`Checks:`);
+            for (const checkRun of checkRuns) {
+                (0, core_1.info)(`  ${checkRun.name}: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`);
+            }
+            const checksCompleted = checkRuns.every((checkRun) => checkRun.status === COMPLETED);
+            if (checksCompleted) {
+                const checksPassed = checkRuns.every((checkRun) => checkRun.status === COMPLETED &&
+                    checkRun.conclusion !== null &&
+                    [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion));
+                if (!checksPassed) {
+                    return;
+                }
+                else {
+                    break;
+                }
+            }
+            else {
+                (0, core_1.info)(`Sleeping: ${SLEEP_INTERVAL}`);
+                yield (0, sleep_1.sleep)(SLEEP_INTERVAL);
+            }
         }
         yield (0, mergePullRequest_1.mergePullRequest)(owner, repo, pullRequestNumber, octokit);
     });
@@ -11665,6 +11679,33 @@ function mergePullRequest(owner, repo, pullRequestNumber, octokit) {
     });
 }
 exports.mergePullRequest = mergePullRequest;
+
+
+/***/ }),
+
+/***/ 986:
+/***/ (function(__unused_webpack_module, exports) {
+
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.sleep = void 0;
+function sleep(ms) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve) => {
+            setTimeout(resolve, ms);
+        });
+    });
+}
+exports.sleep = sleep;
 
 
 /***/ }),
