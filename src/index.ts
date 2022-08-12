@@ -99,7 +99,7 @@ async function run(): Promise<void> {
       Date.parse(y.submitted_at ?? "") - Date.parse(x.submitted_at ?? "")
   );
   if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
-    const lastReview = reviewsSortedByDescendingTime[0].state ?? "";
+    const lastReview = reviewsSortedByDescendingTime[0]?.state ?? "";
     info(`Last review state: ${lastReview}`);
     approved = lastReview === APPROVED;
   } else {
