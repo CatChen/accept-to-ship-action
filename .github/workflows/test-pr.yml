@@ -13,7 +13,6 @@ on:
 
 jobs:
   test_in_pull_request:
-    name: Test in Pull Request
     if: ${{ startsWith(github.head_ref, 'workflows/tests/') }}
     runs-on: ubuntu-latest
     steps:
