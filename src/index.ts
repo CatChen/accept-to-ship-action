@@ -1,14 +1,23 @@
 import { context } from "@actions/github";
-import { info, error, setFailed } from "@actions/core";
+import { info, error, setFailed, notice } from "@actions/core";
 import { PullRequest } from "@octokit/webhooks-definitions/schema";
 import { getOctokit } from "./getOcktokit";
 import { getPullRequest } from "./getPullRequest";
 import { getPullRequestComments } from "./getPullRequestComments";
 import { getPullRequestReviewRequests } from "./getPullRequestReviewRequests";
 import { getPullRequestReviews } from "./getPullRequestReviews";
+import { getCheckRuns } from "./getCheckRuns";
+import { mergePullRequest } from "./mergePullRequest";
+import { sleep } from "./sleep";
 import { components } from "@octokit/openapi-types/types";
 
 const APPROVED = "APPROVED";
+const COMPLETED = "completed";
+const SUCCESS = "success";
+const NEUTRAL = "neutral";
+const SKIPPED = "skipped";
+
+const SLEEP_INTERVAL = 10 * 1000; // 10 seconds
 
 async function run(): Promise<void> {
   if (context.eventName !== "pull_request") {
@@ -83,7 +92,7 @@ async function run(): Promise<void> {
     );
   }
   if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
-    info("Review not requested.");
+    info(`Review not requested.`);
   }
 
   const reviews = await getPullRequestReviews(
@@ -128,6 +137,51 @@ async function run(): Promise<void> {
   if (!approved) {
     return;
   }
+
+  const job = context.job;
+  notice(`Current job: ${job}`);
+  let checksCompleted = false;
+  while (!checksCompleted) {
+    const checkRuns = await getCheckRuns(
+      owner,
+      repo,
+      pullRequest.head.sha,
+      octokit
+    );
+    info(`Checks:`);
+    for (const checkRun of checkRuns) {
+      info(
+        `  ${checkRun.name}: ${
+          checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status
+        }`
+      );
+    }
+    const incompleteChecks = checkRuns.filter(
+      (checkRun) => checkRun.status !== COMPLETED
+    );
+    checksCompleted = incompleteChecks.length <= 1;
+    if (checksCompleted) {
+      const failedCheckes = checkRuns.filter(
+        (checkRun) =>
+          checkRun.status === COMPLETED &&
+          (checkRun.conclusion === null ||
+            ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion))
+      );
+
+      if (failedCheckes.length === 0) {
+        break;
+      } else {
+        info(`Failed checks: ${failedCheckes.length}`);
+        return;
+      }
+    } else {
+      info(`Incomplete checks: ${incompleteChecks.length}`);
+      info(`Sleeping: ${SLEEP_INTERVAL}`);
+      await sleep(SLEEP_INTERVAL);
+    }
+  }
+
+  await mergePullRequest(owner, repo, pullRequestNumber, octokit);
 }
 
 async function cleanup(): Promise<void> {
