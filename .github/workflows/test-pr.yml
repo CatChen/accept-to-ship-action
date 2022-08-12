@@ -2,6 +2,9 @@ name: Test Pull Request
 
 on:
   pull_request:
+    types: [labeled, opened, edited, reopened, synchronize]
+  check_run:
+  pull_request_review:
   workflow_dispatch:
 
 jobs:
