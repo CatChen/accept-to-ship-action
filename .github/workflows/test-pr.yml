@@ -5,6 +5,8 @@ on:
     types: [labeled, opened, edited, reopened, synchronize]
   check_run:
     types: [completed]
+  check_suite:
+    types: [completed]
   pull_request_review:
     types: [submitted, edited]
   workflow_dispatch:
