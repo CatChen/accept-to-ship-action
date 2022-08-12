@@ -75,7 +75,8 @@ jobs:
         run: |
           CHECKS_TEMP_FILE="$(mktemp)"
           sleep 10
-          gh pr checks --watch >> $CHECKS_TEMP_FILE
+          gh pr checks --watch
+          gh pr checks >> $CHECKS_TEMP_FILE
           echo "::notice::Temp file content:
 
           $(cat $CHECKS_TEMP_FILE)
