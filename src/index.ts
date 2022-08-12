@@ -138,8 +138,8 @@ async function run(): Promise<void> {
     return;
   }
 
-  const workflow = context.workflow;
-  notice(`Current Workflow: ${workflow}`);
+  const job = context.job;
+  notice(`Current job: ${job}`);
   while (true) {
     const checkRuns = await getCheckRuns(
       owner,
@@ -156,15 +156,19 @@ async function run(): Promise<void> {
       );
     }
     const checksCompleted = checkRuns.every(
-      (checkRun) => checkRun.status === COMPLETED
+      (checkRun) =>
+        checkRun.name ===
+          job /* Ignoring the Workflow job that's running this Action */ ||
+        checkRun.status === COMPLETED
     );
     if (checksCompleted) {
       const checksPassed = checkRuns.every(
         (checkRun) =>
-          checkRun.name !== workflow &&
-          checkRun.status === COMPLETED &&
-          checkRun.conclusion !== null &&
-          [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)
+          checkRun.name ===
+            job /* Ignoring the Workflow job that's running this Action */ ||
+          (checkRun.status === COMPLETED &&
+            checkRun.conclusion !== null &&
+            [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion))
       );
 
       if (!checksPassed) {
