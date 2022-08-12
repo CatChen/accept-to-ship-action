@@ -1,8 +1,10 @@
 import { context } from "@actions/github";
 import { info, error } from "@actions/core";
+import { getOctokit } from "./getOcktokit";
 
 async function run(): Promise<void> {
   info(`This is the Action context: ${JSON.stringify(context)}`);
+  const octokit = getOctokit();
   error("Action needs to be implemented.");
 }
 
