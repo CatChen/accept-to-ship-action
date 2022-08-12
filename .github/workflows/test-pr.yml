@@ -7,8 +7,8 @@ on:
 
 jobs:
   test_in_pull_request:
-    if: ${{ startsWith(github.head_ref, 'workflows/tests/') }}
     name: Test in Pull Request
+    if: ${{ startsWith(github.head_ref, 'workflows/tests/') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
