@@ -89,7 +89,7 @@ async function run(): Promise<void> {
     );
   }
   if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
-    info("Review not requested.");
+    info(`Review not requested.`);
   }
 
   const reviews = await getPullRequestReviews(
@@ -141,6 +141,14 @@ async function run(): Promise<void> {
     pullRequest.head.sha,
     octokit
   );
+  info(`Last checks:`);
+  for (const checkRun of checkRuns) {
+    info(
+      `  ${checkRun.name}: ${
+        checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status
+      }`
+    );
+  }
   const checksDone = checkRuns.every(
     (checkRun) =>
       checkRun.status === COMPLETED &&
