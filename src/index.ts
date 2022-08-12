@@ -6,9 +6,15 @@ import { getPullRequest } from "./getPullRequest";
 import { getPullRequestComments } from "./getPullRequestComments";
 import { getPullRequestReviewRequests } from "./getPullRequestReviewRequests";
 import { getPullRequestReviews } from "./getPullRequestReviews";
+import { getCheckRuns } from "./getCheckRuns";
+import { mergePullRequest } from "./mergePullRequest";
 import { components } from "@octokit/openapi-types/types";
 
 const APPROVED = "APPROVED";
+const COMPLETED = "completed";
+const SUCCESS = "success";
+const NEUTRAL = "neutral";
+const SKIPPED = "skipped";
 
 async function run(): Promise<void> {
   if (context.eventName !== "pull_request") {
@@ -128,6 +134,25 @@ async function run(): Promise<void> {
   if (!approved) {
     return;
   }
+
+  const checkRuns = await getCheckRuns(
+    owner,
+    repo,
+    pullRequest.head.sha,
+    octokit
+  );
+  const checksDone = checkRuns.every(
+    (checkRun) =>
+      checkRun.status === COMPLETED &&
+      checkRun.conclusion !== null &&
+      [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)
+  );
+
+  if (!checksDone) {
+    return;
+  }
+
+  await mergePullRequest(owner, repo, pullRequestNumber, octokit);
 }
 
 async function cleanup(): Promise<void> {
