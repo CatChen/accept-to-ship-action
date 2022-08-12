@@ -29,17 +29,15 @@ async function run(): Promise<void> {
   const pullRequestNumber = (context.payload.pull_request as PullRequest)
     .number;
 
-  {
-    const merged = await checkIfPullRequestMerged(
-      owner,
-      repo,
-      pullRequestNumber,
-      octokit
-    );
-    if (merged) {
-      error(`This Pull Request has been merged already.`);
-      return;
-    }
+  const mergedBeforeValidations = await checkIfPullRequestMerged(
+    owner,
+    repo,
+    pullRequestNumber,
+    octokit
+  );
+  if (mergedBeforeValidations) {
+    error(`This Pull Request has been merged already.`);
+    return;
   }
 
   const pullRequest = await getPullRequest(
@@ -195,17 +193,15 @@ async function run(): Promise<void> {
     }
   }
 
-  {
-    const merged = await checkIfPullRequestMerged(
-      owner,
-      repo,
-      pullRequestNumber,
-      octokit
-    );
-    if (merged) {
-      error(`This Pull Request has been merged already.`);
-      return;
-    }
+  const mergedAfterValidations = await checkIfPullRequestMerged(
+    owner,
+    repo,
+    pullRequestNumber,
+    octokit
+  );
+  if (mergedAfterValidations) {
+    error(`This Pull Request has been merged already.`);
+    return;
   }
 
   await mergePullRequest(owner, repo, pullRequestNumber, octokit);

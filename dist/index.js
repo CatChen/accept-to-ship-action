@@ -11545,12 +11545,10 @@ function run() {
         const repo = github_1.context.repo.repo;
         const pullRequestNumber = github_1.context.payload.pull_request
             .number;
-        {
-            const merged = yield (0, mergePullRequest_1.checkIfPullRequestMerged)(owner, repo, pullRequestNumber, octokit);
-            if (merged) {
-                (0, core_1.error)(`This Pull Request has been merged already.`);
-                return;
-            }
+        const mergedBeforeValidations = yield (0, mergePullRequest_1.checkIfPullRequestMerged)(owner, repo, pullRequestNumber, octokit);
+        if (mergedBeforeValidations) {
+            (0, core_1.error)(`This Pull Request has been merged already.`);
+            return;
         }
         const pullRequest = yield (0, getPullRequest_1.getPullRequest)(owner, repo, pullRequestNumber, octokit);
         const accept2shipTitle = (_b = (_a = pullRequest.title) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === null || _b === void 0 ? void 0 : _b.includes("#accept2ship");
@@ -11646,12 +11644,10 @@ function run() {
                 yield (0, sleep_1.sleep)(SLEEP_INTERVAL);
             }
         }
-        {
-            const merged = yield (0, mergePullRequest_1.checkIfPullRequestMerged)(owner, repo, pullRequestNumber, octokit);
-            if (merged) {
-                (0, core_1.error)(`This Pull Request has been merged already.`);
-                return;
-            }
+        const mergedAfterValidations = yield (0, mergePullRequest_1.checkIfPullRequestMerged)(owner, repo, pullRequestNumber, octokit);
+        if (mergedAfterValidations) {
+            (0, core_1.error)(`This Pull Request has been merged already.`);
+            return;
         }
         yield (0, mergePullRequest_1.mergePullRequest)(owner, repo, pullRequestNumber, octokit);
     });
