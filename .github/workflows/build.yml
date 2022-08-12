@@ -9,6 +9,8 @@ on:
 
 jobs:
   build:
+    name: Build
+    if: ${{ !startsWith(github.head_ref, 'workflows/tests/') }}
     runs-on: ubuntu-latest
 
     steps:
