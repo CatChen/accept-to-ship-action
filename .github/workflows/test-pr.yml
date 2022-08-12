@@ -1,0 +1,37 @@
+name: Test Pull Request
+
+on:
+  pull_request:
+    types: [labeled, opened, edited, reopened, synchronize]
+  check_run:
+    types: [completed]
+  check_suite:
+    types: [completed]
+  pull_request_review:
+    types: [submitted, edited]
+  workflow_dispatch:
+
+jobs:
+  test_in_pull_request:
+    name: Test in Pull Request
+    if: ${{ startsWith(github.head_ref, 'workflows/tests/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./
+
+  debug_information:
+    name: Debug Information
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print contexts
+        env:
+          GITHUB: ${{ toJSON(github) }}
+          JOB: ${{ toJSON(job) }}
+          INPUTS: ${{ toJSON(inputs) }}
+        run: |
+          echo "::debug::github = $GITHUB"
+          echo "::debug::job = $JOB"
+          echo "::debug::inputs = $INPUTS"
