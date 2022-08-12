@@ -1,8 +1,6 @@
 name: Test
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main, "[0-9]+-[0-9]+-*"]
   workflow_dispatch:
@@ -14,5 +12,124 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Test
-        uses: ./
+      - name: Config Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Make commit
+        env:
+          SHA: ${{ github.sha }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          BASE_BRANCH_NAME: ${{ github.head_ref }}
+          TEST_BRANCH_NAME: ${{ format('workflows/tests/{0}-{1}-on-{2}', github.run_number, github.run_attempt, github.sha) }}
+          BASE_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "::notice::Run number is $RUN_NUMBER"
+          echo "::notice::Run attempt is $RUN_ATTEMPT"
+          echo "::notice::Base branch is $BASE_BRANCH_NAME"
+          echo "::notice::Base commit is `git rev-parse --verify HEAD`"
+          echo "::notice::Test branch is $TEST_BRANCH_NAME"
+          git checkout -b "$TEST_BRANCH_NAME"
+          git commit --allow-empty -m "Test commit for #$BASE_PR_NUMBER ($SHA) by $RUN_NUMBER-$RUN_ATTEMPT"
+          echo "::notice::Test commit is `git rev-parse --verify HEAD`"
+
+      - name: Git push
+        env:
+          TEST_BRANCH_NAME: ${{ format('workflows/tests/{0}-{1}-on-{2}', github.run_number, github.run_attempt, github.sha) }}
+        run: |
+          git push -f --set-upstream origin "$TEST_BRANCH_NAME"
+          echo "::notice::Remote test branch is origin/$TEST_BRANCH_NAME"
+
+      - name: Open PR
+        id: open-pr
+        env:
+          GH_TOKEN: ${{ secrets.CREATE_PULL_REQUEST_ACTION_TOKEN }}
+          SHA: ${{ github.sha }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          BASE_BRANCH_NAME: ${{ github.head_ref }}
+          BASE_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "::notice::Base PR number is $BASE_PR_NUMBER"
+          gh pr create --base "$BASE_BRANCH_NAME" --title "Test PR for #$BASE_PR_NUMBER ($SHA)" --body "Generated from #$BASE_PR_NUMBER. Run $RUN_NUMBER. Attempt $RUN_ATTEMPT.
+
+          #accept2ship"
+          TEST_PR_NUMBER=`gh pr view | grep 'number:' | cut -f 2`
+          echo "::set-output name=test-pr-number::$TEST_PR_NUMBER"
+          echo "::notice::Test PR number is $TEST_PR_NUMBER"
+
+      - name: Check PR
+        id: check-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CHECKS_TEMP_FILE="$(mktemp)"
+          sleep 10
+          gh pr checks --watch >> $CHECKS_TEMP_FILE
+          echo "::notice::Temp file content:
+
+          $(cat $CHECKS_TEMP_FILE)
+          "
+          echo "::set-output name=checks-temp-file::$CHECKS_TEMP_FILE"
+
+      - name: Report Checks
+        if: ${{ steps.check-pr.outputs.checks-temp-file != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          TEST_PR_NUMBER: ${{ steps.open-pr.outputs.test-pr-number }}
+          CHECKS_TEMP_FILE: ${{ steps.check-pr.outputs.checks-temp-file }}
+        run: |
+          gh pr comment "$BASE_PR_NUMBER" --body "**Checks from #$TEST_PR_NUMBER**
+
+          | Check | Status | URL |
+          | --- | --- | --- |
+          $(cat $CHECKS_TEMP_FILE | grep -E 'https://github.com/[^/]*/[^/]*/runs/' | sed -E 's/(.*)\t(.*)\t(.*)\t(.*)/| \1 | \2 | \4 |/')"
+          rm -f $CHECKS_TEMP_FILE
+
+      - name: Verify PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TEST_PR_NUMBER: ${{ steps.open-pr.outputs.test-pr-number }}
+        runs: |
+          TEST_PR_STATE=`gh pr view --json 'state' -q '.state'`
+          echo "::set-output name=test_pr_state::$TEST_PR_STATE"
+          echo "::notice::Test PR state is $TEST_PR_STATE"
+          if [ $TEST_PR_STATE != 'MERGE' ]
+          then
+            exit 1
+          fi
+
+      - name: Close PR
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.sha }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          BASE_BRANCH_NAME: ${{ github.head_ref }}
+          TEST_PR_NUMBER: ${{ steps.open-pr.outputs.test-pr-number }}
+        run: |
+          if [ $BASE_BRANCH_NAME != '' ]
+          then
+            git checkout "$BASE_BRANCH_NAME"
+            echo "::notice::Base branch is `git branch --show-current`"
+          else
+            git checkout "$SHA"
+            echo "::notice::Base commit is `git rev-parse --verify HEAD`"
+          fi
+          gh pr close $TEST_PR_NUMBER -d -c "Finished testing $SHA by $RUN_NUMBER-$RUN_ATTEMPT. Closing PR."
+
+      - name: Delete remote branch
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          SHA: ${{ github.sha }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          TEST_BRANCH_NAME: ${{ format('workflows/tests/{0}-{1}-on-{2}', github.run_number, github.run_attempt, github.sha) }}
+        run: |
+          git push -d origin "$TEST_BRANCH_NAME"
