@@ -11538,6 +11538,7 @@ function run() {
     var _a, _b, _c, _d, _e, _f;
     return __awaiter(this, void 0, void 0, function* () {
         if (github_1.context.eventName !== "pull_request") {
+            (0, core_1.info)(JSON.stringify(github_1.context));
             (0, core_1.setFailed)("This action is for pull_request event only.");
         }
         const octokit = (0, getOcktokit_1.getOctokit)();
