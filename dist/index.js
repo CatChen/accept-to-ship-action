@@ -11497,7 +11497,7 @@ const getPullRequestReviewRequests_1 = __nccwpck_require__(9685);
 const getPullRequestReviews_1 = __nccwpck_require__(2706);
 const APPROVED = "APPROVED";
 function run() {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f;
     return __awaiter(this, void 0, void 0, function* () {
         if (github_1.context.eventName !== "pull_request") {
             (0, core_1.setFailed)("This action is for pull_request event only.");
@@ -11547,7 +11547,7 @@ function run() {
         let approved = false;
         const reviewsSortedByDescendingTime = reviews.sort((x, y) => { var _a, _b; return Date.parse((_a = y.submitted_at) !== null && _a !== void 0 ? _a : "") - Date.parse((_b = x.submitted_at) !== null && _b !== void 0 ? _b : ""); });
         if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
-            const lastReview = (_e = reviewsSortedByDescendingTime[0].state) !== null && _e !== void 0 ? _e : "";
+            const lastReview = (_f = (_e = reviewsSortedByDescendingTime[0]) === null || _e === void 0 ? void 0 : _e.state) !== null && _f !== void 0 ? _f : "";
             (0, core_1.info)(`Last review state: ${lastReview}`);
             approved = lastReview === APPROVED;
         }
