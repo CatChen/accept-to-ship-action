@@ -11569,6 +11569,9 @@ function run() {
                 .map((userId) => lastReviewPerUserId[userId])
                 .every((state) => state === APPROVED);
         }
+        if (!approved) {
+            return;
+        }
     });
 }
 function cleanup() {

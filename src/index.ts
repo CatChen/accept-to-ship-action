@@ -124,6 +124,10 @@ async function run(): Promise<void> {
       .map((userId) => lastReviewPerUserId[userId])
       .every((state) => state === APPROVED);
   }
+
+  if (!approved) {
+    return;
+  }
 }
 
 async function cleanup(): Promise<void> {
