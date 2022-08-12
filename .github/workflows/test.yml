@@ -62,6 +62,12 @@ jobs:
           echo "::set-output name=test-pr-number::$TEST_PR_NUMBER"
           echo "::notice::Test PR number is $TEST_PR_NUMBER"
 
+      - name: Approve PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr review --approve
+
       - name: Check PR
         id: check-pr
         env:
