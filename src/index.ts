@@ -1,5 +1,5 @@
 import { context } from "@actions/github";
-import { info, error, setFailed } from "@actions/core";
+import { info, error, setFailed, notice } from "@actions/core";
 import { PullRequest } from "@octokit/webhooks-definitions/schema";
 import { getOctokit } from "./getOcktokit";
 import { getPullRequest } from "./getPullRequest";
@@ -138,6 +138,8 @@ async function run(): Promise<void> {
     return;
   }
 
+  const workflow = context.workflow;
+  notice(`Current Workflow: ${workflow}`);
   while (true) {
     const checkRuns = await getCheckRuns(
       owner,
@@ -159,6 +161,7 @@ async function run(): Promise<void> {
     if (checksCompleted) {
       const checksPassed = checkRuns.every(
         (checkRun) =>
+          checkRun.name !== workflow &&
           checkRun.status === COMPLETED &&
           checkRun.conclusion !== null &&
           [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)
