@@ -93,7 +93,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TEST_PR_NUMBER: ${{ steps.open-pr.outputs.test-pr-number }}
-        runs: |
+        run: |
           TEST_PR_STATE=`gh pr view --json 'state' -q '.state'`
           echo "::set-output name=test_pr_state::$TEST_PR_STATE"
           echo "::notice::Test PR state is $TEST_PR_STATE"
