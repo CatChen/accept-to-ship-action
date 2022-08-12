@@ -4,6 +4,11 @@ import { PullRequest } from "@octokit/webhooks-definitions/schema";
 import { getOctokit } from "./getOcktokit";
 import { getPullRequest } from "./getPullRequest";
 import { getPullRequestComments } from "./getPullRequestComments";
+import { getPullRequestReviewRequests } from "./getPullRequestReviewRequests";
+import { getPullRequestReviews } from "./getPullRequestReviews";
+import { components } from "@octokit/openapi-types/types";
+
+const APPROVED = "APPROVED";
 
 async function run(): Promise<void> {
   if (context.eventName !== "pull_request") {
@@ -53,7 +58,76 @@ async function run(): Promise<void> {
     accept2shipLabel ||
     accept2shipComment;
 
-  error("Action needs to be implemented.");
+  if (!accept2shipTag) {
+    return;
+  }
+
+  const reviewRequests = await getPullRequestReviewRequests(
+    owner,
+    repo,
+    pullRequestNumber,
+    octokit
+  );
+  if (reviewRequests.users.length > 0) {
+    info(
+      `Review requested from users: ${reviewRequests.users
+        .map((user) => user.name)
+        .join()}`
+    );
+  }
+  if (reviewRequests.teams.length > 0) {
+    info(
+      `Review requested from teams: ${reviewRequests.teams
+        .map((team) => team.name)
+        .join()}`
+    );
+  }
+  if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
+    info("Review not requested.");
+  }
+
+  const reviews = await getPullRequestReviews(
+    owner,
+    repo,
+    pullRequestNumber,
+    octokit
+  );
+
+  let approved = false;
+  const reviewsSortedByDescendingTime = reviews.sort(
+    (x, y) =>
+      Date.parse(y.submitted_at ?? "") - Date.parse(x.submitted_at ?? "")
+  );
+  if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
+    const lastReview = reviewsSortedByDescendingTime[0]?.state ?? "";
+    info(`Last review state: ${lastReview}`);
+    approved = lastReview === APPROVED;
+  } else {
+    const reviewUserIds = reviewRequests.users.map((user) => user.id);
+    const lastReviewPerUserId = reviewsSortedByDescendingTime.reduce(
+      (result, review) => {
+        const user = review.user;
+        if (user) {
+          result[user.id] = result[user.id] ?? review.state;
+        }
+        return result;
+      },
+      {} as {
+        [id: string]: components["schemas"]["pull-request-review"]["state"];
+      }
+    );
+    info(`Last review by user:`);
+    for (const user of reviewRequests.users) {
+      info(`  ${user.name}: ${lastReviewPerUserId[user.id]}`);
+    }
+    approved = reviewUserIds
+      .map((userId) => lastReviewPerUserId[userId])
+      .every((state) => state === APPROVED);
+  }
+
+  if (!approved) {
+    return;
+  }
 }
 
 async function cleanup(): Promise<void> {

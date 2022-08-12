@@ -11414,6 +11414,66 @@ exports.getPullRequestComments = getPullRequestComments;
 
 /***/ }),
 
+/***/ 9685:
+/***/ (function(__unused_webpack_module, exports) {
+
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getPullRequestReviewRequests = void 0;
+function getPullRequestReviewRequests(owner, repo, pullRequestNumber, octokit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield octokit.rest.pulls.listRequestedReviewers({
+            owner,
+            repo,
+            pull_number: pullRequestNumber,
+        });
+        return response.data;
+    });
+}
+exports.getPullRequestReviewRequests = getPullRequestReviewRequests;
+
+
+/***/ }),
+
+/***/ 2706:
+/***/ (function(__unused_webpack_module, exports) {
+
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getPullRequestReviews = void 0;
+function getPullRequestReviews(owner, repo, pullRequestNumber, octokit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield octokit.rest.pulls.listReviews({
+            owner,
+            repo,
+            pull_number: pullRequestNumber,
+        });
+        return response.data;
+    });
+}
+exports.getPullRequestReviews = getPullRequestReviews;
+
+
+/***/ }),
+
 /***/ 6144:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -11433,8 +11493,11 @@ const core_1 = __nccwpck_require__(2186);
 const getOcktokit_1 = __nccwpck_require__(3193);
 const getPullRequest_1 = __nccwpck_require__(9283);
 const getPullRequestComments_1 = __nccwpck_require__(1795);
+const getPullRequestReviewRequests_1 = __nccwpck_require__(9685);
+const getPullRequestReviews_1 = __nccwpck_require__(2706);
+const APPROVED = "APPROVED";
 function run() {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f;
     return __awaiter(this, void 0, void 0, function* () {
         if (github_1.context.eventName !== "pull_request") {
             (0, core_1.setFailed)("This action is for pull_request event only.");
@@ -11463,7 +11526,52 @@ function run() {
             accept2shipBody ||
             accept2shipLabel ||
             accept2shipComment;
-        (0, core_1.error)("Action needs to be implemented.");
+        if (!accept2shipTag) {
+            return;
+        }
+        const reviewRequests = yield (0, getPullRequestReviewRequests_1.getPullRequestReviewRequests)(owner, repo, pullRequestNumber, octokit);
+        if (reviewRequests.users.length > 0) {
+            (0, core_1.info)(`Review requested from users: ${reviewRequests.users
+                .map((user) => user.name)
+                .join()}`);
+        }
+        if (reviewRequests.teams.length > 0) {
+            (0, core_1.info)(`Review requested from teams: ${reviewRequests.teams
+                .map((team) => team.name)
+                .join()}`);
+        }
+        if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
+            (0, core_1.info)("Review not requested.");
+        }
+        const reviews = yield (0, getPullRequestReviews_1.getPullRequestReviews)(owner, repo, pullRequestNumber, octokit);
+        let approved = false;
+        const reviewsSortedByDescendingTime = reviews.sort((x, y) => { var _a, _b; return Date.parse((_a = y.submitted_at) !== null && _a !== void 0 ? _a : "") - Date.parse((_b = x.submitted_at) !== null && _b !== void 0 ? _b : ""); });
+        if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
+            const lastReview = (_f = (_e = reviewsSortedByDescendingTime[0]) === null || _e === void 0 ? void 0 : _e.state) !== null && _f !== void 0 ? _f : "";
+            (0, core_1.info)(`Last review state: ${lastReview}`);
+            approved = lastReview === APPROVED;
+        }
+        else {
+            const reviewUserIds = reviewRequests.users.map((user) => user.id);
+            const lastReviewPerUserId = reviewsSortedByDescendingTime.reduce((result, review) => {
+                var _a;
+                const user = review.user;
+                if (user) {
+                    result[user.id] = (_a = result[user.id]) !== null && _a !== void 0 ? _a : review.state;
+                }
+                return result;
+            }, {});
+            (0, core_1.info)(`Last review by user:`);
+            for (const user of reviewRequests.users) {
+                (0, core_1.info)(`  ${user.name}: ${lastReviewPerUserId[user.id]}`);
+            }
+            approved = reviewUserIds
+                .map((userId) => lastReviewPerUserId[userId])
+                .every((state) => state === APPROVED);
+        }
+        if (!approved) {
+            return;
+        }
     });
 }
 function cleanup() {
