@@ -106,7 +106,7 @@ jobs:
           TEST_PR_STATE=`gh pr view --json 'state' -q '.state'`
           echo "::set-output name=test_pr_state::$TEST_PR_STATE"
           echo "::notice::Test PR state is $TEST_PR_STATE"
-          if [ $TEST_PR_STATE != 'MERGE' ]
+          if [ $TEST_PR_STATE != 'MERGED' ]
           then
             exit 1
           fi
