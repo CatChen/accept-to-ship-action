@@ -1,5 +1,5 @@
-name: "TypeScript Github Action Template"
-description: "A template to create custom GitHub Action with TypeScript/JavaScript."
+name: "Accept to Ship"
+description: "Automatically merge a Pull Request with #accept2ship after it's approved."
 inputs:
   github-token:
     description: "GitHub token."
