@@ -11652,17 +11652,7 @@ function run() {
         yield (0, mergePullRequest_1.mergePullRequest)(owner, repo, pullRequestNumber, octokit);
     });
 }
-function cleanup() {
-    return __awaiter(this, void 0, void 0, function* () {
-        (0, core_1.error)("Post action needs to be implemented or removed.");
-    });
-}
-if (!process.env["STATE_isPost"]) {
-    run();
-}
-else {
-    cleanup();
-}
+run();
 
 
 /***/ }),

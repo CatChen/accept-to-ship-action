@@ -207,12 +207,4 @@ async function run(): Promise<void> {
   await mergePullRequest(owner, repo, pullRequestNumber, octokit);
 }
 
-async function cleanup(): Promise<void> {
-  error("Post action needs to be implemented or removed.");
-}
-
-if (!process.env["STATE_isPost"]) {
-  run();
-} else {
-  cleanup();
-}
+run();
