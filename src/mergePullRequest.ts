@@ -7,20 +7,25 @@ export async function checkIfPullRequestMerged(
   pullRequestNumber: number,
   octokit: Octokit & Api
 ) {
-  const response = await octokit.rest.pulls.checkIfMerged({
-    owner,
-    repo,
-    pull_number: pullRequestNumber,
-  });
+  try {
+    const response = await octokit.rest.pulls.checkIfMerged({
+      owner,
+      repo,
+      pull_number: pullRequestNumber,
+    });
 
-  if (response.status === 204) {
-    return true;
-  } else if (response.status === 404) {
+    if (response.status === 204) {
+      return true;
+    } else if (response.status === 404) {
+      return false;
+    } else {
+      throw new Error(
+        `Failed to check if pull request is merged: ${response.status}`
+      );
+    }
+  } catch (error) {
+    console.log(JSON.stringify(error));
     return false;
-  } else {
-    throw new Error(
-      `Failed to check if pull request is merged: ${response.status}`
-    );
   }
 }
 

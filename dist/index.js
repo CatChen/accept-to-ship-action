@@ -11684,19 +11684,25 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.mergePullRequest = exports.checkIfPullRequestMerged = void 0;
 function checkIfPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
-        const response = yield octokit.rest.pulls.checkIfMerged({
-            owner,
-            repo,
-            pull_number: pullRequestNumber,
-        });
-        if (response.status === 204) {
-            return true;
+        try {
+            const response = yield octokit.rest.pulls.checkIfMerged({
+                owner,
+                repo,
+                pull_number: pullRequestNumber,
+            });
+            if (response.status === 204) {
+                return true;
+            }
+            else if (response.status === 404) {
+                return false;
+            }
+            else {
+                throw new Error(`Failed to check if pull request is merged: ${response.status}`);
+            }
         }
-        else if (response.status === 404) {
+        catch (error) {
+            console.log(JSON.stringify(error));
             return false;
-        }
-        else {
-            throw new Error(`Failed to check if pull request is merged: ${response.status}`);
         }
     });
 }
