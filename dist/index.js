@@ -11374,7 +11374,7 @@ function getOctokit() {
             },
         },
         retry: {
-            doNotRetry: [400, 401, 403, 404, 422, 429],
+            doNotRetry: [204, 400, 401, 403, 404, 422, 429],
         },
     }));
     return octokit;
