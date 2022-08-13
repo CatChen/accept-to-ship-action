@@ -2,6 +2,7 @@ import { context } from "@actions/github";
 import { info, error, setFailed, notice } from "@actions/core";
 import { PullRequest } from "@octokit/webhooks-definitions/schema";
 import { getOctokit } from "./getOcktokit";
+import { getMergeMethod } from "./getMergeMethod";
 import { getPullRequest } from "./getPullRequest";
 import { getPullRequestComments } from "./getPullRequestComments";
 import { getPullRequestReviewRequests } from "./getPullRequestReviewRequests";
@@ -204,7 +205,9 @@ async function run(): Promise<void> {
     return;
   }
 
-  await mergePullRequest(owner, repo, pullRequestNumber, octokit);
+  const mergeMethod = getMergeMethod();
+  notice(`Merging with merge method: ${mergeMethod}`);
+  await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
 }
 
 run();
