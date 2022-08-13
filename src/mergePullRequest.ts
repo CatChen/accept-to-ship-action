@@ -1,4 +1,5 @@
 import { Octokit } from "@octokit/core";
+import { getInput } from "@actions/core";
 import { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
 import { RequestError } from "@octokit/request-error";
 
@@ -38,10 +39,14 @@ export async function mergePullRequest(
   pullRequestNumber: number,
   octokit: Octokit & Api
 ) {
+  const mergeMethod = getInput("merge-method");
   const response = await octokit.rest.pulls.merge({
     owner,
     repo,
     pull_number: pullRequestNumber,
+    merge_method: ["merge", "squash", "rebase"].includes(mergeMethod)
+      ? (mergeMethod as "merge" | "squash" | "rebase")
+      : "merge",
   });
   if (response.status !== 200) {
     throw new Error(`Failed to merge pull request: ${response.status}`);

@@ -11672,6 +11672,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.mergePullRequest = exports.checkIfPullRequestMerged = void 0;
+const core_1 = __nccwpck_require__(2186);
 const request_error_1 = __nccwpck_require__(537);
 function checkIfPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -11702,10 +11703,14 @@ function checkIfPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
 exports.checkIfPullRequestMerged = checkIfPullRequestMerged;
 function mergePullRequest(owner, repo, pullRequestNumber, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
+        const mergeMethod = (0, core_1.getInput)("merge-method");
         const response = yield octokit.rest.pulls.merge({
             owner,
             repo,
             pull_number: pullRequestNumber,
+            merge_method: ["merge", "squash", "rebase"].includes(mergeMethod)
+                ? mergeMethod
+                : "merge",
         });
         if (response.status !== 200) {
             throw new Error(`Failed to merge pull request: ${response.status}`);
