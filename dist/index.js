@@ -11374,7 +11374,7 @@ function getOctokit() {
             },
         },
         retry: {
-            doNotRetry: [204, 400, 401, 403, 404, 422, 429],
+            doNotRetry: ["429"],
         },
     }));
     return octokit;
@@ -11668,7 +11668,7 @@ else {
 /***/ }),
 
 /***/ 8867:
-/***/ (function(__unused_webpack_module, exports) {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -11682,27 +11682,30 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.mergePullRequest = exports.checkIfPullRequestMerged = void 0;
+const request_error_1 = __nccwpck_require__(537);
 function checkIfPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
+        let response;
         try {
-            const response = yield octokit.rest.pulls.checkIfMerged({
+            response = yield octokit.rest.pulls.checkIfMerged({
                 owner,
                 repo,
                 pull_number: pullRequestNumber,
             });
-            if (response.status === 204) {
-                return true;
-            }
-            else if (response.status === 404) {
-                return false;
-            }
-            else {
-                throw new Error(`Failed to check if pull request is merged: ${response.status}`);
-            }
         }
         catch (error) {
-            console.log(JSON.stringify(error));
+            if (error instanceof request_error_1.RequestError) {
+                response = error.response;
+            }
+        }
+        if ((response === null || response === void 0 ? void 0 : response.status) === 204) {
+            return true;
+        }
+        else if ((response === null || response === void 0 ? void 0 : response.status) === 404) {
             return false;
+        }
+        else {
+            throw new Error(`Failed to check if pull request is merged: ${response === null || response === void 0 ? void 0 : response.status}`);
         }
     });
 }
