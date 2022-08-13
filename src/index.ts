@@ -7,7 +7,7 @@ import { getPullRequestComments } from "./getPullRequestComments";
 import { getPullRequestReviewRequests } from "./getPullRequestReviewRequests";
 import { getPullRequestReviews } from "./getPullRequestReviews";
 import { getCheckRuns } from "./getCheckRuns";
-import { mergePullRequest } from "./mergePullRequest";
+import { checkIfPullRequestMerged, mergePullRequest } from "./mergePullRequest";
 import { sleep } from "./sleep";
 import { components } from "@octokit/openapi-types/types";
 
@@ -28,6 +28,18 @@ async function run(): Promise<void> {
   const repo = context.repo.repo;
   const pullRequestNumber = (context.payload.pull_request as PullRequest)
     .number;
+
+  const mergedBeforeValidations = await checkIfPullRequestMerged(
+    owner,
+    repo,
+    pullRequestNumber,
+    octokit
+  );
+  if (mergedBeforeValidations) {
+    error(`This Pull Request has been merged already.`);
+    return;
+  }
+
   const pullRequest = await getPullRequest(
     owner,
     repo,
@@ -179,6 +191,17 @@ async function run(): Promise<void> {
       info(`Sleeping: ${SLEEP_INTERVAL}`);
       await sleep(SLEEP_INTERVAL);
     }
+  }
+
+  const mergedAfterValidations = await checkIfPullRequestMerged(
+    owner,
+    repo,
+    pullRequestNumber,
+    octokit
+  );
+  if (mergedAfterValidations) {
+    error(`This Pull Request has been merged already.`);
+    return;
   }
 
   await mergePullRequest(owner, repo, pullRequestNumber, octokit);

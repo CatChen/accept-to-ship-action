@@ -11545,6 +11545,11 @@ function run() {
         const repo = github_1.context.repo.repo;
         const pullRequestNumber = github_1.context.payload.pull_request
             .number;
+        const mergedBeforeValidations = yield (0, mergePullRequest_1.checkIfPullRequestMerged)(owner, repo, pullRequestNumber, octokit);
+        if (mergedBeforeValidations) {
+            (0, core_1.error)(`This Pull Request has been merged already.`);
+            return;
+        }
         const pullRequest = yield (0, getPullRequest_1.getPullRequest)(owner, repo, pullRequestNumber, octokit);
         const accept2shipTitle = (_b = (_a = pullRequest.title) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === null || _b === void 0 ? void 0 : _b.includes("#accept2ship");
         (0, core_1.info)(`#accept2ship ${accept2shipTitle ? "" : "not "}found in title`);
@@ -11639,6 +11644,11 @@ function run() {
                 yield (0, sleep_1.sleep)(SLEEP_INTERVAL);
             }
         }
+        const mergedAfterValidations = yield (0, mergePullRequest_1.checkIfPullRequestMerged)(owner, repo, pullRequestNumber, octokit);
+        if (mergedAfterValidations) {
+            (0, core_1.error)(`This Pull Request has been merged already.`);
+            return;
+        }
         yield (0, mergePullRequest_1.mergePullRequest)(owner, repo, pullRequestNumber, octokit);
     });
 }
@@ -11658,7 +11668,7 @@ else {
 /***/ }),
 
 /***/ 8867:
-/***/ (function(__unused_webpack_module, exports) {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -11671,7 +11681,35 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.mergePullRequest = void 0;
+exports.mergePullRequest = exports.checkIfPullRequestMerged = void 0;
+const request_error_1 = __nccwpck_require__(537);
+function checkIfPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let response;
+        try {
+            response = yield octokit.rest.pulls.checkIfMerged({
+                owner,
+                repo,
+                pull_number: pullRequestNumber,
+            });
+        }
+        catch (error) {
+            if (error instanceof request_error_1.RequestError) {
+                response = error.response;
+            }
+        }
+        if ((response === null || response === void 0 ? void 0 : response.status) === 204) {
+            return true;
+        }
+        else if ((response === null || response === void 0 ? void 0 : response.status) === 404) {
+            return false;
+        }
+        else {
+            throw new Error(`Failed to check if pull request is merged: ${response === null || response === void 0 ? void 0 : response.status}`);
+        }
+    });
+}
+exports.checkIfPullRequestMerged = checkIfPullRequestMerged;
 function mergePullRequest(owner, repo, pullRequestNumber, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield octokit.rest.pulls.merge({
@@ -11680,7 +11718,7 @@ function mergePullRequest(owner, repo, pullRequestNumber, octokit) {
             pull_number: pullRequestNumber,
         });
         if (response.status !== 200) {
-            throw new Error(`Failed to merge pull request: ${pullRequestNumber}`);
+            throw new Error(`Failed to merge pull request: ${response.status}`);
         }
     });
 }
