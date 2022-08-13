@@ -2,7 +2,6 @@
 
 ![build status badge](https://github.com/CatChen/accept-to-ship-action/actions/workflows/build.yml/badge.svg?event=push)
 ![eslint status badge](https://github.com/CatChen/accept-to-ship-action/actions/workflows/eslint.yml/badge.svg)
-![test status badge](https://github.com/CatChen/accept-to-ship-action/actions/workflows/test.yml/badge.svg?event=push)
 
 Want to merge a Pull Request automatically after someone approved it? Set up this Action and add a `#accept2ship` hashtag to the Pull Request. It will be merged automatically without involving you or the approver.
 
