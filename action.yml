@@ -5,6 +5,10 @@ inputs:
     description: "GitHub token."
     required: false
     default: ${{ github.token }}
+  merge-method:
+    description: "Merge method to use. Possible values are `merge`, `squash` or `rebase`. Default is merge."
+    required: false
+    default: "merge"
 runs:
   using: "node16"
   main: "dist/index.js"

@@ -11337,6 +11337,27 @@ exports.getCheckRuns = getCheckRuns;
 
 /***/ }),
 
+/***/ 7253:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getMergeMethod = void 0;
+const core_1 = __nccwpck_require__(2186);
+function getMergeMethod() {
+    const mergeMethod = (0, core_1.getInput)("merge-method");
+    if (mergeMethod !== "merge" &&
+        mergeMethod !== "squash" &&
+        mergeMethod !== "rebase") {
+        throw new Error(`Unsupported merge-method: ${mergeMethod}`);
+    }
+    return mergeMethod;
+}
+exports.getMergeMethod = getMergeMethod;
+
+
+/***/ }),
+
 /***/ 3193:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -11521,6 +11542,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github_1 = __nccwpck_require__(5438);
 const core_1 = __nccwpck_require__(2186);
 const getOcktokit_1 = __nccwpck_require__(3193);
+const getMergeMethod_1 = __nccwpck_require__(7253);
 const getPullRequest_1 = __nccwpck_require__(9283);
 const getPullRequestComments_1 = __nccwpck_require__(1795);
 const getPullRequestReviewRequests_1 = __nccwpck_require__(9685);
@@ -11649,7 +11671,9 @@ function run() {
             (0, core_1.error)(`This Pull Request has been merged already.`);
             return;
         }
-        yield (0, mergePullRequest_1.mergePullRequest)(owner, repo, pullRequestNumber, octokit);
+        const mergeMethod = (0, getMergeMethod_1.getMergeMethod)();
+        (0, core_1.notice)(`Merging with merge method: ${mergeMethod}`);
+        yield (0, mergePullRequest_1.mergePullRequest)(owner, repo, pullRequestNumber, mergeMethod, octokit);
     });
 }
 run();
@@ -11700,12 +11724,13 @@ function checkIfPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
     });
 }
 exports.checkIfPullRequestMerged = checkIfPullRequestMerged;
-function mergePullRequest(owner, repo, pullRequestNumber, octokit) {
+function mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield octokit.rest.pulls.merge({
             owner,
             repo,
             pull_number: pullRequestNumber,
+            merge_method: mergeMethod,
         });
         if (response.status !== 200) {
             throw new Error(`Failed to merge pull request: ${response.status}`);
