@@ -21,10 +21,6 @@ const SKIPPED = "skipped";
 const SLEEP_INTERVAL = 10 * 1000; // 10 seconds
 
 async function run(): Promise<void> {
-  if (context.eventName !== "pull_request") {
-    info(JSON.stringify(context));
-    setFailed("This action is for pull_request event only.");
-  }
   const octokit = getOctokit();
   const owner = context.repo.owner;
   const repo = context.repo.repo;
