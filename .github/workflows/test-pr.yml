@@ -2,11 +2,7 @@ name: Test Pull Request
 
 on:
   pull_request:
-    types: [labeled, opened, edited, reopened, synchronize]
-  check_run:
-    types: [completed]
-  check_suite:
-    types: [completed]
+    types: [synchronize]
   pull_request_review:
     types: [submitted, edited]
   workflow_dispatch:
@@ -14,7 +10,7 @@ on:
 jobs:
   test_in_pull_request:
     name: Test in Pull Request
-    if: ${{ startsWith(github.head_ref, 'workflows/tests/') }}
+    if: ${{ startsWith(github.head_ref, 'workflows/tests/') && github.base_ref != 'main' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
