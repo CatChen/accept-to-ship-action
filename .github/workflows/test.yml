@@ -20,6 +20,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      - name: Git fetch
+        env:
+          TEST_BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          git fetch --unshallow origin
+          git checkout $TEST_BRANCH_NAME
+
       - name: Make commit
         env:
           SHA: ${{ github.sha }}
