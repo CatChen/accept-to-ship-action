@@ -125,6 +125,11 @@
   resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-12.11.0.tgz#da5638d64f2b919bca89ce6602d059f1b52d3ef0"
   integrity sha512-VsXyi8peyRq9PqIz/tpqiL2w3w80OgVMwBHltTml3LmVvXiphgeqmY9mvBw9Wu7e0QWk/fqD37ux8yP5uVekyQ==
 
+"@octokit/openapi-types@^13.0.0":
+  version "13.0.1"
+  resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-13.0.1.tgz#f655810f0dc0547b771526fea171acffbc7bd4a8"
+  integrity sha512-40U39YoFBhJhmkAg6gbJnh9U8aueJwCuiTW0mXY2pNl9/+E7dUxXiMPOrIUGT12XqLinroaXYA3FUiw3BMeNfg==
+
 "@octokit/plugin-paginate-rest@^2.17.0":
   version "2.21.3"
   resolved "https://registry.yarnpkg.com/@octokit/plugin-paginate-rest/-/plugin-paginate-rest-2.21.3.tgz#7f12532797775640dbb8224da577da7dc210c87e"
@@ -148,12 +153,12 @@
     "@octokit/types" "^6.0.3"
     bottleneck "^2.15.3"
 
-"@octokit/plugin-throttling@^4.1.0":
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/@octokit/plugin-throttling/-/plugin-throttling-4.1.0.tgz#e73549655b783703be202c71fa441d90d63948cb"
-  integrity sha512-HZAf9aeH552jpMELlSTRhYMHGRlUe5gqm8jWB1mz+w8+O/WBlBmn55WpQyDmaDnb3YyfV4fmbjz5+dEACKznuQ==
+"@octokit/plugin-throttling@^4.2.0":
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/@octokit/plugin-throttling/-/plugin-throttling-4.2.0.tgz#261f265426dcf2f5126e60b75edf547e57e24def"
+  integrity sha512-5QilB43MU9MgKfrQh7ZBJ/sPwasoNOazHVZd77xS7iMRu81qxH9uOt31t2QXNx6Jnc29h7eiLZIRrJAVn+7kJA==
   dependencies:
-    "@octokit/types" "^6.0.1"
+    "@octokit/types" "^7.0.0"
     bottleneck "^2.15.3"
 
 "@octokit/request-error@^2.0.5", "@octokit/request-error@^2.1.0":
@@ -177,12 +182,19 @@
     node-fetch "^2.6.7"
     universal-user-agent "^6.0.0"
 
-"@octokit/types@^6.0.1", "@octokit/types@^6.0.3", "@octokit/types@^6.16.1", "@octokit/types@^6.39.0", "@octokit/types@^6.40.0":
+"@octokit/types@^6.0.3", "@octokit/types@^6.16.1", "@octokit/types@^6.39.0", "@octokit/types@^6.40.0":
   version "6.41.0"
   resolved "https://registry.yarnpkg.com/@octokit/types/-/types-6.41.0.tgz#e58ef78d78596d2fb7df9c6259802464b5f84a04"
   integrity sha512-eJ2jbzjdijiL3B4PrSQaSjuF2sPEQPVCPzBvTHJD9Nz+9dw2SGH4K4xeQJ77YfTq5bRQ+bD8wT11JbeDPmxmGg==
   dependencies:
     "@octokit/openapi-types" "^12.11.0"
+
+"@octokit/types@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-7.0.0.tgz#3ecee92edff53a93ecd75d6b9d6620574d2048ca"
+  integrity sha512-8uSDc66p6+wADn6lh6lA7I3ZTIapn7F/dfpsiDztVjEr6kkyKR3qPqa4lgEX92O/8iJoDeGcscKRXGAjCSR/zg==
+  dependencies:
+    "@octokit/openapi-types" "^13.0.0"
 
 "@octokit/webhooks-definitions@^3.67.3":
   version "3.67.3"
