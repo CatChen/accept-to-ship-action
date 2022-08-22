@@ -12,6 +12,7 @@ on:
 jobs:
   debug_information:
     name: Debug Information
+    if: ${{ github.actor != 'dependabot[bot]' || github.event_name == 'workflow_run' }}
     runs-on: ubuntu-latest
 
     steps:
