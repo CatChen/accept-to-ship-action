@@ -12,7 +12,7 @@ jobs:
     name: Build
     if: ${{ !startsWith(github.head_ref, 'workflows/tests/') }}
     runs-on: ubuntu-latest
-
+    permissions: write-all
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
