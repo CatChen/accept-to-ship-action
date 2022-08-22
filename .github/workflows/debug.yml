@@ -1,0 +1,34 @@
+name: Debug
+
+on:
+  pull_request:
+    branches: [main, "[0-9]+-[0-9]+-*"]
+  workflow_run:
+    workflows: ["Dependabot Debug"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  debug_information:
+    name: Debug Information
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print contexts
+        env:
+          GITHUB: ${{ toJSON(github) }}
+          JOB: ${{ toJSON(job) }}
+          INPUTS: ${{ toJSON(inputs) }}
+        run: |
+          echo "::debug::github = $GITHUB"
+          echo "::debug::job = $JOB"
+          echo "::debug::inputs = $INPUTS"
+
+  dependabot-build:
+    name: Dependabot Debug
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 0

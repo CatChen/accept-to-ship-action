@@ -42,5 +42,6 @@ jobs:
   dependabot-build:
     name: Dependabot Build
     if: ${{ github.actor == 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
     steps:
       - run: exit 0
