@@ -10,6 +10,7 @@ jobs:
     name: Test
     if: ${{ !startsWith(github.head_ref, 'workflows/tests/') }}
     runs-on: ubuntu-latest
+    permissions: write-all
 
     steps:
       - uses: actions/checkout@v3
