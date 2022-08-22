@@ -5,12 +5,16 @@ on:
     branches: [main]
   pull_request:
     branches: [main, "[0-9]+-[0-9]+-*"]
+  workflow_run:
+    workflows: ["Dependabot Build"]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
   build:
     name: Build
-    if: ${{ !startsWith(github.head_ref, 'workflows/tests/') }}
+    if: ${{ !startsWith(github.head_ref, 'workflows/tests/') && github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
@@ -34,3 +38,10 @@ jobs:
           fail-if-not-clean: true
           push-if-not-clean: true
           github-token: ${{ secrets.CHECK_GIT_STATUS_ACTION_TOKEN }}
+
+  dependabot-build:
+    name: Dependabot Build
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 0
