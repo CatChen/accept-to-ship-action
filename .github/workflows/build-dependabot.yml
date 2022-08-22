@@ -10,7 +10,7 @@ on:
 jobs:
   build-dependabot:
     name: Build for Dependabot
-    if: ${{ github.actor == 'dependabot[bot]' }}
+    if: ${{ !startsWith(github.head_ref, 'workflows/tests/') && github.actor == 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     steps:
       - run: exit 0
