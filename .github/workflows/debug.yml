@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, "[0-9]+-[0-9]+-*"]
   workflow_run:
-    workflows: ["Dependabot Debug"]
+    workflows: ["Debug for Dependabot"]
     types:
       - completed
   workflow_dispatch:
@@ -25,10 +25,3 @@ jobs:
           echo "::debug::github = $GITHUB"
           echo "::debug::job = $JOB"
           echo "::debug::inputs = $INPUTS"
-
-  dependabot-build:
-    name: Dependabot Debug
-    if: ${{ github.actor == 'dependabot[bot]' }}
-    runs-on: ubuntu-latest
-    steps:
-      - run: exit 0
