@@ -12,7 +12,14 @@ on:
 jobs:
   test:
     name: Test
-    if: ${{ !startsWith(github.head_ref, 'workflows/tests/') && github.head_ref != 'refs/heads/main' && github.actor != 'dependabot[bot]' }}
+    if: |-
+      ${{ 
+        !startsWith(github.head_ref, 'workflows/tests/') && 
+        github.head_ref != 'refs/heads/main' &&(
+          (github.event_name == 'pull_request' && github.actor != 'dependabot[bot]') ||
+          (github.event_name == 'workflow_run' && github.actor == 'dependabot[bot]')
+        )
+      }}
     runs-on: ubuntu-latest
     permissions: write-all
 
@@ -26,10 +33,10 @@ jobs:
 
       - name: Git fetch
         env:
-          TEST_BRANCH_NAME: ${{ github.head_ref }}
+          BASE_BRANCH_NAME: ${{ github.head_ref }}
         run: |
           git fetch --unshallow origin
-          git checkout $TEST_BRANCH_NAME
+          git checkout $BASE_BRANCH_NAME
 
       - name: Make commit
         env:
