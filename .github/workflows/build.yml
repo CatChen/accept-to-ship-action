@@ -14,7 +14,7 @@ on:
 jobs:
   build:
     name: Build
-    if: |
+    if: |-
       ${{ 
         !startsWith(github.head_ref, 'workflows/tests/') && (
           (github.event_name == 'pull_request' && github.actor != 'dependabot[bot]') ||
