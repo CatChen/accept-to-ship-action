@@ -13,7 +13,7 @@ jobs:
   test:
     name: Test
     if: |-
-      ${{ 
+      ${{
         !startsWith(github.head_ref, 'workflows/tests/') && 
         github.head_ref != 'refs/heads/main' && (
           (github.event_name == 'pull_request' && github.actor != 'dependabot[bot]') ||
