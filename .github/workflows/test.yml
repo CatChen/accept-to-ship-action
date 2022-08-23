@@ -24,6 +24,10 @@ jobs:
     permissions: write-all
 
     steps:
+      - name: Sanity check
+        if: ${{ startsWith(github.head_ref, 'workflows/tests/') || github.head_ref != 'refs/heads/main' }}
+        run: exit 1
+
       - uses: actions/checkout@v3
 
       - name: Config Git
