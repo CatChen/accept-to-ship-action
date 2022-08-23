@@ -15,7 +15,7 @@ jobs:
     if: |-
       ${{ 
         !startsWith(github.head_ref, 'workflows/tests/') && 
-        github.head_ref != 'refs/heads/main' &&(
+        github.head_ref != 'refs/heads/main' && (
           (github.event_name == 'pull_request' && github.actor != 'dependabot[bot]') ||
           (github.event_name == 'workflow_run' && github.actor == 'dependabot[bot]')
         )
@@ -42,12 +42,31 @@ jobs:
           git fetch --unshallow origin
           git checkout $BASE_BRANCH_NAME
 
+      - name: Git checkout
+        id: git-checkout
+        env:
+          PULL_REQUEST_BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+          PULL_REQUEST_WORKFLOW_RUN_BRANCH_NAME: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          BASE_BRANCH_NAME="$PULL_REQUEST_BRANCH_NAME"
+          if [ -z "$BASE_BRANCH_NAME" ]
+          then
+            BASE_BRANCH_NAME="$PULL_REQUEST_WORKFLOW_RUN_BRANCH_NAME"
+          fi
+          if [ -z "$BASE_BRANCH_NAME" ]
+          then
+            echo "::error::Fail to identify Pull Request branch"
+            exit 1
+          fi
+          echo "::set-output name=base-branch-name::$BASE_BRANCH_NAME"
+          git checkout $BASE_BRANCH_NAME
+
       - name: Make commit
         env:
           SHA: ${{ github.sha }}
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-          BASE_BRANCH_NAME: ${{ github.head_ref }}
+          BASE_BRANCH_NAME: ${{ steps.git-checkout.outputs.base-branch-name }}
           TEST_BRANCH_NAME: ${{ format('workflows/tests/{0}-{1}-on-{2}', github.run_number, github.run_attempt, github.sha) }}
           BASE_PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
@@ -74,7 +93,7 @@ jobs:
           SHA: ${{ github.sha }}
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-          BASE_BRANCH_NAME: ${{ github.head_ref }}
+          BASE_BRANCH_NAME: ${{ steps.git-checkout.outputs.base-branch-name }}
           BASE_PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           echo "::notice::Base PR number is $BASE_PR_NUMBER"
@@ -142,7 +161,7 @@ jobs:
           SHA: ${{ github.sha }}
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-          BASE_BRANCH_NAME: ${{ github.head_ref }}
+          BASE_BRANCH_NAME: ${{ steps.git-checkout.outputs.base-branch-name }}
           TEST_PR_NUMBER: ${{ steps.open-pr.outputs.test-pr-number }}
         run: |
           if [ $BASE_BRANCH_NAME != '' ]
