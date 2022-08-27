@@ -188,7 +188,7 @@ jobs:
           TEST_PR_STATE=`gh pr view --json 'state' -q '.state'`
           echo "::set-output name=test_pr_state::$TEST_PR_STATE"
           echo "::notice::Test PR state is $TEST_PR_STATE"
-          if [ $TEST_PR_STATE != 'MERGED' ]
+          if [ "$TEST_PR_STATE" != 'MERGED' ]
           then
             exit 1
           fi
@@ -204,7 +204,12 @@ jobs:
           BASE_BRANCH_NAME: ${{ steps.git-checkout.outputs.base-branch-name }}
           TEST_HEAD_PR_NUMBER: ${{ steps.open-head-pr.outputs.test-head-pr-number }}
         run: |
-          if [ $BASE_BRANCH_NAME != '' ]
+          TEST_PR_STATE=`gh pr view --json 'state' -q '.state'`
+          if [ "$TEST_PR_STATE" = 'MERGED' ]
+          then
+            exit
+          fi
+          if [ -n "$BASE_BRANCH_NAME" ]
           then
             git checkout "$BASE_BRANCH_NAME"
             echo "::notice::Base branch is `git branch --show-current`"
@@ -215,12 +220,15 @@ jobs:
           gh pr close $TEST_HEAD_PR_NUMBER -d -c "Finished testing $SHA by $RUN_NUMBER-$RUN_ATTEMPT. Closing PR."
 
       - name: Delete remote test head branch
-        if: ${{ failure() || cancelled() }}
+        if: ${{ always() }}
         continue-on-error: true
         env:
           TEST_HEAD_BRANCH_NAME: ${{ format('workflows/tests/head/{0}-{1}-on-{2}', github.run_number, github.run_attempt, github.sha) }}
         run: |
-          git push -d origin "$TEST_HEAD_BRANCH_NAME"
+          if test $(git ls-remote origin --heads "$TEST_HEAD_BRANCH_NAME" | wc -l ) != 0
+          then
+            git push -d origin "$TEST_HEAD_BRANCH_NAME"
+          fi
 
       - name: Close base PR
         if: ${{ always() }}
@@ -233,7 +241,7 @@ jobs:
           BASE_BRANCH_NAME: ${{ steps.git-checkout.outputs.base-branch-name }}
           TEST_BASE_PR_NUMBER: ${{ steps.open-head-pr.outputs.test-base-pr-number }}
         run: |
-          if [ $BASE_BRANCH_NAME != '' ]
+          if [ -n "$BASE_BRANCH_NAME" ]
           then
             git checkout "$BASE_BRANCH_NAME"
             echo "::notice::Base branch is `git branch --show-current`"
@@ -249,4 +257,7 @@ jobs:
         env:
           TEST_BASE_BRANCH_NAME: ${{ format('workflows/tests/base/{0}-{1}-on-{2}', github.run_number, github.run_attempt, github.sha) }}
         run: |
-          git push -d origin "$TEST_BASE_BRANCH_NAME"
+          if test $(git ls-remote origin --heads "$TEST_BASE_BRANCH_NAME" | wc -l ) != 0
+          then
+            git push -d origin "$TEST_BASE_BRANCH_NAME"
+          fi
