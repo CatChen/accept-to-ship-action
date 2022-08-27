@@ -9,6 +9,10 @@ inputs:
     description: "Merge method to use. Possible values are `merge`, `squash` or `rebase`. Default is merge."
     required: false
     default: "merge"
+  timeout:
+    description: "The time allowance for waiting the checks to pass in seconds."
+    required: false
+    default: 600
 runs:
   using: "node16"
   main: "dist/index.js"
