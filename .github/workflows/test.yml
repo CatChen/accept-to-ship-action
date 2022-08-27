@@ -68,7 +68,16 @@ jobs:
         run: |
           echo "::notice::Base branch is $TEST_BASE_BRANCH_NAME"
           git checkout -b "$TEST_BASE_BRANCH_NAME"
-          echo "::notice::Base commit is `git rev-parse --verify HEAD`"
+
+      - name: Make test base commit
+        env:
+          SHA: ${{ github.sha }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          BASE_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          git commit --allow-empty -m "Test base commit for #$BASE_PR_NUMBER ($SHA) by $RUN_NUMBER-$RUN_ATTEMPT"
+          echo "::notice::Test base commit is `git rev-parse --verify HEAD`"
 
       - name: Git push test base branch
         env:
@@ -94,18 +103,22 @@ jobs:
           echo "::set-output name=test-base-pr-number::$TEST_BASE_PR_NUMBER"
           echo "::notice::Test base PR number is $TEST_BASE_PR_NUMBER"
 
+      - name: Git checkout test head branch
+        env:
+          TEST_HEAD_BRANCH_NAME: ${{ format('workflows/tests/head/{0}-{1}-on-{2}', github.run_number, github.run_attempt, github.sha) }}
+        run: |
+          echo "::notice::Test head branch is $TEST_HEAD_BRANCH_NAME"
+          git checkout -b "$TEST_HEAD_BRANCH_NAME"
+
       - name: Make test head commit
         env:
           SHA: ${{ github.sha }}
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-          TEST_HEAD_BRANCH_NAME: ${{ format('workflows/tests/head/{0}-{1}-on-{2}', github.run_number, github.run_attempt, github.sha) }}
           BASE_PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          echo "::notice::Test branch is $TEST_HEAD_BRANCH_NAME"
-          git checkout -b "$TEST_HEAD_BRANCH_NAME"
-          git commit --allow-empty -m "Test commit for #$BASE_PR_NUMBER ($SHA) by $RUN_NUMBER-$RUN_ATTEMPT"
-          echo "::notice::Test commit is `git rev-parse --verify HEAD`"
+          git commit --allow-empty -m "Test head commit for #$BASE_PR_NUMBER ($SHA) by $RUN_NUMBER-$RUN_ATTEMPT"
+          echo "::notice::Test head commit is `git rev-parse --verify HEAD`"
 
       - name: Git push test head branch
         env:
