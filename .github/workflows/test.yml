@@ -29,17 +29,20 @@ jobs:
         run: exit 1
 
       - uses: actions/checkout@v3
+        if: ${{ github.event_name != 'workflow_run' }}
+        with:
+          fetch-depth: 0
+
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name == 'workflow_run' }}
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
 
       - name: Config Git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Git fetch
-        env:
-          BASE_BRANCH_NAME: ${{ github.head_ref }}
-        run: |
-          git fetch --unshallow origin
 
       - name: Git checkout base branch
         id: git-checkout
