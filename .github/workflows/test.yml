@@ -239,7 +239,7 @@ jobs:
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
           BASE_BRANCH_NAME: ${{ steps.git-checkout.outputs.base-branch-name }}
-          TEST_BASE_PR_NUMBER: ${{ steps.open-head-pr.outputs.test-base-pr-number }}
+          TEST_BASE_PR_NUMBER: ${{ steps.open-base-pr.outputs.test-base-pr-number }}
         run: |
           if [ -n "$BASE_BRANCH_NAME" ]
           then
