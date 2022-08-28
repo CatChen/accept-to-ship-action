@@ -11679,7 +11679,7 @@ function run() {
         for (const job of jobs) {
             (0, core_1.info)(`  Job id: ${job.id} (${job.html_url})`);
             (0, core_1.info)(`  Job name: ${job.name}`);
-            (0, core_1.info)(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}\n`);
+            (0, core_1.info)(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}\n\n`);
         }
         const jobIds = jobs.map((job) => job.id);
         const timeout = parseInt((0, core_1.getInput)("timeout"), 10);
@@ -11692,7 +11692,7 @@ function run() {
             for (const checkRun of checkRuns) {
                 (0, core_1.info)(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
                 (0, core_1.info)(`  Check name: ${checkRun.name}`);
-                (0, core_1.info)(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}\n`);
+                (0, core_1.info)(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}\n\n`);
             }
             if (externalId === undefined || externalId === null) {
                 externalId = (_j = checkRuns.find((checkRun) => jobIds.includes(checkRun.id))) === null || _j === void 0 ? void 0 : _j.external_id;

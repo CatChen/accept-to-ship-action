@@ -166,7 +166,7 @@ async function run(): Promise<void> {
   for (const job of jobs) {
     info(`  Job id: ${job.id} (${job.html_url})`);
     info(`  Job name: ${job.name}`);
-    info(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}\n`);
+    info(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}\n\n`);
   }
   const jobIds = jobs.map((job) => job.id);
 
@@ -188,7 +188,7 @@ async function run(): Promise<void> {
       info(
         `  Check status/conclusion: ${
           checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status
-        }\n`
+        }\n\n`
       );
     }
     if (externalId === undefined || externalId === null) {
