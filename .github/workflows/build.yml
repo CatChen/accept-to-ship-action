@@ -67,8 +67,8 @@ jobs:
               head_sha: context.payload.workflow_run.head_sha,
               conclusion: process.env.STATUS === 'clean' ? 'success' : 'failure',
               output: {
-                title: null,
-                summary: null,
-                text: null,
+                title: '',
+                summary: '',
+                text: '',
               },
             })
