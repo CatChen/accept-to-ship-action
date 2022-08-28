@@ -1,5 +1,5 @@
 import { context } from "@actions/github";
-import { info, error, setFailed, notice } from "@actions/core";
+import { info, notice, error, setFailed, getInput } from "@actions/core";
 import { PullRequest } from "@octokit/webhooks-definitions/schema";
 import { getOctokit } from "./getOcktokit";
 import { getMergeMethod } from "./getMergeMethod";
@@ -11,6 +11,7 @@ import { getCheckRuns } from "./getCheckRuns";
 import { checkIfPullRequestMerged, mergePullRequest } from "./mergePullRequest";
 import { sleep } from "./sleep";
 import { components } from "@octokit/openapi-types/types";
+import { performance } from "node:perf_hooks";
 
 const APPROVED = "APPROVED";
 const COMPLETED = "completed";
@@ -19,6 +20,13 @@ const NEUTRAL = "neutral";
 const SKIPPED = "skipped";
 
 const SLEEP_INTERVAL = 10 * 1000; // 10 seconds
+
+const LOCALE = Intl.NumberFormat().resolvedOptions().locale;
+const FORMATTER = new Intl.NumberFormat(LOCALE, {
+  style: "unit",
+  unit: "second",
+  unitDisplay: "long",
+});
 
 async function run(): Promise<void> {
   const octokit = getOctokit();
@@ -149,6 +157,7 @@ async function run(): Promise<void> {
   }
 
   const job = context.job;
+  const timeout = parseInt(getInput("timeout"), 10);
   notice(`Current job: ${job}`);
   let checksCompleted = false;
   while (!checksCompleted) {
@@ -186,8 +195,20 @@ async function run(): Promise<void> {
       }
     } else {
       info(`Incomplete checks: ${incompleteChecks.length}`);
-      info(`Sleeping: ${SLEEP_INTERVAL}`);
-      await sleep(SLEEP_INTERVAL);
+      const executionTime = Math.round(performance.now() / 1000);
+      if (executionTime <= timeout) {
+        info(`Execution time: ${FORMATTER.format(executionTime)}`);
+        info(`Sleeping: ${SLEEP_INTERVAL}`);
+        await sleep(SLEEP_INTERVAL);
+      } else {
+        error(`Execution time: ${FORMATTER.format(executionTime)}`);
+        setFailed(
+          `Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(
+            SLEEP_INTERVAL / 1000
+          )}`
+        );
+        return;
+      }
     }
   }
 

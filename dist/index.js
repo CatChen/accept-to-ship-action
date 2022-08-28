@@ -11550,12 +11550,19 @@ const getPullRequestReviews_1 = __nccwpck_require__(2706);
 const getCheckRuns_1 = __nccwpck_require__(3530);
 const mergePullRequest_1 = __nccwpck_require__(8867);
 const sleep_1 = __nccwpck_require__(986);
+const node_perf_hooks_1 = __nccwpck_require__(8846);
 const APPROVED = "APPROVED";
 const COMPLETED = "completed";
 const SUCCESS = "success";
 const NEUTRAL = "neutral";
 const SKIPPED = "skipped";
 const SLEEP_INTERVAL = 10 * 1000; // 10 seconds
+const LOCALE = Intl.NumberFormat().resolvedOptions().locale;
+const FORMATTER = new Intl.NumberFormat(LOCALE, {
+    style: "unit",
+    unit: "second",
+    unitDisplay: "long",
+});
 function run() {
     var _a, _b, _c, _d, _e, _f;
     return __awaiter(this, void 0, void 0, function* () {
@@ -11635,6 +11642,7 @@ function run() {
             return;
         }
         const job = github_1.context.job;
+        const timeout = parseInt((0, core_1.getInput)("timeout"), 10);
         (0, core_1.notice)(`Current job: ${job}`);
         let checksCompleted = false;
         while (!checksCompleted) {
@@ -11659,8 +11667,17 @@ function run() {
             }
             else {
                 (0, core_1.info)(`Incomplete checks: ${incompleteChecks.length}`);
-                (0, core_1.info)(`Sleeping: ${SLEEP_INTERVAL}`);
-                yield (0, sleep_1.sleep)(SLEEP_INTERVAL);
+                const executionTime = Math.round(node_perf_hooks_1.performance.now() / 1000);
+                if (executionTime <= timeout) {
+                    (0, core_1.info)(`Execution time: ${FORMATTER.format(executionTime)}`);
+                    (0, core_1.info)(`Sleeping: ${SLEEP_INTERVAL}`);
+                    yield (0, sleep_1.sleep)(SLEEP_INTERVAL);
+                }
+                else {
+                    (0, core_1.error)(`Execution time: ${FORMATTER.format(executionTime)}`);
+                    (0, core_1.setFailed)(`Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(SLEEP_INTERVAL / 1000)}`);
+                    return;
+                }
             }
         }
         const mergedAfterValidations = yield (0, mergePullRequest_1.checkIfPullRequestMerged)(owner, repo, pullRequestNumber, octokit);
@@ -11820,6 +11837,13 @@ module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("https");
 /***/ ((module) => {
 
 module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("net");
+
+/***/ }),
+
+/***/ 8846:
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:perf_hooks");
 
 /***/ }),
 
