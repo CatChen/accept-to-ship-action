@@ -41,8 +41,7 @@ jobs:
             }
 
             const listJobsForWorkflowRunResponse = await octokit.rest.actions.listJobsForWorkflowRun({
-              owner,
-              repo,
+              ...context.repo,
               run_id: context.runId,
             });
             if (listJobsForWorkflowRunResponse.data.jobs.length !== 1) {
