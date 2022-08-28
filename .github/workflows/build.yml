@@ -40,30 +40,31 @@ jobs:
               return;
             }
 
-            const response = await octokit.rest.actions.listJobsForWorkflowRun({
+            const listJobsForWorkflowRunResponse = await octokit.rest.actions.listJobsForWorkflowRun({
               owner,
               repo,
               run_id: context.runId,
             });
-            if (response.data.jobs.length !== 1) {
+            if (listJobsForWorkflowRunResponse.data.jobs.length !== 1) {
               info(
-                `Workflow doesn't have exactly 1 job ${response.data.jobs.length}`
+                `Workflow doesn't have exactly 1 job ${listJobsForWorkflowRunResponse.data.jobs.length}`
               );
               return;
             }
 
-            const job = response.data.jobs[0];
+            const job = listJobsForWorkflowRunResponse.data.jobs[0];
             info(`Job:`);
             info(`  Job id: ${job.id} (${job.html_url})`);
             info(`  Job name: ${job.name}`);
-            info(`Head SHA: ${github.head_sha});
-            return await octokit.rest.checks.create({
+            info(`Head SHA: ${context.payload.workflow_run.head_sha}`);
+            const checksCreateResponse = await octokit.rest.checks.create({
               ...context.repo,
-              head_sha: github.head_sha,
-              name: job.name
+              head_sha: context.payload.workflow_run.head_sha,
+              name: job.name,
               details_url: job.details_url,
               status: "in_progress",
             });
+            return checksCreateResponse.data;
 
       - uses: actions/checkout@v3
         if: ${{ github.event_name != 'workflow_run' }}
