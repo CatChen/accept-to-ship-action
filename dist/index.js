@@ -11563,7 +11563,7 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
     unitDisplay: "long",
 });
 function run() {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g;
     return __awaiter(this, void 0, void 0, function* () {
         const octokit = (0, getOcktokit_1.getOctokit)();
         const owner = github_1.context.repo.owner;
@@ -11631,11 +11631,11 @@ function run() {
             }, {});
             (0, core_1.info)(`Last review by user:`);
             for (const user of reviewRequests.users) {
-                (0, core_1.info)(`  ${user.login}: ${(_f = lastReviewPerUserId[user.id].state) !== null && _f !== void 0 ? _f : "none"} (${lastReviewPerUserId[user.id].html_url})`);
+                (0, core_1.info)(`  ${user.login}: ${(_g = (_f = lastReviewPerUserId[user.id]) === null || _f === void 0 ? void 0 : _f.state) !== null && _g !== void 0 ? _g : "none"} (${lastReviewPerUserId[user.id].html_url})`);
             }
             approved = reviewUserIds
                 .map((userId) => lastReviewPerUserId[userId])
-                .every((review) => review.state === APPROVED);
+                .every((review) => (review === null || review === void 0 ? void 0 : review.state) === APPROVED);
         }
         if (!approved) {
             return;
