@@ -96,7 +96,7 @@ async function run(): Promise<void> {
   if (reviewRequests.users.length > 0) {
     info(
       `Review requested from users: ${reviewRequests.users
-        .map((user) => user.name)
+        .map((user) => `${user.login} (${user.html_url})`)
         .join()}`
     );
   }
@@ -124,30 +124,34 @@ async function run(): Promise<void> {
       Date.parse(y.submitted_at ?? "") - Date.parse(x.submitted_at ?? "")
   );
   if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
-    const lastReview = reviewsSortedByDescendingTime[0]?.state ?? "";
-    info(`Last review state: ${lastReview}`);
-    approved = lastReview === APPROVED;
+    const lastReview = reviewsSortedByDescendingTime[0];
+    info(`Last review state: ${lastReview?.state ?? "none"}`);
+    approved = lastReview?.state === APPROVED;
   } else {
     const reviewUserIds = reviewRequests.users.map((user) => user.id);
     const lastReviewPerUserId = reviewsSortedByDescendingTime.reduce(
       (result, review) => {
         const user = review.user;
         if (user) {
-          result[user.id] = result[user.id] ?? review.state;
+          result[user.id] = result[user.id] ?? review;
         }
         return result;
       },
       {} as {
-        [id: string]: components["schemas"]["pull-request-review"]["state"];
+        [id: string]: components["schemas"]["pull-request-review"];
       }
     );
     info(`Last review by user:`);
     for (const user of reviewRequests.users) {
-      info(`  ${user.name}: ${lastReviewPerUserId[user.id]}`);
+      info(
+        `  ${user.login}: ${lastReviewPerUserId[user.id].state ?? "none"} (${
+          lastReviewPerUserId[user.id].html_url
+        })`
+      );
     }
     approved = reviewUserIds
       .map((userId) => lastReviewPerUserId[userId])
-      .every((state) => state === APPROVED);
+      .every((review) => review.state === APPROVED);
   }
 
   if (!approved) {
