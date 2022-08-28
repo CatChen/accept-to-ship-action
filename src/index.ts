@@ -7,6 +7,7 @@ import { getPullRequest } from "./getPullRequest";
 import { getPullRequestComments } from "./getPullRequestComments";
 import { getPullRequestReviewRequests } from "./getPullRequestReviewRequests";
 import { getPullRequestReviews } from "./getPullRequestReviews";
+import { getWorkflowRunJobs } from "./getWorkflowRunJobs";
 import { getCheckRuns } from "./getCheckRuns";
 import { checkIfPullRequestMerged, mergePullRequest } from "./mergePullRequest";
 import { sleep } from "./sleep";
@@ -27,9 +28,6 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
 });
 
 async function run(): Promise<void> {
-  info(`Current Workflow: ${context.workflow}`);
-  info(`Current job: ${context.job}`);
-
   const octokit = getOctokit();
   const owner = context.repo.owner;
   const repo = context.repo.repo;
@@ -163,9 +161,19 @@ async function run(): Promise<void> {
     return;
   }
 
+  const jobs = await getWorkflowRunJobs(owner, repo, octokit);
+  info(`Jobs: ${jobs.length}`);
+  for (const job of jobs) {
+    info(`  Job id: ${job.id} (${job.html_url})`);
+    info(`  Job name: ${job.name}`);
+    info(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}\n\n`);
+  }
+  const jobIds = jobs.map((job) => job.id);
+
   const timeout = parseInt(getInput("timeout"), 10);
   const interval = parseInt(getInput("checks-watch-interval"), 10);
   let checksCompleted = false;
+  let externalId: string | undefined | null = undefined;
   while (!checksCompleted) {
     const checkRuns = await getCheckRuns(
       owner,
@@ -175,16 +183,26 @@ async function run(): Promise<void> {
     );
     info(`Checks:`);
     for (const checkRun of checkRuns) {
+      info(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
+      info(`  Check name: ${checkRun.name}`);
       info(
-        `  ${checkRun.name}: ${
+        `  Check status/conclusion: ${
           checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status
-        }`
+        }\n\n`
       );
     }
+    if (externalId === undefined || externalId === null) {
+      externalId = checkRuns.find((checkRun) =>
+        jobIds.includes(checkRun.id)
+      )?.external_id;
+    }
     const incompleteChecks = checkRuns.filter(
-      (checkRun) => checkRun.status !== COMPLETED
+      (checkRun) =>
+        !jobIds.includes(checkRun.id) &&
+        checkRun.external_id !== externalId &&
+        checkRun.status !== COMPLETED
     );
-    checksCompleted = incompleteChecks.length <= 1;
+    checksCompleted = incompleteChecks.length === 0;
     if (checksCompleted) {
       const failedCheckes = checkRuns.filter(
         (checkRun) =>
@@ -204,7 +222,7 @@ async function run(): Promise<void> {
       const executionTime = Math.round(performance.now() / 1000);
       if (executionTime <= timeout) {
         info(`Execution time: ${FORMATTER.format(executionTime)}`);
-        info(`Sleeping: ${FORMATTER.format(interval)}`);
+        info(`Sleeping: ${FORMATTER.format(interval)}\n`);
         await sleep(interval * 1000);
       } else {
         error(`Execution time: ${FORMATTER.format(executionTime)}`);

@@ -3,16 +3,15 @@ import { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
 import { components } from "@octokit/openapi-types/types";
 import { context } from "@actions/github";
 
-export async function getCheckRuns(
+export async function getWorkflowRunJobs(
   owner: string,
   repo: string,
-  ref: string,
   octokit: Octokit & Api
 ) {
-  const response = await octokit.rest.checks.listForRef({
+  const response = await octokit.rest.actions.listJobsForWorkflowRun({
     owner,
     repo,
-    ref,
+    run_id: context.runId,
   });
-  return response.data.check_runs as components["schemas"]["check-run"][];
+  return response.data.jobs as components["schemas"]["job"][];
 }

@@ -11525,6 +11525,37 @@ exports.getPullRequestReviews = getPullRequestReviews;
 
 /***/ }),
 
+/***/ 7833:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getWorkflowRunJobs = void 0;
+const github_1 = __nccwpck_require__(5438);
+function getWorkflowRunJobs(owner, repo, octokit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield octokit.rest.actions.listJobsForWorkflowRun({
+            owner,
+            repo,
+            run_id: github_1.context.runId,
+        });
+        return response.data.jobs;
+    });
+}
+exports.getWorkflowRunJobs = getWorkflowRunJobs;
+
+
+/***/ }),
+
 /***/ 6144:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -11547,6 +11578,7 @@ const getPullRequest_1 = __nccwpck_require__(9283);
 const getPullRequestComments_1 = __nccwpck_require__(1795);
 const getPullRequestReviewRequests_1 = __nccwpck_require__(9685);
 const getPullRequestReviews_1 = __nccwpck_require__(2706);
+const getWorkflowRunJobs_1 = __nccwpck_require__(7833);
 const getCheckRuns_1 = __nccwpck_require__(3530);
 const mergePullRequest_1 = __nccwpck_require__(8867);
 const sleep_1 = __nccwpck_require__(986);
@@ -11563,10 +11595,8 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
     unitDisplay: "long",
 });
 function run() {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     return __awaiter(this, void 0, void 0, function* () {
-        (0, core_1.info)(`Current Workflow: ${github_1.context.workflow}`);
-        (0, core_1.info)(`Current job: ${github_1.context.job}`);
         const octokit = (0, getOcktokit_1.getOctokit)();
         const owner = github_1.context.repo.owner;
         const repo = github_1.context.repo.repo;
@@ -11644,17 +11674,33 @@ function run() {
         if (!approved) {
             return;
         }
+        const jobs = yield (0, getWorkflowRunJobs_1.getWorkflowRunJobs)(owner, repo, octokit);
+        (0, core_1.info)(`Jobs: ${jobs.length}`);
+        for (const job of jobs) {
+            (0, core_1.info)(`  Job id: ${job.id} (${job.html_url})`);
+            (0, core_1.info)(`  Job name: ${job.name}`);
+            (0, core_1.info)(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}\n\n`);
+        }
+        const jobIds = jobs.map((job) => job.id);
         const timeout = parseInt((0, core_1.getInput)("timeout"), 10);
         const interval = parseInt((0, core_1.getInput)("checks-watch-interval"), 10);
         let checksCompleted = false;
+        let externalId = undefined;
         while (!checksCompleted) {
             const checkRuns = yield (0, getCheckRuns_1.getCheckRuns)(owner, repo, pullRequest.head.sha, octokit);
             (0, core_1.info)(`Checks:`);
             for (const checkRun of checkRuns) {
-                (0, core_1.info)(`  ${checkRun.name}: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`);
+                (0, core_1.info)(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
+                (0, core_1.info)(`  Check name: ${checkRun.name}`);
+                (0, core_1.info)(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}\n\n`);
             }
-            const incompleteChecks = checkRuns.filter((checkRun) => checkRun.status !== COMPLETED);
-            checksCompleted = incompleteChecks.length <= 1;
+            if (externalId === undefined || externalId === null) {
+                externalId = (_j = checkRuns.find((checkRun) => jobIds.includes(checkRun.id))) === null || _j === void 0 ? void 0 : _j.external_id;
+            }
+            const incompleteChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
+                checkRun.external_id !== externalId &&
+                checkRun.status !== COMPLETED);
+            checksCompleted = incompleteChecks.length === 0;
             if (checksCompleted) {
                 const failedCheckes = checkRuns.filter((checkRun) => checkRun.status === COMPLETED &&
                     (checkRun.conclusion === null ||
@@ -11672,7 +11718,7 @@ function run() {
                 const executionTime = Math.round(node_perf_hooks_1.performance.now() / 1000);
                 if (executionTime <= timeout) {
                     (0, core_1.info)(`Execution time: ${FORMATTER.format(executionTime)}`);
-                    (0, core_1.info)(`Sleeping: ${FORMATTER.format(interval)}`);
+                    (0, core_1.info)(`Sleeping: ${FORMATTER.format(interval)}\n`);
                     yield (0, sleep_1.sleep)(interval * 1000);
                 }
                 else {
