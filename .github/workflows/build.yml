@@ -28,8 +28,6 @@ jobs:
       - name: Dependabot check reset
         if: ${{ always() }}
         uses: actions/github-script@v6.2.0
-        env:
-          CHECK_GIT_STATUS_OUTCOME: ${{ steps.check-git-status.outcome }}
         with:
           script: |
             const { info } = core;
