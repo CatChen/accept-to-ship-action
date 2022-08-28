@@ -11643,7 +11643,7 @@ function run() {
         }
         const job = github_1.context.job;
         const timeout = parseInt((0, core_1.getInput)("timeout"), 10);
-        (0, core_1.notice)(`Current job: ${job}`);
+        (0, core_1.info)(`Current job: ${job}`);
         let checksCompleted = false;
         while (!checksCompleted) {
             const checkRuns = yield (0, getCheckRuns_1.getCheckRuns)(owner, repo, pullRequest.head.sha, octokit);
@@ -11686,7 +11686,7 @@ function run() {
             return;
         }
         const mergeMethod = (0, getMergeMethod_1.getMergeMethod)();
-        (0, core_1.notice)(`Merging with merge method: ${mergeMethod}`);
+        (0, core_1.info)(`Merging with merge method: ${mergeMethod}`);
         yield (0, mergePullRequest_1.mergePullRequest)(owner, repo, pullRequestNumber, mergeMethod, octokit);
     });
 }
