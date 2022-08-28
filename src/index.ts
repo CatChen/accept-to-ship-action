@@ -184,6 +184,7 @@ async function run(): Promise<void> {
     info(`Checks:`);
     for (const checkRun of checkRuns) {
       info(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
+      info(`  Check name: ${checkRun.name}`);
       info(
         `  Check status/conclusion: ${
           checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status
