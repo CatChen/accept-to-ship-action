@@ -144,14 +144,14 @@ async function run(): Promise<void> {
     info(`Last review by user:`);
     for (const user of reviewRequests.users) {
       info(
-        `  ${user.login}: ${lastReviewPerUserId[user.id].state ?? "none"} (${
+        `  ${user.login}: ${lastReviewPerUserId[user.id]?.state ?? "none"} (${
           lastReviewPerUserId[user.id].html_url
         })`
       );
     }
     approved = reviewUserIds
       .map((userId) => lastReviewPerUserId[userId])
-      .every((review) => review.state === APPROVED);
+      .every((review) => review?.state === APPROVED);
   }
 
   if (!approved) {
