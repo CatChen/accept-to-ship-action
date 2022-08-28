@@ -19,8 +19,6 @@ const SUCCESS = "success";
 const NEUTRAL = "neutral";
 const SKIPPED = "skipped";
 
-const SLEEP_INTERVAL = 10 * 1000; // 10 seconds
-
 const LOCALE = Intl.NumberFormat().resolvedOptions().locale;
 const FORMATTER = new Intl.NumberFormat(LOCALE, {
   style: "unit",
@@ -158,6 +156,7 @@ async function run(): Promise<void> {
 
   const job = context.job;
   const timeout = parseInt(getInput("timeout"), 10);
+  const interval = parseInt(getInput("checks-watch-interval"), 10);
   info(`Current job: ${job}`);
   let checksCompleted = false;
   while (!checksCompleted) {
@@ -198,13 +197,13 @@ async function run(): Promise<void> {
       const executionTime = Math.round(performance.now() / 1000);
       if (executionTime <= timeout) {
         info(`Execution time: ${FORMATTER.format(executionTime)}`);
-        info(`Sleeping: ${SLEEP_INTERVAL}`);
-        await sleep(SLEEP_INTERVAL);
+        info(`Sleeping: ${FORMATTER.format(interval)}`);
+        await sleep(interval * 1000);
       } else {
         error(`Execution time: ${FORMATTER.format(executionTime)}`);
         setFailed(
           `Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(
-            SLEEP_INTERVAL / 1000
+            timeout
           )}`
         );
         return;
