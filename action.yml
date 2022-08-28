@@ -10,9 +10,13 @@ inputs:
     required: false
     default: "merge"
   timeout:
-    description: "The time allowance for waiting the checks to pass in seconds."
+    description: "The time allowance in seconds for waiting the checks to pass."
     required: false
     default: 600
+  checks-watch-interval:
+    description: "Refresh interval in seconds when using waiting for checks."
+    required: false
+    default: 10
 runs:
   using: "node16"
   main: "dist/index.js"
