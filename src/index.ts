@@ -1,5 +1,5 @@
 import { context } from "@actions/github";
-import { info, notice, error, setFailed, getInput } from "@actions/core";
+import { info, error, setFailed, getInput } from "@actions/core";
 import { PullRequest } from "@octokit/webhooks-definitions/schema";
 import { getOctokit } from "./getOcktokit";
 import { getMergeMethod } from "./getMergeMethod";
@@ -158,7 +158,7 @@ async function run(): Promise<void> {
 
   const job = context.job;
   const timeout = parseInt(getInput("timeout"), 10);
-  notice(`Current job: ${job}`);
+  info(`Current job: ${job}`);
   let checksCompleted = false;
   while (!checksCompleted) {
     const checkRuns = await getCheckRuns(
@@ -224,7 +224,7 @@ async function run(): Promise<void> {
   }
 
   const mergeMethod = getMergeMethod();
-  notice(`Merging with merge method: ${mergeMethod}`);
+  info(`Merging with merge method: ${mergeMethod}`);
   await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
 }
 
