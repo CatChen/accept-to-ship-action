@@ -25,6 +25,46 @@ jobs:
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
+      - name: Create check run
+        id: create-check-run
+        uses: actions/github-script@v6.2.0
+        env:
+          CHECK_GIT_STATUS_OUTCOME: ${{ steps.check-git-status.outcome }}
+        with:
+          script: |
+            const { info } = core;
+            const octokit = github;
+
+            if (context.eventName !== "workflow_run") {
+              info(`Event isn't workflow_run: ${context.eventName}`);
+              return;
+            }
+
+            const response = await octokit.rest.actions.listJobsForWorkflowRun({
+              owner,
+              repo,
+              run_id: context.runId,
+            });
+            if (response.data.jobs.length !== 1) {
+              info(
+                `Workflow doesn't have exactly 1 job ${response.data.jobs.length}`
+              );
+              return;
+            }
+
+            const job = response.data.jobs[0];
+            info(`Job:`);
+            info(`  Job id: ${job.id} (${job.html_url})`);
+            info(`  Job name: ${job.name}`);
+            info(`Head SHA: ${github.head_sha});
+            return await octokit.rest.checks.create({
+              ...context.repo,
+              head_sha: github.head_sha,
+              name: job.name
+              details_url: job.details_url,
+              status: "in_progress",
+            });
+
       - uses: actions/checkout@v3
         if: ${{ github.event_name != 'workflow_run' }}
 
@@ -54,11 +94,12 @@ jobs:
           push-if-not-clean: true
           github-token: ${{ secrets.CHECK_GIT_STATUS_ACTION_TOKEN }}
 
-      - name: Dependabot check update
+      - name: Update check run
         if: ${{ always() }}
         uses: actions/github-script@v6.2.0
         env:
           CHECK_GIT_STATUS_OUTCOME: ${{ steps.check-git-status.outcome }}
+          CHECK_RUN_JSON: ${{ steps.create-check-run.outputs.result }}
         with:
           script: |
             const { info } = core;
@@ -69,28 +110,11 @@ jobs:
               return;
             }
 
-            const checkSuiteId = context.payload.workflow_run.check_suite_id;
-            if (!checkSuiteId) {
-              return;
-            }
-            info(`Check suite id: ${checkSuiteId}`);
-
-            const response = await octokit.rest.checks.listForSuite({
-              ...context.repo,
-              check_suite_id: checkSuiteId,
-            });
-            if (response.data.check_runs.length !== 1) {
-              info(
-                `Check suite doesn't have exactly 1 check run: ${response.data.check_runs.length}`
-              );
-              return;
-            }
-
-            const checkRun = response.data.check_runs[0];
+            const checkRun = JSON.parse(process.env.CHECK_RUN_JSON);
             info(`Check run id: ${checkRun.id}`);
             await octokit.rest.checks.update({
               ...context.repo,
               check_run_id: checkRun.id,
+              status: "completed",
               conclusion: process.env.CHECK_GIT_STATUS_OUTCOME,
-              details_url: checkRun.details_url,
             });
