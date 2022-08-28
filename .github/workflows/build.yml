@@ -55,17 +55,20 @@ jobs:
           github-token: ${{ secrets.CHECK_GIT_STATUS_ACTION_TOKEN }}
 
       - name: Dependabot Check
-        if: ${{ github.event_name == 'workflow_run' }}
+        if: ${{ always() }}
         uses: actions/github-script@v6.2.0
         env:
-          STATUS: steps.check-git-status.outputs.status
+          CHECK_GIT_STATUS_OUTCOME: steps.check-git-status.outcome
         with:
           script: |
+            if (context.eventName !== 'workflow_run') {
+              return;
+            }
             await github.rest.checks.create({
               ...context.repo,
               name: "Build",
               head_sha: context.payload.workflow_run.head_sha,
-              conclusion: process.env.STATUS === 'clean' ? 'success' : 'failure',
+              conclusion: process.env.CHECK_GIT_STATUS_OUTCOME,
               output: {
                 title: '',
                 summary: '',
