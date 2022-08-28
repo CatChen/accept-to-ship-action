@@ -48,7 +48,27 @@ jobs:
         run: yarn package
 
       - uses: CatChen/check-git-status-action@v1
+        id: check-git-status
         with:
           fail-if-not-clean: ${{ github.actor != 'dependabot[bot]' }}
           push-if-not-clean: true
           github-token: ${{ secrets.CHECK_GIT_STATUS_ACTION_TOKEN }}
+
+      - name: Dependabot Check
+        if: ${{ github.event_name == 'workflow_run' }}
+        uses: actions/github-script@v6.2.0
+        env:
+          STATUS: steps.check-git-status.outputs.status
+        with:
+          script: |
+            await github.rest.checks.create({
+              ...context.repo,
+              name: "Build",
+              head_sha: context.payload.workflow_run.head_sha,
+              conclusion: process.env.STATUS === 'clean' ? 'success' : 'failure',
+              output: {
+                title: null,
+                summary: null,
+                text: null,
+              },
+            })
