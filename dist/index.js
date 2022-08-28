@@ -11556,7 +11556,6 @@ const COMPLETED = "completed";
 const SUCCESS = "success";
 const NEUTRAL = "neutral";
 const SKIPPED = "skipped";
-const SLEEP_INTERVAL = 10 * 1000; // 10 seconds
 const LOCALE = Intl.NumberFormat().resolvedOptions().locale;
 const FORMATTER = new Intl.NumberFormat(LOCALE, {
     style: "unit",
@@ -11643,6 +11642,7 @@ function run() {
         }
         const job = github_1.context.job;
         const timeout = parseInt((0, core_1.getInput)("timeout"), 10);
+        const interval = parseInt((0, core_1.getInput)("checks-watch-interval"), 10);
         (0, core_1.info)(`Current job: ${job}`);
         let checksCompleted = false;
         while (!checksCompleted) {
@@ -11670,12 +11670,12 @@ function run() {
                 const executionTime = Math.round(node_perf_hooks_1.performance.now() / 1000);
                 if (executionTime <= timeout) {
                     (0, core_1.info)(`Execution time: ${FORMATTER.format(executionTime)}`);
-                    (0, core_1.info)(`Sleeping: ${SLEEP_INTERVAL}`);
-                    yield (0, sleep_1.sleep)(SLEEP_INTERVAL);
+                    (0, core_1.info)(`Sleeping: ${FORMATTER.format(interval)}`);
+                    yield (0, sleep_1.sleep)(interval * 1000);
                 }
                 else {
                     (0, core_1.error)(`Execution time: ${FORMATTER.format(executionTime)}`);
-                    (0, core_1.setFailed)(`Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(SLEEP_INTERVAL / 1000)}`);
+                    (0, core_1.setFailed)(`Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(timeout)}`);
                     return;
                 }
             }
