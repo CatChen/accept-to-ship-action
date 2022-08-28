@@ -144,7 +144,7 @@ async function run(): Promise<void> {
     info(`Last review by user:`);
     for (const user of reviewRequests.users) {
       info(
-        `  ${user.login}: ${lastReviewPerUserId[user.id].state ?? "none"} (${
+        `  ${user.login}: ${lastReviewPerUserId[user.id]?.state ?? "none"} (${
           lastReviewPerUserId[user.id].html_url
         })`
       );
