@@ -61,17 +61,35 @@ jobs:
           CHECK_GIT_STATUS_OUTCOME: ${{ steps.check-git-status.outcome }}
         with:
           script: |
-            if (context.eventName !== 'workflow_run') {
+            const { info } = core;
+            const octokit = github;
+
+            if (context.eventName !== "workflow_run") {
+              info(`Event isn't workflow_run: ${context.eventName}`);
               return;
             }
-            await github.rest.checks.create({
+
+            const checkSuiteId = context.payload.workflow_run.check_suite_id;
+            if (!checkSuiteId) {
+              return;
+            }
+            info(`Check suite id: ${checkSuiteId}`);
+
+            const response = await octokit.rest.checks.listForSuite({
               ...context.repo,
-              name: "Build",
-              head_sha: context.payload.workflow_run.head_sha,
+              check_suite_id: checkSuiteId,
+            });
+            if (response.data.check_runs.length !== 1) {
+              info(
+                `Check suite doesn't have exactly 1 check run: ${response.data.check_runs.length}`
+              );
+              return;
+            }
+
+            const checkRun = response.data.check_runs[0];
+            info(`Check run id: ${checkRun}`);
+            await octokit.rest.checks.update({
+              ...context.repo,
+              check_run_id: response.data.check_runs[0].id,
               conclusion: process.env.CHECK_GIT_STATUS_OUTCOME,
-              output: {
-                title: '',
-                summary: '',
-                text: '',
-              },
-            })
+            });
