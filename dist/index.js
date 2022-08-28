@@ -11565,6 +11565,8 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
 function run() {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     return __awaiter(this, void 0, void 0, function* () {
+        (0, core_1.info)(`Current Workflow: ${github_1.context.workflow}`);
+        (0, core_1.info)(`Current job: ${github_1.context.job}`);
         const octokit = (0, getOcktokit_1.getOctokit)();
         const owner = github_1.context.repo.owner;
         const repo = github_1.context.repo.repo;
@@ -11642,10 +11644,8 @@ function run() {
         if (!approved) {
             return;
         }
-        const job = github_1.context.job;
         const timeout = parseInt((0, core_1.getInput)("timeout"), 10);
         const interval = parseInt((0, core_1.getInput)("checks-watch-interval"), 10);
-        (0, core_1.info)(`Current job: ${job}`);
         let checksCompleted = false;
         while (!checksCompleted) {
             const checkRuns = yield (0, getCheckRuns_1.getCheckRuns)(owner, repo, pullRequest.head.sha, octokit);

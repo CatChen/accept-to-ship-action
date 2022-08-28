@@ -27,6 +27,9 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
 });
 
 async function run(): Promise<void> {
+  info(`Current Workflow: ${context.workflow}`);
+  info(`Current job: ${context.job}`);
+
   const octokit = getOctokit();
   const owner = context.repo.owner;
   const repo = context.repo.repo;
@@ -160,10 +163,8 @@ async function run(): Promise<void> {
     return;
   }
 
-  const job = context.job;
   const timeout = parseInt(getInput("timeout"), 10);
   const interval = parseInt(getInput("checks-watch-interval"), 10);
-  info(`Current job: ${job}`);
   let checksCompleted = false;
   while (!checksCompleted) {
     const checkRuns = await getCheckRuns(
