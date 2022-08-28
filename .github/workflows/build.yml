@@ -129,5 +129,5 @@ jobs:
             await octokit.rest.checks.update({
               ...context.repo,
               check_run_id: checkRun.id,
-              conclusion: process.env.CHECK_GIT_STATUS_OUTCOME,
+              conclusion: 'failure',
             });
