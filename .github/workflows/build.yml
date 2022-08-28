@@ -87,9 +87,9 @@ jobs:
             }
 
             const checkRun = response.data.check_runs[0];
-            info(`Check run id: ${checkRun}`);
+            info(`Check run id: ${checkRun.id}`);
             await octokit.rest.checks.update({
               ...context.repo,
-              check_run_id: response.data.check_runs[0].id,
+              check_run_id: checkRun.id,
               conclusion: process.env.CHECK_GIT_STATUS_OUTCOME,
             });
