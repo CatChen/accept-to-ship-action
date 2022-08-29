@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
     branches: [main, "[0-9]+-[0-9]+-*"]
+  pull_request_review:
+    types: [submitted, edited]
   workflow_run:
     workflows: ["Debug for Dependabot", "Accept to Ship"]
     types:
