@@ -11622,6 +11622,12 @@ function run() {
                     }
                 })();
                 break;
+            case "check_run":
+                (0, core_1.error)(`Unimplemented GitHub Action event: ${github_1.context.eventName}`);
+                return;
+            case "check_suite":
+                (0, core_1.error)(`Unimplemented GitHub Action event: ${github_1.context.eventName}`);
+                return;
             case "workflow_dispatch":
                 (0, core_1.error)(`Unimplemented GitHub Action event: ${github_1.context.eventName}`);
                 return;
