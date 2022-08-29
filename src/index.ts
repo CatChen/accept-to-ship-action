@@ -240,12 +240,11 @@ async function run(): Promise<void> {
     } else {
       info(`Incomplete checks: ${incompleteChecks.length}`);
       const executionTime = Math.round(performance.now() / 1000);
+      info(`Execution time: ${FORMATTER.format(executionTime)}`);
       if (executionTime <= timeout) {
-        info(`Execution time: ${FORMATTER.format(executionTime)}`);
         info(`Sleeping: ${FORMATTER.format(interval)}\n`);
         await sleep(interval * 1000);
       } else {
-        error(`Execution time: ${FORMATTER.format(executionTime)}`);
         if (failIfTimeout) {
           setFailed(
             `Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(
@@ -253,11 +252,13 @@ async function run(): Promise<void> {
             )}`
           );
         } else {
-          info(`Check run id: ${context.runId}`);
           info(`Check run conclusion: ${NEUTRAL}`);
           await Promise.all(
             jobIds.map((jobId) =>
-              updateCheckRun(owner, repo, jobId, NEUTRAL, octokit)
+              (async () => {
+                info(`  Check id: ${jobId}`);
+                return updateCheckRun(owner, repo, jobId, NEUTRAL, octokit);
+              })()
             )
           );
         }
