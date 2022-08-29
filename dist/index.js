@@ -11580,7 +11580,6 @@ const getPullRequestReviewRequests_1 = __nccwpck_require__(9685);
 const getPullRequestReviews_1 = __nccwpck_require__(2706);
 const getWorkflowRunJobs_1 = __nccwpck_require__(7833);
 const getCheckRuns_1 = __nccwpck_require__(3530);
-const updateCheckRun_1 = __nccwpck_require__(3687);
 const mergePullRequest_1 = __nccwpck_require__(8867);
 const sleep_1 = __nccwpck_require__(986);
 const node_perf_hooks_1 = __nccwpck_require__(8846);
@@ -11692,9 +11691,9 @@ function handePullRequest(pullRequestNumber) {
         const timeout = parseInt((0, core_1.getInput)("timeout"), 10);
         const interval = parseInt((0, core_1.getInput)("checks-watch-interval"), 10);
         const failIfTimeout = (0, core_1.getBooleanInput)("fail-if-timeout");
-        let checksCompleted = false;
+        let worthChecking = true;
         let externalId = undefined;
-        while (!checksCompleted) {
+        while (worthChecking) {
             const checkRuns = yield (0, getCheckRuns_1.getCheckRuns)(owner, repo, pullRequest.head.sha, octokit);
             (0, core_1.info)(`Checks:`);
             for (const checkRun of checkRuns) {
@@ -11702,46 +11701,34 @@ function handePullRequest(pullRequestNumber) {
                 (0, core_1.info)(`  Check name: ${checkRun.name}`);
                 (0, core_1.info)(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}\n\n`);
             }
+            const failedCheckes = checkRuns.filter((checkRun) => checkRun.status === COMPLETED &&
+                (checkRun.conclusion === null ||
+                    ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
+            if (failedCheckes.length > 0) {
+                (0, core_1.info)(`Failed checks: ${failedCheckes.length}`);
+                return;
+            }
             if (externalId === undefined || externalId === null) {
                 externalId = (_j = checkRuns.find((checkRun) => jobIds.includes(checkRun.id))) === null || _j === void 0 ? void 0 : _j.external_id;
             }
             const incompleteChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
                 checkRun.external_id !== externalId &&
                 checkRun.status !== COMPLETED);
-            checksCompleted = incompleteChecks.length === 0;
-            if (checksCompleted) {
-                const failedCheckes = checkRuns.filter((checkRun) => checkRun.status === COMPLETED &&
-                    (checkRun.conclusion === null ||
-                        ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
-                if (failedCheckes.length === 0) {
-                    break;
-                }
-                else {
-                    (0, core_1.info)(`Failed checks: ${failedCheckes.length}`);
-                    return;
-                }
-            }
-            else {
+            if (incompleteChecks.length > 0) {
                 (0, core_1.info)(`Incomplete checks: ${incompleteChecks.length}`);
                 const executionTime = Math.round(node_perf_hooks_1.performance.now() / 1000);
                 (0, core_1.info)(`Execution time: ${FORMATTER.format(executionTime)}`);
-                if (executionTime <= timeout) {
-                    (0, core_1.info)(`Sleeping: ${FORMATTER.format(interval)}\n`);
-                    yield (0, sleep_1.sleep)(interval * 1000);
-                }
-                else {
+                if (executionTime > timeout) {
                     if (failIfTimeout) {
                         (0, core_1.setFailed)(`Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(timeout)}`);
                     }
-                    else {
-                        (0, core_1.info)(`Check run conclusion: ${NEUTRAL}`);
-                        yield Promise.all(jobIds.map((jobId) => (() => __awaiter(this, void 0, void 0, function* () {
-                            (0, core_1.info)(`  Check id: ${jobId}`);
-                            return (0, updateCheckRun_1.updateCheckRun)(owner, repo, jobId, NEUTRAL, octokit);
-                        }))()));
-                    }
                     return;
                 }
+                (0, core_1.info)(`Sleeping: ${FORMATTER.format(interval)}\n`);
+                yield (0, sleep_1.sleep)(interval * 1000);
+            }
+            else {
+                worthChecking = false;
             }
         }
         const mergedAfterValidations = yield (0, mergePullRequest_1.checkIfPullRequestMerged)(owner, repo, pullRequestNumber, octokit);
@@ -11907,36 +11894,6 @@ function sleep(ms) {
     });
 }
 exports.sleep = sleep;
-
-
-/***/ }),
-
-/***/ 3687:
-/***/ (function(__unused_webpack_module, exports) {
-
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updateCheckRun = void 0;
-function updateCheckRun(owner, repo, runId, conclusion, octokit) {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield octokit.rest.checks.update({
-            owner,
-            repo,
-            check_run_id: runId,
-            conclusion,
-        });
-    });
-}
-exports.updateCheckRun = updateCheckRun;
 
 
 /***/ }),
