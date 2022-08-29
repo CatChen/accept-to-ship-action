@@ -6,7 +6,10 @@ import {
   getInput,
   getBooleanInput,
 } from "@actions/core";
-import { PullRequest } from "@octokit/webhooks-definitions/schema";
+import {
+  PullRequest,
+  WorkflowRunEvent,
+} from "@octokit/webhooks-definitions/schema";
 import { getOctokit } from "./getOcktokit";
 import { getMergeMethod } from "./getMergeMethod";
 import { getPullRequest } from "./getPullRequest";
@@ -38,6 +41,44 @@ async function run(): Promise<void> {
   const octokit = getOctokit();
   const owner = context.repo.owner;
   const repo = context.repo.repo;
+
+  switch (context.eventName) {
+    case "pull_request":
+    case "pull_request_review":
+      break;
+    case "workflow_run":
+      (() => {
+        const workflowRun = context.payload as WorkflowRunEvent;
+        switch (workflowRun.workflow_run.event) {
+          case "pull_request":
+            workflowRun.workflow_run.pull_requests;
+            error(`Unimplemented GitHub Action event: ${context.eventName}`);
+            return;
+          case "push":
+            error(`Unimplemented GitHub Action event: ${context.eventName}`);
+            return;
+          default:
+            error(
+              `Unsupported GitHub Action event: ${workflowRun.workflow_run.event}`
+            );
+            return;
+        }
+      })();
+      break;
+    case "check_run":
+      error(`Unimplemented GitHub Action event: ${context.eventName}`);
+      return;
+    case "check_suite":
+      error(`Unimplemented GitHub Action event: ${context.eventName}`);
+      return;
+    case "workflow_dispatch":
+      error(`Unimplemented GitHub Action event: ${context.eventName}`);
+      return;
+    default:
+      error(`Unsupported GitHub Action event: ${context.eventName}`);
+      return;
+  }
+
   const pullRequestNumber = (context.payload.pull_request as PullRequest)
     .number;
 
