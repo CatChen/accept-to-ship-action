@@ -267,12 +267,12 @@ async function run(): Promise<void> {
     }
   }
 
-  info(`Check run conclusion: ${SKIPPED}`);
+  info(`Check run conclusion: ${"timed_out"}`);
   await Promise.all(
     jobIds.map((jobId) =>
       (async () => {
         info(`  Check id: ${jobId}`);
-        return updateCheckRun(owner, repo, jobId, SKIPPED, octokit);
+        return updateCheckRun(owner, repo, jobId, "timed_out", octokit);
       })()
     )
   );
