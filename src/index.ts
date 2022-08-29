@@ -267,16 +267,6 @@ async function run(): Promise<void> {
     }
   }
 
-  info(`Check run conclusion: ${NEUTRAL}`);
-  await Promise.all(
-    jobIds.map((jobId) =>
-      (async () => {
-        info(`  Check id: ${jobId}`);
-        return updateCheckRun(owner, repo, jobId, NEUTRAL, octokit);
-      })()
-    )
-  );
-
   const mergedAfterValidations = await checkIfPullRequestMerged(
     owner,
     repo,
@@ -291,6 +281,16 @@ async function run(): Promise<void> {
   const mergeMethod = getMergeMethod();
   info(`Merging with merge method: ${mergeMethod}`);
   await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
+
+  info(`Check run conclusion: ${NEUTRAL}`);
+  await Promise.all(
+    jobIds.map((jobId) =>
+      (async () => {
+        info(`  Check id: ${jobId}`);
+        return updateCheckRun(owner, repo, jobId, NEUTRAL, octokit);
+      })()
+    )
+  );
 }
 
 run();
