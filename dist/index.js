@@ -11684,6 +11684,7 @@ function run() {
         const jobIds = jobs.map((job) => job.id);
         const timeout = parseInt((0, core_1.getInput)("timeout"), 10);
         const interval = parseInt((0, core_1.getInput)("checks-watch-interval"), 10);
+        const failIfTimeout = (0, core_1.getBooleanInput)("fail-if-timeout");
         let checksCompleted = false;
         let externalId = undefined;
         while (!checksCompleted) {
@@ -11723,7 +11724,9 @@ function run() {
                 }
                 else {
                     (0, core_1.error)(`Execution time: ${FORMATTER.format(executionTime)}`);
-                    (0, core_1.setFailed)(`Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(timeout)}`);
+                    if (failIfTimeout) {
+                        (0, core_1.setFailed)(`Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(timeout)}`);
+                    }
                     return;
                 }
             }

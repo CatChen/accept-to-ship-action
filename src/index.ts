@@ -1,5 +1,11 @@
 import { context } from "@actions/github";
-import { info, error, setFailed, getInput } from "@actions/core";
+import {
+  info,
+  error,
+  setFailed,
+  getInput,
+  getBooleanInput,
+} from "@actions/core";
 import { PullRequest } from "@octokit/webhooks-definitions/schema";
 import { getOctokit } from "./getOcktokit";
 import { getMergeMethod } from "./getMergeMethod";
@@ -172,6 +178,7 @@ async function run(): Promise<void> {
 
   const timeout = parseInt(getInput("timeout"), 10);
   const interval = parseInt(getInput("checks-watch-interval"), 10);
+  const failIfTimeout = getBooleanInput("fail-if-timeout");
   let checksCompleted = false;
   let externalId: string | undefined | null = undefined;
   while (!checksCompleted) {
@@ -226,11 +233,13 @@ async function run(): Promise<void> {
         await sleep(interval * 1000);
       } else {
         error(`Execution time: ${FORMATTER.format(executionTime)}`);
-        setFailed(
-          `Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(
-            timeout
-          )}`
-        );
+        if (failIfTimeout) {
+          setFailed(
+            `Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(
+              timeout
+            )}`
+          );
+        }
         return;
       }
     }
