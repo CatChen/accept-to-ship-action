@@ -196,9 +196,9 @@ async function handePullRequest(pullRequestNumber: number) {
   const timeout = parseInt(getInput("timeout"), 10);
   const interval = parseInt(getInput("checks-watch-interval"), 10);
   const failIfTimeout = getBooleanInput("fail-if-timeout");
-  let checksCompleted = false;
+  let worthChecking = true;
   let externalId: string | undefined | null = undefined;
-  while (!checksCompleted) {
+  while (worthChecking) {
     const checkRuns = await getCheckRuns(
       owner,
       repo,
@@ -215,6 +215,18 @@ async function handePullRequest(pullRequestNumber: number) {
         }\n\n`
       );
     }
+
+    const failedCheckes = checkRuns.filter(
+      (checkRun) =>
+        checkRun.status === COMPLETED &&
+        (checkRun.conclusion === null ||
+          ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion))
+    );
+    if (failedCheckes.length > 0) {
+      info(`Failed checks: ${failedCheckes.length}`);
+      return;
+    }
+
     if (externalId === undefined || externalId === null) {
       externalId = checkRuns.find((checkRun) =>
         jobIds.includes(checkRun.id)
@@ -226,48 +238,26 @@ async function handePullRequest(pullRequestNumber: number) {
         checkRun.external_id !== externalId &&
         checkRun.status !== COMPLETED
     );
-    checksCompleted = incompleteChecks.length === 0;
-    if (checksCompleted) {
-      const failedCheckes = checkRuns.filter(
-        (checkRun) =>
-          checkRun.status === COMPLETED &&
-          (checkRun.conclusion === null ||
-            ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion))
-      );
-
-      if (failedCheckes.length === 0) {
-        break;
-      } else {
-        info(`Failed checks: ${failedCheckes.length}`);
-        return;
-      }
-    } else {
+    if (incompleteChecks.length > 0) {
       info(`Incomplete checks: ${incompleteChecks.length}`);
       const executionTime = Math.round(performance.now() / 1000);
       info(`Execution time: ${FORMATTER.format(executionTime)}`);
-      if (executionTime <= timeout) {
-        info(`Sleeping: ${FORMATTER.format(interval)}\n`);
-        await sleep(interval * 1000);
-      } else {
+
+      if (executionTime > timeout) {
         if (failIfTimeout) {
           setFailed(
             `Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(
               timeout
             )}`
           );
-        } else {
-          info(`Check run conclusion: ${NEUTRAL}`);
-          await Promise.all(
-            jobIds.map((jobId) =>
-              (async () => {
-                info(`  Check id: ${jobId}`);
-                return updateCheckRun(owner, repo, jobId, NEUTRAL, octokit);
-              })()
-            )
-          );
         }
         return;
       }
+
+      info(`Sleeping: ${FORMATTER.format(interval)}\n`);
+      await sleep(interval * 1000);
+    } else {
+      worthChecking = false;
     }
   }
 
