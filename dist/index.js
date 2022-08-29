@@ -11746,6 +11746,11 @@ function run() {
                 }
             }
         }
+        (0, core_1.info)(`Check run conclusion: ${NEUTRAL}`);
+        yield Promise.all(jobIds.map((jobId) => (() => __awaiter(this, void 0, void 0, function* () {
+            (0, core_1.info)(`  Check id: ${jobId}`);
+            return (0, updateCheckRun_1.updateCheckRun)(owner, repo, jobId, NEUTRAL, octokit);
+        }))()));
         const mergedAfterValidations = yield (0, mergePullRequest_1.checkIfPullRequestMerged)(owner, repo, pullRequestNumber, octokit);
         if (mergedAfterValidations) {
             (0, core_1.error)(`This Pull Request has been merged already.`);

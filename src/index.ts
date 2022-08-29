@@ -267,6 +267,16 @@ async function run(): Promise<void> {
     }
   }
 
+  info(`Check run conclusion: ${NEUTRAL}`);
+  await Promise.all(
+    jobIds.map((jobId) =>
+      (async () => {
+        info(`  Check id: ${jobId}`);
+        return updateCheckRun(owner, repo, jobId, NEUTRAL, octokit);
+      })()
+    )
+  );
+
   const mergedAfterValidations = await checkIfPullRequestMerged(
     owner,
     repo,
