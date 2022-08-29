@@ -282,12 +282,12 @@ async function run(): Promise<void> {
   info(`Merging with merge method: ${mergeMethod}`);
   await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
 
-  info(`Check run conclusion: ${"cancelled"}`);
+  info(`Check run conclusion: ${SUCCESS}`);
   await Promise.all(
     jobIds.map((jobId) =>
       (async () => {
         info(`  Check id: ${jobId}`);
-        return updateCheckRun(owner, repo, jobId, "cancelled", octokit);
+        return updateCheckRun(owner, repo, jobId, SUCCESS, octokit);
       })()
     )
   );
