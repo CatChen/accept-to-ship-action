@@ -5,6 +5,13 @@ on:
     types: [synchronize]
   pull_request_review:
     types: [submitted, edited]
+  check_run:
+    types: [completed]
+  check_suite:
+    types: [completed]
+  workflow_run:
+    workflows: ["Build", "Test", "ESLint", "CodeQL"]
+    types: [completed]
 
 jobs:
   ship:
@@ -17,3 +24,4 @@ jobs:
       - uses: ./
         with:
           merge-method: squash
+          timeout: 0
