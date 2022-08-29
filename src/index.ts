@@ -267,12 +267,12 @@ async function run(): Promise<void> {
     }
   }
 
-  info(`Check run conclusion: ${NEUTRAL}`);
+  info(`Check run conclusion: ${SKIPPED}`);
   await Promise.all(
     jobIds.map((jobId) =>
       (async () => {
         info(`  Check id: ${jobId}`);
-        return updateCheckRun(owner, repo, jobId, NEUTRAL, octokit);
+        return updateCheckRun(owner, repo, jobId, SKIPPED, octokit);
       })()
     )
   );
