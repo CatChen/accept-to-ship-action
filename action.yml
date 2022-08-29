@@ -17,6 +17,10 @@ inputs:
     description: "Refresh interval in seconds when using waiting for checks."
     required: false
     default: 10
+  fail-if-timeout:
+    description: "Fail the workflow if tiemout."
+    required: false
+    default: false
 runs:
   using: "node16"
   main: "dist/index.js"
