@@ -32,6 +32,9 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }} # optional
           merge-method: merge # optional
+          timeout: 600 # optional
+          checks-watch-interval: 10 # optional
+          fail-if-timeout: false # optinal
 ```
 
 ## Options
@@ -43,6 +46,18 @@ The default value is `${{ github.token }}`, which is the GitHub token generated 
 ### `merge-method`
 
 The merge method to use when this Action is triggered. Possible values are `merge`, `squash` or `rebase`. The default value is `merge`.
+
+### `timeout`
+
+How much time to wait for checks before giving up. This needs to be an integer in seconds. The default value is `600` (10 minutes).
+
+### `checks-watch-interval`
+
+How much time to wait before refreshing the checks again before they are completed. This needs to be an integer in seconds. The default value is `10` seconds.
+
+### `fail-if-timeout`
+
+When this option is set to `true` this Action will fail if its execution time (including the time waiting for checks) exceeds the value set in `timeout`.
 
 ## FAQ
 
