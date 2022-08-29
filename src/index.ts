@@ -15,6 +15,7 @@ import { getPullRequestReviewRequests } from "./getPullRequestReviewRequests";
 import { getPullRequestReviews } from "./getPullRequestReviews";
 import { getWorkflowRunJobs } from "./getWorkflowRunJobs";
 import { getCheckRuns } from "./getCheckRuns";
+import { updateCheckRun } from "./updateCheckRun";
 import { checkIfPullRequestMerged, mergePullRequest } from "./mergePullRequest";
 import { sleep } from "./sleep";
 import { components } from "@octokit/openapi-types/types";
@@ -239,6 +240,10 @@ async function run(): Promise<void> {
               timeout
             )}`
           );
+        } else {
+          info(`Check run id: ${context.runId}`);
+          info(`Check run conclusion: ${NEUTRAL}`);
+          await updateCheckRun(owner, repo, context.runId, NEUTRAL, octokit);
         }
         return;
       }
