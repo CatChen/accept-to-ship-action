@@ -11681,6 +11681,14 @@ function run() {
             (0, core_1.info)(`  Job id: ${job.id} (${job.html_url})`);
             (0, core_1.info)(`  Job name: ${job.name}`);
             (0, core_1.info)(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}\n\n`);
+            if (job.steps !== undefined) {
+                (0, core_1.info)(`  Job steps: ${job.steps.length}`);
+                for (const step of job.steps) {
+                    (0, core_1.info)(`    Step number: ${step.number}`);
+                    (0, core_1.info)(`    Step name: ${step.name}`);
+                    (0, core_1.info)(`    Step status/conclusion: ${step.status === COMPLETED ? step.conclusion : step.status}\n`);
+                }
+            }
         }
         const jobIds = jobs.map((job) => job.id);
         const timeout = parseInt((0, core_1.getInput)("timeout"), 10);
@@ -11731,7 +11739,7 @@ function run() {
                     else {
                         (0, core_1.info)(`Check run id: ${github_1.context.runId}`);
                         (0, core_1.info)(`Check run conclusion: ${NEUTRAL}`);
-                        yield (0, updateCheckRun_1.updateCheckRun)(owner, repo, github_1.context.runId, NEUTRAL, octokit);
+                        yield Promise.all(jobIds.map((jobId) => (0, updateCheckRun_1.updateCheckRun)(owner, repo, jobId, NEUTRAL, octokit)));
                     }
                     return;
                 }

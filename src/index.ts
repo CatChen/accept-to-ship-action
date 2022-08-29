@@ -174,6 +174,18 @@ async function run(): Promise<void> {
     info(`  Job id: ${job.id} (${job.html_url})`);
     info(`  Job name: ${job.name}`);
     info(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}\n\n`);
+    if (job.steps !== undefined) {
+      info(`  Job steps: ${job.steps.length}`);
+      for (const step of job.steps) {
+        info(`    Step number: ${step.number}`);
+        info(`    Step name: ${step.name}`);
+        info(
+          `    Step status/conclusion: ${
+            step.status === COMPLETED ? step.conclusion : step.status
+          }\n`
+        );
+      }
+    }
   }
   const jobIds = jobs.map((job) => job.id);
 
@@ -243,7 +255,11 @@ async function run(): Promise<void> {
         } else {
           info(`Check run id: ${context.runId}`);
           info(`Check run conclusion: ${NEUTRAL}`);
-          await updateCheckRun(owner, repo, context.runId, NEUTRAL, octokit);
+          await Promise.all(
+            jobIds.map((jobId) =>
+              updateCheckRun(owner, repo, jobId, NEUTRAL, octokit)
+            )
+          );
         }
         return;
       }
