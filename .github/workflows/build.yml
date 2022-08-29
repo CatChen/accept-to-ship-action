@@ -25,46 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
-      - name: Create check run
-        id: create-check-run
-        uses: actions/github-script@v6.2.0
-        env:
-          CHECK_GIT_STATUS_OUTCOME: ${{ steps.check-git-status.outcome }}
-        with:
-          script: |
-            const { info } = core;
-            const octokit = github;
-
-            if (context.eventName !== "workflow_run") {
-              info(`Event isn't workflow_run: ${context.eventName}`);
-              return;
-            }
-
-            const listJobsForWorkflowRunResponse = await octokit.rest.actions.listJobsForWorkflowRun({
-              ...context.repo,
-              run_id: context.runId,
-            });
-            if (listJobsForWorkflowRunResponse.data.jobs.length !== 1) {
-              info(
-                `Workflow doesn't have exactly 1 job ${listJobsForWorkflowRunResponse.data.jobs.length}`
-              );
-              return;
-            }
-
-            const job = listJobsForWorkflowRunResponse.data.jobs[0];
-            info(`Job:`);
-            info(`  Job id: ${job.id} (${job.html_url})`);
-            info(`  Job name: ${job.name}`);
-            info(`Head SHA: ${context.payload.workflow_run.head_sha}`);
-            const checksCreateResponse = await octokit.rest.checks.create({
-              ...context.repo,
-              head_sha: context.payload.workflow_run.head_sha,
-              name: job.name,
-              details_url: job.html_url,
-              status: "in_progress",
-            });
-            return checksCreateResponse.data;
-
       - uses: actions/checkout@v3
         if: ${{ github.event_name != 'workflow_run' }}
 
@@ -93,28 +53,3 @@ jobs:
           fail-if-not-clean: ${{ github.actor != 'dependabot[bot]' }}
           push-if-not-clean: true
           github-token: ${{ secrets.CHECK_GIT_STATUS_ACTION_TOKEN }}
-
-      - name: Update check run
-        if: ${{ always() }}
-        uses: actions/github-script@v6.2.0
-        env:
-          CHECK_GIT_STATUS_OUTCOME: ${{ steps.check-git-status.outcome }}
-          CHECK_RUN_JSON: ${{ steps.create-check-run.outputs.result }}
-        with:
-          script: |
-            const { info } = core;
-            const octokit = github;
-
-            if (context.eventName !== "workflow_run") {
-              info(`Event isn't workflow_run: ${context.eventName}`);
-              return;
-            }
-
-            const checkRun = JSON.parse(process.env.CHECK_RUN_JSON);
-            info(`Check run id: ${checkRun.id}`);
-            await octokit.rest.checks.update({
-              ...context.repo,
-              check_run_id: checkRun.id,
-              status: "completed",
-              conclusion: process.env.CHECK_GIT_STATUS_OUTCOME,
-            });
