@@ -1,7 +1,6 @@
 import { Octokit } from "@octokit/core";
 import { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
 import { components } from "@octokit/openapi-types/types";
-import { context } from "@actions/github";
 
 export async function getCheckRuns(
   owner: string,
