@@ -7,7 +7,10 @@ import {
   getBooleanInput,
 } from "@actions/core";
 import {
-  PullRequest,
+  CheckRunEvent,
+  CheckSuiteEvent,
+  PullRequestEvent,
+  PullRequestReviewEvent,
   WorkflowRunEvent,
 } from "@octokit/webhooks-definitions/schema";
 import { getOctokit } from "./getOcktokit";
@@ -37,50 +40,10 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
   unitDisplay: "long",
 });
 
-async function run(): Promise<void> {
+async function handePullRequest(pullRequestNumber: number) {
   const octokit = getOctokit();
   const owner = context.repo.owner;
   const repo = context.repo.repo;
-
-  switch (context.eventName) {
-    case "pull_request":
-    case "pull_request_review":
-      break;
-    case "workflow_run":
-      (() => {
-        const workflowRun = context.payload as WorkflowRunEvent;
-        switch (workflowRun.workflow_run.event) {
-          case "pull_request":
-            workflowRun.workflow_run.pull_requests;
-            error(`Unimplemented GitHub Action event: ${context.eventName}`);
-            return;
-          case "push":
-            error(`Unimplemented GitHub Action event: ${context.eventName}`);
-            return;
-          default:
-            error(
-              `Unsupported GitHub Action event: ${workflowRun.workflow_run.event}`
-            );
-            return;
-        }
-      })();
-      break;
-    case "check_run":
-      error(`Unimplemented GitHub Action event: ${context.eventName}`);
-      return;
-    case "check_suite":
-      error(`Unimplemented GitHub Action event: ${context.eventName}`);
-      return;
-    case "workflow_dispatch":
-      error(`Unimplemented GitHub Action event: ${context.eventName}`);
-      return;
-    default:
-      error(`Unsupported GitHub Action event: ${context.eventName}`);
-      return;
-  }
-
-  const pullRequestNumber = (context.payload.pull_request as PullRequest)
-    .number;
 
   const mergedBeforeValidations = await checkIfPullRequestMerged(
     owner,
@@ -322,6 +285,68 @@ async function run(): Promise<void> {
   const mergeMethod = getMergeMethod();
   info(`Merging with merge method: ${mergeMethod}`);
   await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
+}
+
+async function run(): Promise<void> {
+  switch (context.eventName) {
+    case "pull_request":
+      await (async () => {
+        const pullRequest = (context.payload as PullRequestEvent).pull_request;
+        await handePullRequest(pullRequest.number);
+      })();
+      break;
+    case "pull_request_review":
+      await (async () => {
+        const pullRequest = (context.payload as PullRequestReviewEvent)
+          .pull_request;
+        await handePullRequest(pullRequest.number);
+      })();
+      break;
+    case "check_run":
+      await (async () => {
+        const checkRun = (context.payload as CheckRunEvent).check_run;
+        await Promise.all(
+          checkRun.pull_requests.map((pullRequest) =>
+            handePullRequest(pullRequest.number)
+          )
+        );
+      })();
+      return;
+    case "check_suite":
+      await (async () => {
+        const checkSuites = (context.payload as CheckSuiteEvent).check_suite;
+        await Promise.all(
+          checkSuites.pull_requests.map((pullRequest) =>
+            handePullRequest(pullRequest.number)
+          )
+        );
+      })();
+      return;
+    case "workflow_run":
+      await (async () => {
+        const workflowRun = (context.payload as WorkflowRunEvent).workflow_run;
+        switch (workflowRun.event) {
+          case "pull_request":
+          case "push":
+            await Promise.all(
+              workflowRun.pull_requests.map((pullRequest) =>
+                handePullRequest(pullRequest.number)
+              )
+            );
+            return;
+          default:
+            error(
+              `Unimplemented GitHub Action event: ${context.eventName}/${workflowRun.event}`
+            );
+            return;
+        }
+      })();
+      break;
+    case "workflow_dispatch":
+    default:
+      error(`Unsupported GitHub Action event: ${context.eventName}`);
+      return;
+  }
 }
 
 run();
