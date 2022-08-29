@@ -11754,11 +11754,6 @@ function run() {
         const mergeMethod = (0, getMergeMethod_1.getMergeMethod)();
         (0, core_1.info)(`Merging with merge method: ${mergeMethod}`);
         yield (0, mergePullRequest_1.mergePullRequest)(owner, repo, pullRequestNumber, mergeMethod, octokit);
-        (0, core_1.info)(`Check run conclusion: ${SUCCESS}`);
-        yield Promise.all(jobIds.map((jobId) => (() => __awaiter(this, void 0, void 0, function* () {
-            (0, core_1.info)(`  Check id: ${jobId}`);
-            return (0, updateCheckRun_1.updateCheckRun)(owner, repo, jobId, SUCCESS, octokit);
-        }))()));
     });
 }
 run();
