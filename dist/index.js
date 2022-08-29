@@ -11580,6 +11580,7 @@ const getPullRequestReviewRequests_1 = __nccwpck_require__(9685);
 const getPullRequestReviews_1 = __nccwpck_require__(2706);
 const getWorkflowRunJobs_1 = __nccwpck_require__(7833);
 const getCheckRuns_1 = __nccwpck_require__(3530);
+const updateCheckRun_1 = __nccwpck_require__(3687);
 const mergePullRequest_1 = __nccwpck_require__(8867);
 const sleep_1 = __nccwpck_require__(986);
 const node_perf_hooks_1 = __nccwpck_require__(8846);
@@ -11727,6 +11728,11 @@ function run() {
                     if (failIfTimeout) {
                         (0, core_1.setFailed)(`Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(timeout)}`);
                     }
+                    else {
+                        (0, core_1.info)(`Check run id: ${github_1.context.runId}`);
+                        (0, core_1.info)(`Check run conclusion: ${NEUTRAL}`);
+                        yield (0, updateCheckRun_1.updateCheckRun)(owner, repo, github_1.context.runId, NEUTRAL, octokit);
+                    }
                     return;
                 }
             }
@@ -11830,6 +11836,36 @@ function sleep(ms) {
     });
 }
 exports.sleep = sleep;
+
+
+/***/ }),
+
+/***/ 3687:
+/***/ (function(__unused_webpack_module, exports) {
+
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateCheckRun = void 0;
+function updateCheckRun(owner, repo, runId, conclusion, octokit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield octokit.rest.checks.update({
+            owner,
+            repo,
+            check_run_id: runId,
+            conclusion,
+        });
+    });
+}
+exports.updateCheckRun = updateCheckRun;
 
 
 /***/ }),
