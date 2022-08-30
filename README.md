@@ -14,16 +14,34 @@ name: Accept to Ship
 
 on:
   pull_request:
-    types: [labeled, opened, edited, reopened, synchronize]
+    types:
+      [
+        labeled,
+        unlabeled,
+        edited,
+        closed,
+        reopened,
+        synchronize,
+        review_requested,
+        review_request_removed,
+      ]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
   check_run:
-    types: [completed]
+    type: [created, rerequested, completed]
   check_suite:
     types: [completed]
-  pull_request_review:
-    types: [submitted, edited]
+  workflow_run:
+    workflows: []
+    types: [completed]
+
+concurrency:
+  group: ${{ github.event.pull_request.number || github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   accept_to_ship:
+    name: Ship
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -77,4 +95,10 @@ If no reviewer is requested then any approval is enough.
 
 Yes. It waits for other checks. Other checks need to be completed and their conclusions have to be either "success", "neutral" or "skipped". (The options to configurate check requirements may be added in the future.)
 
-The check from the Workflow that runs this Action doesn't count. It will always be in progress without conclusion when this Action is running.
+The check from the Workflow that runs this Action doesn't count. It will always be in progress without conclusion when this Action is running. This Action ignores the Workflow instance that's running this Action and all instances of the same Workflow.
+
+### The successful completion of my other Workflow doesn't trigger this Workflow.
+
+> When you use the repository's `GITHUB_TOKEN` to perform tasks, events triggered by the `GITHUB_TOKEN` will not create a new workflow run. This prevents you from accidentally creating recursive workflow runs. -- [Source](https://docs.github.com/en/actions/security-guides/automatic-token-authentication)
+
+Please list your other Workflows in the `workflows` field under the `workflow_run` trigger. Put them into the empty bracket in the example from above. When they complete they will trigger this Action.
