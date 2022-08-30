@@ -28,6 +28,7 @@ import { components } from "@octokit/openapi-types/types";
 import { performance } from "node:perf_hooks";
 
 const APPROVED = "APPROVED";
+const CHANGES_REQUESTED = "CHANGES_REQUESTED";
 const COMPLETED = "completed";
 const SUCCESS = "success";
 const NEUTRAL = "neutral";
@@ -130,15 +131,20 @@ async function handePullRequest(pullRequestNumber: number) {
     octokit
   );
 
+  const acceptZeroApprovals = getBooleanInput("request-zero-accept-zero");
   let approved = false;
   const reviewsSortedByDescendingTime = reviews.sort(
     (x, y) =>
       Date.parse(y.submitted_at ?? "") - Date.parse(x.submitted_at ?? "")
   );
   if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
-    const lastReview = reviewsSortedByDescendingTime[0];
-    info(`Last review state: ${lastReview?.state ?? "none"}`);
-    approved = lastReview?.state === APPROVED;
+    if (acceptZeroApprovals) {
+      approved = reviews.every((review) => review.state !== CHANGES_REQUESTED);
+    } else {
+      const lastReview = reviewsSortedByDescendingTime[0];
+      info(`Last review state: ${lastReview?.state ?? "none"}`);
+      approved = lastReview?.state === APPROVED;
+    }
   } else {
     const reviewUserIds = reviewRequests.users.map((user) => user.id);
     const lastReviewPerUserId = reviewsSortedByDescendingTime.reduce(
