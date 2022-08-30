@@ -11773,18 +11773,33 @@ function run() {
             case "check_run":
                 yield (() => __awaiter(this, void 0, void 0, function* () {
                     const checkRun = github_1.context.payload.check_run;
+                    if (checkRun.status !== COMPLETED ||
+                        checkRun.conclusion === null ||
+                        ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)) {
+                        return;
+                    }
                     yield Promise.all(checkRun.pull_requests.map((pullRequest) => handePullRequest(pullRequest.number)));
                 }))();
                 return;
             case "check_suite":
                 yield (() => __awaiter(this, void 0, void 0, function* () {
                     const checkSuites = github_1.context.payload.check_suite;
+                    if (checkSuites.status !== COMPLETED ||
+                        checkSuites.conclusion === null ||
+                        ![SUCCESS, NEUTRAL, SKIPPED].includes(checkSuites.conclusion)) {
+                        return;
+                    }
                     yield Promise.all(checkSuites.pull_requests.map((pullRequest) => handePullRequest(pullRequest.number)));
                 }))();
                 return;
             case "workflow_run":
                 yield (() => __awaiter(this, void 0, void 0, function* () {
                     const workflowRun = github_1.context.payload.workflow_run;
+                    if (workflowRun.status !== COMPLETED ||
+                        workflowRun.conclusion === null ||
+                        ![SUCCESS, NEUTRAL, SKIPPED].includes(workflowRun.conclusion)) {
+                        return;
+                    }
                     switch (workflowRun.event) {
                         case "pull_request":
                         case "push":

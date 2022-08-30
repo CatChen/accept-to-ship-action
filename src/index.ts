@@ -305,6 +305,13 @@ async function run(): Promise<void> {
     case "check_run":
       await (async () => {
         const checkRun = (context.payload as CheckRunEvent).check_run;
+        if (
+          checkRun.status !== COMPLETED ||
+          checkRun.conclusion === null ||
+          ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)
+        ) {
+          return;
+        }
         await Promise.all(
           checkRun.pull_requests.map((pullRequest) =>
             handePullRequest(pullRequest.number)
@@ -315,6 +322,13 @@ async function run(): Promise<void> {
     case "check_suite":
       await (async () => {
         const checkSuites = (context.payload as CheckSuiteEvent).check_suite;
+        if (
+          checkSuites.status !== COMPLETED ||
+          checkSuites.conclusion === null ||
+          ![SUCCESS, NEUTRAL, SKIPPED].includes(checkSuites.conclusion)
+        ) {
+          return;
+        }
         await Promise.all(
           checkSuites.pull_requests.map((pullRequest) =>
             handePullRequest(pullRequest.number)
@@ -325,6 +339,13 @@ async function run(): Promise<void> {
     case "workflow_run":
       await (async () => {
         const workflowRun = (context.payload as WorkflowRunEvent).workflow_run;
+        if (
+          workflowRun.status !== COMPLETED ||
+          workflowRun.conclusion === null ||
+          ![SUCCESS, NEUTRAL, SKIPPED].includes(workflowRun.conclusion)
+        ) {
+          return;
+        }
         switch (workflowRun.event) {
           case "pull_request":
           case "push":
