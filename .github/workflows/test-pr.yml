@@ -20,6 +20,7 @@ jobs:
     name: Test in Pull Request
     if: ${{ startsWith(github.head_ref, 'workflows/tests/head') }}
     runs-on: ubuntu-latest
+    permissions: write-all
     steps:
       - name: Sanity check
         if: ${{ !startsWith(github.base_ref, 'workflows/tests/base') }}
