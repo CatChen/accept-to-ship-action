@@ -2,16 +2,30 @@ name: Accept to Ship
 
 on:
   pull_request:
-    types: [synchronize]
+    types:
+      [
+        labeled,
+        unlabeled,
+        edited,
+        closed,
+        reopened,
+        synchronize,
+        review_requested,
+        review_request_removed,
+      ]
   pull_request_review:
-    types: [submitted, edited]
+    types: [submitted, edited, dismissed]
   check_run:
-    types: [completed]
+    type: [created, rerequested, completed]
   check_suite:
     types: [completed]
   workflow_run:
     workflows: ["Build", "Test", "ESLint", "CodeQL"]
     types: [completed]
+
+concurrency:
+  group: ${{ github.event.pull_request.number || github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   ship:
