@@ -21,6 +21,10 @@ inputs:
     description: "Fail the workflow if tiemout."
     required: false
     default: false
+  request-zero-accept-zero:
+    description: "If zero reviews are requested then zero approval are needed."
+    required: false
+    default: false
 runs:
   using: "node16"
   main: "dist/index.js"
