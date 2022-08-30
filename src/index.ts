@@ -21,7 +21,6 @@ import { getPullRequestReviewRequests } from "./getPullRequestReviewRequests";
 import { getPullRequestReviews } from "./getPullRequestReviews";
 import { getWorkflowRunJobs } from "./getWorkflowRunJobs";
 import { getCheckRuns } from "./getCheckRuns";
-import { updateCheckRun } from "./updateCheckRun";
 import { checkIfPullRequestMerged, mergePullRequest } from "./mergePullRequest";
 import { sleep } from "./sleep";
 import { components } from "@octokit/openapi-types/types";
@@ -57,22 +56,22 @@ async function handePullRequest(pullRequestNumber: number) {
     return;
   }
 
+  const customHashTag = getInput("custom-hashtag") || "#accept2ship";
+  const hashTagLabel = customHashTag.replace(/^#*/, "");
+  const hashTag = `#${hashTagLabel}`;
+
   const pullRequest = await getPullRequest(
     owner,
     repo,
     pullRequestNumber,
     octokit
   );
-  const accept2shipTitle = pullRequest.title
-    ?.toLowerCase()
-    ?.includes("#accept2ship");
+  const accept2shipTitle = pullRequest.title?.toLowerCase()?.includes(hashTag);
   info(`#accept2ship ${accept2shipTitle ? "" : "not "}found in title`);
-  const accept2shipBody = pullRequest.body
-    ?.toLowerCase()
-    ?.includes("#accept2ship");
+  const accept2shipBody = pullRequest.body?.toLowerCase()?.includes(hashTag);
   info(`#accept2ship ${accept2shipBody ? "" : "not "}found in body`);
   const accept2shipLabel = pullRequest.labels.some(
-    (label) => label.name.toLowerCase() === "accept2ship"
+    (label) => label.name.toLowerCase() === hashTagLabel
   );
   info(`#accept2ship ${accept2shipLabel ? "" : "not "}found in labels`);
 
@@ -86,7 +85,7 @@ async function handePullRequest(pullRequestNumber: number) {
   const accept2shipComment = comments.some(
     (comment) =>
       comment.user?.id === pullRequestUserId &&
-      comment.body.toLowerCase().includes("#accept2ship")
+      comment.body.toLowerCase().includes(hashTag)
   );
   info(`#accept2ship ${accept2shipComment ? "" : "not "}found in comments`);
 

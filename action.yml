@@ -25,6 +25,10 @@ inputs:
     description: "If zero reviews are requested then zero approval are needed."
     required: false
     default: false
+  custom-hashtag:
+    description: "A different hashtag to use other than #accept2ship."
+    required: false
+    default: "#accept2ship"
 runs:
   using: "node16"
   main: "dist/index.js"
