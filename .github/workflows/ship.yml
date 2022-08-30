@@ -52,6 +52,14 @@ jobs:
 
   pass-to-ship:
     name: Pass to Ship
+    if: |-
+      ${{
+        github.base_ref == 'main' ||
+        github.event.pull_request.base.ref == 'main' ||
+        contains(github.event.check_run.pull_requests.*.base.ref, 'main') ||
+        contains(github.event.check_suite.pull_requests.*.base.ref, 'main') ||
+        contains(github.event.workflow_run.pull_requests.*.base.ref, 'main')
+      }}
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
