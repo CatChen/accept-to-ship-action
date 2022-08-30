@@ -1,4 +1,4 @@
-name: Accept to Ship
+name: Ship
 
 on:
   pull_request:
@@ -33,8 +33,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ship:
-    name: Ship
+  accept-to-ship:
+    name: Accept to Ship
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
@@ -44,3 +44,17 @@ jobs:
         with:
           merge-method: squash
           timeout: 0
+
+  pass-to-ship:
+    name: Pass to Ship
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./
+        with:
+          merge-method: squash
+          timeout: 0
+          request-zero-accept-zero: true
+          custom-hashtag: "#pass2ship"
