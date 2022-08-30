@@ -11,6 +11,10 @@ on:
     types: [submitted, edited]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.event.pull_request.number || github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   test_in_pull_request:
     name: Test in Pull Request
