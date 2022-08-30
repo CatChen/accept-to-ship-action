@@ -67,13 +67,13 @@ async function handePullRequest(pullRequestNumber: number) {
     octokit
   );
   const accept2shipTitle = pullRequest.title?.toLowerCase()?.includes(hashTag);
-  info(`#accept2ship ${accept2shipTitle ? "" : "not "}found in title`);
+  info(`${hashTag} ${accept2shipTitle ? "" : "not "}found in title`);
   const accept2shipBody = pullRequest.body?.toLowerCase()?.includes(hashTag);
-  info(`#accept2ship ${accept2shipBody ? "" : "not "}found in body`);
+  info(`${hashTag} ${accept2shipBody ? "" : "not "}found in body`);
   const accept2shipLabel = pullRequest.labels.some(
     (label) => label.name.toLowerCase() === hashTagLabel
   );
-  info(`#accept2ship ${accept2shipLabel ? "" : "not "}found in labels`);
+  info(`${hashTag} ${accept2shipLabel ? "" : "not "}found in labels`);
 
   const pullRequestUserId = pullRequest.user.id;
   const comments = await getPullRequestComments(
@@ -87,7 +87,7 @@ async function handePullRequest(pullRequestNumber: number) {
       comment.user?.id === pullRequestUserId &&
       comment.body.toLowerCase().includes(hashTag)
   );
-  info(`#accept2ship ${accept2shipComment ? "" : "not "}found in comments`);
+  info(`${hashTag} ${accept2shipComment ? "" : "not "}found in comments`);
 
   const accept2shipTag =
     accept2shipTitle ||
@@ -139,6 +139,10 @@ async function handePullRequest(pullRequestNumber: number) {
   if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
     if (acceptZeroApprovals) {
       approved = reviews.every((review) => review.state !== CHANGES_REQUESTED);
+      info(`Review states: ${reviews.length || "none"}`);
+      for (const review of reviews) {
+        info(`  ${review.user?.login ?? "Unknown"}: ${review.state}`);
+      }
     } else {
       const lastReview = reviewsSortedByDescendingTime[0];
       info(`Last review state: ${lastReview?.state ?? "none"}`);
