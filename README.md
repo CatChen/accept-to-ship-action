@@ -10,10 +10,8 @@ Want to merge a Pull Request automatically after someone approved it? Set up thi
 
 ## Examples
 
-name: Test Pull Request
-
 ```yaml
-name: Accept to Ship
+name: Ship
 
 on:
   pull_request:
@@ -44,7 +42,15 @@ concurrency:
 
 jobs:
   accept_to_ship:
-    name: Ship
+    name: Accept to Ship
+    if: |-
+      ${{
+        github.base_ref == 'main' ||
+        github.event.pull_request.base.ref == 'main' ||
+        contains(github.event.check_run.pull_requests.*.base.ref, 'main') ||
+        contains(github.event.check_suite.pull_requests.*.base.ref, 'main') ||
+        contains(github.event.workflow_run.pull_requests.*.base.ref, 'main')
+      }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -53,9 +59,31 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }} # optional
           merge-method: merge # optional
-          timeout: 600 # optional
+          timeout: 0 # optional
           checks-watch-interval: 10 # optional
           fail-if-timeout: false # optinal
+          request-zero-accept-zero: false # optional
+          custom-hashtag: "#accept2ship" #optional
+
+  pass-to-ship:
+    name: Pass to Ship
+    if: |-
+      ${{
+        github.base_ref == 'main' ||
+        github.event.pull_request.base.ref == 'main' ||
+        contains(github.event.check_run.pull_requests.*.base.ref, 'main') ||
+        contains(github.event.check_suite.pull_requests.*.base.ref, 'main') ||
+        contains(github.event.workflow_run.pull_requests.*.base.ref, 'main')
+      }}
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./
+        with:
+          request-zero-accept-zero: true
+          custom-hashtag: "#pass2ship"
 ```
 
 ## Options
@@ -70,7 +98,7 @@ The merge method to use when this Action is triggered. Possible values are `merg
 
 ### `timeout`
 
-How much time to wait for checks before giving up. This needs to be an integer in seconds. The default value is `600` (10 minutes).
+How much time to wait for checks before giving up. This needs to be an integer in seconds. The default value is `0`.
 
 ### `checks-watch-interval`
 
@@ -79,6 +107,14 @@ How much time to wait before refreshing the checks again before they are complet
 ### `fail-if-timeout`
 
 When this option is set to `true` this Action will fail if its execution time (including the time waiting for checks) exceeds the value set in `timeout`.
+
+### custom-hashtag
+
+Change `#accept2ship` to another hashtag. Use multiple instances of this Action with different configurations and different hashtags. The default value is `#accept2ship`.
+
+### request-zero-accept-zero
+
+When this option is set to `true` this Action will not wait for any approval if no review was requested. Otherwise, this Action will wait for at least one approval if no review was requested. It's useful to set this to `true` with a different hashtag set in `custom-hashtag` to merge certain Pull Requests after running and passing all the checks. See the `#pass2ship` configuration in the examples from above. The default value is `false`.
 
 ## FAQ
 
@@ -105,3 +141,7 @@ The check from the Workflow that runs this Action doesn't count. It will always 
 > When you use the repository's `GITHUB_TOKEN` to perform tasks, events triggered by the `GITHUB_TOKEN` will not create a new workflow run. This prevents you from accidentally creating recursive workflow runs. -- [Source](https://docs.github.com/en/actions/security-guides/automatic-token-authentication)
 
 Please list your other Workflows in the `workflows` field under the `workflow_run` trigger. Put them into the empty bracket in the example from above. When they complete they will trigger this Action.
+
+### How do I use Action this with stacked Pull Requests?
+
+Limit this Action to the branches that are directly based on the main branch (usually `main` or `master`). It will merge the bottom Pull Request to the main branch. The Pull Request right above that will become the new bottom Pull Request. This Action will start merging that Pull Request, too. This process will continue itself until all mergeable Pull Requests in the stack are merged. See the `jobs.accept-to-ship.if` block in the example from above as a reference.
