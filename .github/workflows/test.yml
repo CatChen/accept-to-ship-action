@@ -166,13 +166,14 @@ jobs:
         run: |
           CHECKS_TEMP_FILE="$(mktemp)"
           sleep 10
-          PENDING=-1
+          PENDING=$(gh pr checks | cut -f2 | grep pending | wc -l)
           while [ $PENDING -ne 0 ]
           do
+            echo "::group::Pending checks: $PENDING"
             gh pr checks --watch
             sleep 10
             PENDING=$(gh pr checks | cut -f2 | grep pending | wc -l)
-            echo "::notice::Pending checks: $PENDING"
+            echo "::endgroup::"
           done
           gh pr checks >> $CHECKS_TEMP_FILE
           echo "::notice::Temp file content:
