@@ -11612,7 +11612,7 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
     unitDisplay: "long",
 });
 function handePullRequest(pullRequestNumber) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     return __awaiter(this, void 0, void 0, function* () {
         const octokit = (0, getOcktokit_1.getOctokit)();
         const owner = github_1.context.repo.owner;
@@ -11703,18 +11703,19 @@ function handePullRequest(pullRequestNumber) {
             return;
         }
         const jobs = yield (0, getWorkflowRunJobs_1.getWorkflowRunJobs)(owner, repo, octokit);
-        (0, core_1.info)(`Jobs: ${jobs.length}`);
+        (0, core_1.info)(`Jobs in current Workflow: ${jobs.length}`);
         for (const job of jobs) {
             (0, core_1.info)(`  Job id: ${job.id} (${job.html_url})`);
             (0, core_1.info)(`  Job name: ${job.name}`);
             (0, core_1.info)(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}\n\n`);
             if (job.steps !== undefined) {
-                (0, core_1.info)(`  Job steps: ${job.steps.length}`);
+                (0, core_1.startGroup)(`  Job steps: ${job.steps.length}`);
                 for (const step of job.steps) {
                     (0, core_1.info)(`    Step number: ${step.number}`);
                     (0, core_1.info)(`    Step name: ${step.name}`);
                     (0, core_1.info)(`    Step status/conclusion: ${step.status === COMPLETED ? step.conclusion : step.status}\n`);
                 }
+                (0, core_1.endGroup)();
             }
         }
         const jobIds = jobs.map((job) => job.id);
@@ -11722,7 +11723,7 @@ function handePullRequest(pullRequestNumber) {
         const interval = parseInt((0, core_1.getInput)("checks-watch-interval"), 10);
         const failIfTimeout = (0, core_1.getBooleanInput)("fail-if-timeout");
         let worthChecking = true;
-        let externalId = undefined;
+        let externalIds = undefined;
         while (worthChecking) {
             const checkRuns = yield (0, getCheckRuns_1.getCheckRuns)(owner, repo, pullRequest.head.sha, octokit);
             (0, core_1.info)(`Checks:`);
@@ -11731,18 +11732,24 @@ function handePullRequest(pullRequestNumber) {
                 (0, core_1.info)(`  Check name: ${checkRun.name}`);
                 (0, core_1.info)(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}\n\n`);
             }
-            const failedCheckes = checkRuns.filter((checkRun) => checkRun.status === COMPLETED &&
+            if (externalIds === undefined) {
+                // Two instances of the same job's execution share the same external id but not the same job id.
+                // We use external id to identify other instances of the job.
+                externalIds = checkRuns
+                    .filter((checkRun) => jobIds.includes(checkRun.id) && checkRun.external_id !== null)
+                    .map((checkRun) => checkRun.external_id);
+            }
+            const failedChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
+                !(externalIds === null || externalIds === void 0 ? void 0 : externalIds.includes(checkRun.external_id)) &&
+                checkRun.status === COMPLETED &&
                 (checkRun.conclusion === null ||
                     ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
-            if (failedCheckes.length > 0) {
-                (0, core_1.info)(`Failed checks: ${failedCheckes.length}`);
+            if (failedChecks.length > 0) {
+                (0, core_1.info)(`Failed checks: ${failedChecks.length}`);
                 return;
             }
-            if (externalId === undefined || externalId === null) {
-                externalId = (_l = checkRuns.find((checkRun) => jobIds.includes(checkRun.id))) === null || _l === void 0 ? void 0 : _l.external_id;
-            }
             const incompleteChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
-                checkRun.external_id !== externalId &&
+                !(externalIds === null || externalIds === void 0 ? void 0 : externalIds.includes(checkRun.external_id)) &&
                 checkRun.status !== COMPLETED);
             if (incompleteChecks.length > 0) {
                 (0, core_1.info)(`Incomplete checks: ${incompleteChecks.length}`);

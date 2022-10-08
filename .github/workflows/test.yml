@@ -151,7 +151,7 @@ jobs:
           #accept2ship"
           TEST_HEAD_PR_NUMBER=`gh pr view | grep 'number:' | cut -f 2`
           echo "::set-output name=test-head-pr-number::$TEST_HEAD_PR_NUMBER"
-          echo "::notice::Test PR number is $TEST_HEAD_PR_NUMBER"
+          echo "::notice::Test head PR number is $TEST_HEAD_PR_NUMBER"
 
       - name: Approve PR
         env:

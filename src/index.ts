@@ -5,6 +5,8 @@ import {
   setFailed,
   getInput,
   getBooleanInput,
+  startGroup,
+  endGroup,
 } from "@actions/core";
 import {
   CheckRunEvent,
@@ -182,13 +184,13 @@ async function handePullRequest(pullRequestNumber: number) {
   }
 
   const jobs = await getWorkflowRunJobs(owner, repo, octokit);
-  info(`Jobs: ${jobs.length}`);
+  info(`Jobs in current Workflow: ${jobs.length}`);
   for (const job of jobs) {
     info(`  Job id: ${job.id} (${job.html_url})`);
     info(`  Job name: ${job.name}`);
     info(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}\n\n`);
     if (job.steps !== undefined) {
-      info(`  Job steps: ${job.steps.length}`);
+      startGroup(`  Job steps: ${job.steps.length}`);
       for (const step of job.steps) {
         info(`    Step number: ${step.number}`);
         info(`    Step name: ${step.name}`);
@@ -198,6 +200,7 @@ async function handePullRequest(pullRequestNumber: number) {
           }\n`
         );
       }
+      endGroup();
     }
   }
   const jobIds = jobs.map((job) => job.id);
@@ -206,7 +209,7 @@ async function handePullRequest(pullRequestNumber: number) {
   const interval = parseInt(getInput("checks-watch-interval"), 10);
   const failIfTimeout = getBooleanInput("fail-if-timeout");
   let worthChecking = true;
-  let externalId: string | undefined | null = undefined;
+  let externalIds: Array<string | null> | undefined = undefined;
   while (worthChecking) {
     const checkRuns = await getCheckRuns(
       owner,
@@ -225,26 +228,34 @@ async function handePullRequest(pullRequestNumber: number) {
       );
     }
 
-    const failedCheckes = checkRuns.filter(
+    if (externalIds === undefined) {
+      // Two instances of the same job's execution share the same external id but not the same job id.
+      // We use external id to identify other instances of the job.
+      externalIds = checkRuns
+        .filter(
+          (checkRun) =>
+            jobIds.includes(checkRun.id) && checkRun.external_id !== null
+        )
+        .map((checkRun) => checkRun.external_id);
+    }
+
+    const failedChecks = checkRuns.filter(
       (checkRun) =>
+        !jobIds.includes(checkRun.id) &&
+        !externalIds?.includes(checkRun.external_id) &&
         checkRun.status === COMPLETED &&
         (checkRun.conclusion === null ||
           ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion))
     );
-    if (failedCheckes.length > 0) {
-      info(`Failed checks: ${failedCheckes.length}`);
+    if (failedChecks.length > 0) {
+      info(`Failed checks: ${failedChecks.length}`);
       return;
     }
 
-    if (externalId === undefined || externalId === null) {
-      externalId = checkRuns.find((checkRun) =>
-        jobIds.includes(checkRun.id)
-      )?.external_id;
-    }
     const incompleteChecks = checkRuns.filter(
       (checkRun) =>
         !jobIds.includes(checkRun.id) &&
-        checkRun.external_id !== externalId &&
+        !externalIds?.includes(checkRun.external_id) &&
         checkRun.status !== COMPLETED
     );
     if (incompleteChecks.length > 0) {
