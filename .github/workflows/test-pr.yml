@@ -22,6 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
+      - name: Concurrency group
+        env:
+          CONCURRENCY_GROUP: ${{ github.event.pull_request.number || github.sha || github.ref }}
+        run: |
+          echo "::notice::Concurrency group is $CONCURRENCY_GROUP"
+
       - name: Sanity check
         if: ${{ !startsWith(github.base_ref, 'workflows/tests/base') }}
         run: exit 1
