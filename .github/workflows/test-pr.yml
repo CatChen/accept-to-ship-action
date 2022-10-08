@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.event.pull_request.number || github.workflow }}
+  group: ${{ github.event.pull_request.number || github.sha || github.ref }}
   cancel-in-progress: true
 
 jobs:
