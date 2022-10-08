@@ -193,7 +193,7 @@ jobs:
 
           | Check | Status | URL |
           | --- | --- | --- |
-          $(cat $CHECKS_TEMP_FILE | grep -E 'https://github.com/[^/]*/[^/]*/runs/' | sed -E 's/(.*)\t(.*)\t(.*)\t(.*)/| \1 | \2 | \4 |/')"
+          $(cat $CHECKS_TEMP_FILE | grep -E 'https://' | sed -E 's/(.*)\t(.*)\t(.*)\t(.*)/| \1 | \2 | \4 |/')"
           rm -f $CHECKS_TEMP_FILE
 
       - name: Verify PR
