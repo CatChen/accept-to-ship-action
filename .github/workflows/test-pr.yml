@@ -57,3 +57,4 @@ jobs:
       - uses: ./
         with:
           merge-method: squash
+          timeout: 600
