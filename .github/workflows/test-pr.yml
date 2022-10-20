@@ -2,18 +2,34 @@ name: Test Pull Request
 
 on:
   pull_request:
-    types: [labeled, opened, edited, reopened, synchronize]
+    types:
+      [
+        labeled,
+        unlabeled,
+        edited,
+        closed,
+        reopened,
+        synchronize,
+        review_requested,
+        review_request_removed,
+      ]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
   check_run:
-    types: [completed]
+    type: [created, rerequested, completed]
   check_suite:
     types: [completed]
-  pull_request_review:
-    types: [submitted, edited]
-  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.event.pull_request.number || github.sha || github.ref }}
-  cancel-in-progress: true
+  group: |-
+    ${{
+      github.event.pull_request.number ||
+      join(github.event.check_run.pull_requests.*.number, ', ') ||
+      join(github.event.check_suite.pull_requests.*.number, ', ') ||
+      join(github.event.workflow_run.pull_requests.*.number, ', ') ||
+      github.sha ||
+      github.ref
+    }}
 
 jobs:
   test_in_pull_request:
@@ -24,7 +40,15 @@ jobs:
     steps:
       - name: Concurrency group
         env:
-          CONCURRENCY_GROUP: ${{ github.event.pull_request.number || github.sha || github.ref }}
+          CONCURRENCY_GROUP: |-
+            ${{
+              github.event.pull_request.number ||
+              join(github.event.check_run.pull_requests.*.number, ', ') ||
+              join(github.event.check_suite.pull_requests.*.number, ', ') ||
+              join(github.event.workflow_run.pull_requests.*.number, ', ') ||
+              github.sha ||
+              github.ref
+            }}
         run: |
           echo "::notice::Concurrency group is $CONCURRENCY_GROUP"
 
