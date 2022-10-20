@@ -108,11 +108,11 @@ How much time to wait before refreshing the checks again before they are complet
 
 When this option is set to `true` this Action will fail if its execution time (including the time waiting for checks) exceeds the value set in `timeout`.
 
-### custom-hashtag
+### `custom-hashtag`
 
 Change `#accept2ship` to another hashtag. Use multiple instances of this Action with different configurations and different hashtags. The default value is `#accept2ship`.
 
-### request-zero-accept-zero
+### `request-zero-accept-zero`
 
 When this option is set to `true` this Action will not wait for any approval if no review was requested. Otherwise, this Action will wait for at least one approval if no review was requested. It's useful to set this to `true` with a different hashtag set in `custom-hashtag` to merge certain Pull Requests after running and passing all the checks. See the `#pass2ship` configuration in the examples from above. The default value is `false`.
 
