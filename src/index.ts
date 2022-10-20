@@ -43,7 +43,7 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
   unitDisplay: "long",
 });
 
-async function handePullRequest(pullRequestNumber: number) {
+async function handlePullRequest(pullRequestNumber: number) {
   startGroup(`PR number: ${pullRequestNumber}`);
   const octokit = getOctokit();
   const owner = context.repo.owner;
@@ -314,14 +314,14 @@ async function run(): Promise<void> {
     case "pull_request":
       await (async () => {
         const pullRequest = (context.payload as PullRequestEvent).pull_request;
-        await handePullRequest(pullRequest.number);
+        await handlePullRequest(pullRequest.number);
       })();
       break;
     case "pull_request_review":
       await (async () => {
         const pullRequest = (context.payload as PullRequestReviewEvent)
           .pull_request;
-        await handePullRequest(pullRequest.number);
+        await handlePullRequest(pullRequest.number);
       })();
       break;
     case "check_run":
@@ -336,7 +336,7 @@ async function run(): Promise<void> {
         }
         await Promise.all(
           checkRun.pull_requests.map((pullRequest) =>
-            handePullRequest(pullRequest.number)
+            handlePullRequest(pullRequest.number)
           )
         );
       })();
@@ -353,7 +353,7 @@ async function run(): Promise<void> {
         }
         await Promise.all(
           checkSuites.pull_requests.map((pullRequest) =>
-            handePullRequest(pullRequest.number)
+            handlePullRequest(pullRequest.number)
           )
         );
       })();
@@ -373,7 +373,7 @@ async function run(): Promise<void> {
           case "push":
             await Promise.all(
               workflowRun.pull_requests.map((pullRequest) =>
-                handePullRequest(pullRequest.number)
+                handlePullRequest(pullRequest.number)
               )
             );
             return;
