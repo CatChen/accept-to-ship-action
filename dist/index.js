@@ -11614,6 +11614,7 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
 function handePullRequest(pullRequestNumber) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     return __awaiter(this, void 0, void 0, function* () {
+        (0, core_1.startGroup)(`PR number: ${pullRequestNumber}`);
         const octokit = (0, getOcktokit_1.getOctokit)();
         const owner = github_1.context.repo.owner;
         const repo = github_1.context.repo.repo;
@@ -11702,12 +11703,13 @@ function handePullRequest(pullRequestNumber) {
         if (!approved) {
             return;
         }
+        (0, core_1.endGroup)();
         const jobs = yield (0, getWorkflowRunJobs_1.getWorkflowRunJobs)(owner, repo, octokit);
         (0, core_1.info)(`Jobs in current Workflow: ${jobs.length}`);
         for (const job of jobs) {
             (0, core_1.info)(`  Job id: ${job.id} (${job.html_url})`);
             (0, core_1.info)(`  Job name: ${job.name}`);
-            (0, core_1.info)(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}\n\n`);
+            (0, core_1.info)(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}`);
             if (job.steps !== undefined) {
                 (0, core_1.startGroup)(`  Job steps: ${job.steps.length}`);
                 for (const step of job.steps) {
@@ -11716,6 +11718,7 @@ function handePullRequest(pullRequestNumber) {
                     (0, core_1.info)(`    Step status/conclusion: ${step.status === COMPLETED ? step.conclusion : step.status}\n`);
                 }
                 (0, core_1.endGroup)();
+                (0, core_1.info)("\n\n");
             }
         }
         const jobIds = jobs.map((job) => job.id);
@@ -11730,7 +11733,18 @@ function handePullRequest(pullRequestNumber) {
             for (const checkRun of checkRuns) {
                 (0, core_1.info)(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
                 (0, core_1.info)(`  Check name: ${checkRun.name}`);
-                (0, core_1.info)(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}\n\n`);
+                if (checkRun.status === COMPLETED) {
+                    if (checkRun.conclusion !== null &&
+                        [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)) {
+                        (0, core_1.info)(`  Check status/conclusion: ${checkRun.conclusion}\n\n`);
+                    }
+                    else {
+                        (0, core_1.error)(`  Check status/conclusion: ${checkRun.conclusion}\n\n`);
+                    }
+                }
+                else {
+                    (0, core_1.warning)(`  Check status/conclusion: ${checkRun.status}\n\n`);
+                }
             }
             if (externalIds === undefined) {
                 // Two instances of the same job's execution share the same external id but not the same job id.
@@ -11780,6 +11794,7 @@ function handePullRequest(pullRequestNumber) {
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
+        (0, core_1.info)(`Event name: ${github_1.context.eventName}`);
         switch (github_1.context.eventName) {
             case "pull_request":
                 yield (() => __awaiter(this, void 0, void 0, function* () {
