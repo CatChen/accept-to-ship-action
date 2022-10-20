@@ -7,6 +7,7 @@ import {
   getBooleanInput,
   startGroup,
   endGroup,
+  warning,
 } from "@actions/core";
 import {
   CheckRunEvent,
@@ -43,6 +44,7 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
 });
 
 async function handePullRequest(pullRequestNumber: number) {
+  startGroup(`PR number: ${pullRequestNumber}`);
   const octokit = getOctokit();
   const owner = context.repo.owner;
   const repo = context.repo.repo;
@@ -182,13 +184,14 @@ async function handePullRequest(pullRequestNumber: number) {
   if (!approved) {
     return;
   }
+  endGroup();
 
   const jobs = await getWorkflowRunJobs(owner, repo, octokit);
   info(`Jobs in current Workflow: ${jobs.length}`);
   for (const job of jobs) {
     info(`  Job id: ${job.id} (${job.html_url})`);
     info(`  Job name: ${job.name}`);
-    info(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}\n\n`);
+    info(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}`);
     if (job.steps !== undefined) {
       startGroup(`  Job steps: ${job.steps.length}`);
       for (const step of job.steps) {
@@ -201,6 +204,7 @@ async function handePullRequest(pullRequestNumber: number) {
         );
       }
       endGroup();
+      info("\n\n");
     }
   }
   const jobIds = jobs.map((job) => job.id);
@@ -221,11 +225,18 @@ async function handePullRequest(pullRequestNumber: number) {
     for (const checkRun of checkRuns) {
       info(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
       info(`  Check name: ${checkRun.name}`);
-      info(
-        `  Check status/conclusion: ${
-          checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status
-        }\n\n`
-      );
+      if (checkRun.status === COMPLETED) {
+        if (
+          checkRun.conclusion !== null &&
+          [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)
+        ) {
+          info(`  Check status/conclusion: ${checkRun.conclusion}\n\n`);
+        } else {
+          error(`  Check status/conclusion: ${checkRun.conclusion}\n\n`);
+        }
+      } else {
+        warning(`  Check status/conclusion: ${checkRun.status}\n\n`);
+      }
     }
 
     if (externalIds === undefined) {
@@ -298,6 +309,7 @@ async function handePullRequest(pullRequestNumber: number) {
 }
 
 async function run(): Promise<void> {
+  info(`Event name: ${context.eventName}`);
   switch (context.eventName) {
     case "pull_request":
       await (async () => {
