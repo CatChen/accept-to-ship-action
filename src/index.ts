@@ -44,7 +44,7 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
 });
 
 async function handlePullRequest(pullRequestNumber: number) {
-  startGroup(`PR number: ${pullRequestNumber}`);
+  startGroup(`Pull Request number: ${pullRequestNumber}`);
   const octokit = getOctokit();
   const owner = context.repo.owner;
   const repo = context.repo.repo;
