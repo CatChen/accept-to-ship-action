@@ -20,7 +20,7 @@ jobs:
         !startsWith(github.head_ref, 'workflows/tests/') && (
           (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
           (github.event_name == 'pull_request' && github.actor != 'dependabot[bot]') ||
-          (github.event_name == 'workflow_run' && github.actor == 'dependabot[bot]')
+          (github.event_name == 'workflow_run' && github.actor == 'dependabot[bot]') ||
           github.event_name == 'workflow_call' ||
           github.event_name == 'workflow_dispatch'
         )
