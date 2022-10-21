@@ -9,6 +9,9 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
 
+  test:
+    uses: ./.github/workflows/test.yml
+
   eslint:
     uses: ./.github/workflows/eslint.yml
 
@@ -17,7 +20,7 @@ jobs:
 
   release:
     name: Release
-    needs: [build, eslint, codeql]
+    needs: [build, test, eslint, codeql]
     runs-on: ubuntu-latest
     outputs:
       base-tag: ${{ steps.git-push.outputs.base-tag }}
