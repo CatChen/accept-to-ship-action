@@ -34,7 +34,7 @@ concurrency:
 jobs:
   test_in_pull_request:
     name: Test in Pull Request
-    if: ${{ startsWith(github.head_ref, 'workflows/tests/head') && startsWith(github.base_ref, 'workflows/tests/base') }}
+    if: ${{ startsWith(github.head_ref, 'workflows/tests/head') }}
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
@@ -53,8 +53,10 @@ jobs:
           echo "::notice::Concurrency group is $CONCURRENCY_GROUP"
 
       - uses: actions/checkout@v3
+        if: ${{ startsWith(github.base_ref, 'workflows/tests/base') }}
 
       - uses: ./
+        if: ${{ startsWith(github.base_ref, 'workflows/tests/base') }}
         with:
           merge-method: squash
           timeout: 600
