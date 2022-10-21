@@ -54,8 +54,8 @@ jobs:
         run: |
           BASE_RELEASE=$(gh api \
             -H "Accept: application/vnd.github+json" \
-            "/repos/$GITHUB_REPOSITORY/releases/latest" \
-            -q .tag_name)
+            "/repos/$GITHUB_REPOSITORY/releases" \
+            -q ".[0].tag_name")
           echo "::notice:: Base release is $BASE_RELEASE"
           echo "::set-output name=base-release::$BASE_RELEASE"
 
