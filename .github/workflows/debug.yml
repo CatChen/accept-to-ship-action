@@ -32,7 +32,7 @@ on:
   check_suite:
     type: [completed]
   workflow_run:
-    workflows: ["Debug for Dependabot", "Ship", "Build"]
+    workflows: ["Debug for Dependabot", "Build"]
     types: [completed, requested]
   workflow_dispatch:
 
@@ -43,6 +43,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Print events
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTION: ${{ github.event.action }}
+          WORKFLOW_NAME: ${{ github.event.workflow.name }}
+          WORKFLOW_URL: ${{ github.event.workflow.html_url }}
+          WORKFLOW_RUN_EVENT: ${{ github.event.workflow_run.event }}
+          WORKFLOW_RUN_URL: ${{ github.event.workflow_run.html_url }}
+          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          echo "::notice::Event name: $EVENT_NAME"
+          echo "::notice::Event action: $EVENT_ACTION"
+          if [ -n "$WORKFLOW_NAME" ]
+          then
+            echo "::notice::Workflow Name: $WORKFLOW_NAME"
+            echo "::notice::Workflow URL: $WORKFLOW_URL"
+            echo "::notice::Workflow run event: $WORKFLOW_RUN_EVENT"
+            echo "::notice::Workflow run URL: $WORKFLOW_RUN_URL"
+            echo "::notice::Workflow run ID: $WORKFLOW_RUN_ID"
+          fi
+
       - name: Print contexts
         env:
           GITHUB: ${{ toJSON(github) }}
