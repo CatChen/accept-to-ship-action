@@ -32,7 +32,7 @@ on:
   check_suite:
     type: [completed]
   workflow_run:
-    workflows: ["Debug for Dependabot", "Ship"]
+    workflows: ["Debug for Dependabot", "Ship", "Build"]
     types: [completed, requested]
   workflow_dispatch:
 
