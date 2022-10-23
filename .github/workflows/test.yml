@@ -29,10 +29,6 @@ jobs:
     permissions: write-all
 
     steps:
-      - name: Sanity check
-        if: ${{ startsWith(github.head_ref, 'workflows/tests/') }}
-        run: exit 1
-
       - uses: actions/checkout@v3
         if: ${{ github.event_name != 'workflow_run' }}
         with:
