@@ -334,11 +334,9 @@ async function run(): Promise<void> {
         ) {
           return;
         }
-        await Promise.all(
-          checkRun.pull_requests.map((pullRequest) =>
-            handlePullRequest(pullRequest.number)
-          )
-        );
+        for (const pullRequest of checkRun.pull_requests) {
+          await handlePullRequest(pullRequest.number);
+        }
       })();
       return;
     case "check_suite":
@@ -351,11 +349,9 @@ async function run(): Promise<void> {
         ) {
           return;
         }
-        await Promise.all(
-          checkSuites.pull_requests.map((pullRequest) =>
-            handlePullRequest(pullRequest.number)
-          )
-        );
+        for (const pullRequest of checkSuites.pull_requests) {
+          await handlePullRequest(pullRequest.number);
+        }
       })();
       return;
     case "workflow_run":
@@ -368,20 +364,8 @@ async function run(): Promise<void> {
         ) {
           return;
         }
-        switch (workflowRun.event) {
-          case "pull_request":
-          case "push":
-            await Promise.all(
-              workflowRun.pull_requests.map((pullRequest) =>
-                handlePullRequest(pullRequest.number)
-              )
-            );
-            return;
-          default:
-            error(
-              `Unimplemented GitHub Action event: ${context.eventName}/${workflowRun.event}`
-            );
-            return;
+        for (const pullRequest of workflowRun.pull_requests) {
+          await handlePullRequest(pullRequest.number);
         }
       })();
       break;
