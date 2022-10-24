@@ -1,7 +1,8 @@
-import { Octokit } from "@octokit/core";
-import { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
 import { RequestError } from "@octokit/request-error";
 import { getMergeMethod } from "./getMergeMethod";
+
+import type { Octokit } from "@octokit/core";
+import type { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
 
 export async function checkIfPullRequestMerged(
   owner: string,

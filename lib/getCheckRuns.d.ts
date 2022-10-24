@@ -1,5 +1,5 @@
-import { Octokit } from "@octokit/core";
-import { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
+import type { Octokit } from "@octokit/core";
+import type { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
 export declare function getCheckRuns(owner: string, repo: string, ref: string, octokit: Octokit & Api): Promise<{
     id: number;
     head_sha: string;
