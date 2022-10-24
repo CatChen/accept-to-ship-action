@@ -11817,7 +11817,9 @@ function run() {
                         ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)) {
                         return;
                     }
-                    yield Promise.all(checkRun.pull_requests.map((pullRequest) => handlePullRequest(pullRequest.number)));
+                    for (const pullRequest of checkRun.pull_requests) {
+                        yield handlePullRequest(pullRequest.number);
+                    }
                 }))();
                 return;
             case "check_suite":
@@ -11828,7 +11830,9 @@ function run() {
                         ![SUCCESS, NEUTRAL, SKIPPED].includes(checkSuites.conclusion)) {
                         return;
                     }
-                    yield Promise.all(checkSuites.pull_requests.map((pullRequest) => handlePullRequest(pullRequest.number)));
+                    for (const pullRequest of checkSuites.pull_requests) {
+                        yield handlePullRequest(pullRequest.number);
+                    }
                 }))();
                 return;
             case "workflow_run":
@@ -11839,14 +11843,8 @@ function run() {
                         ![SUCCESS, NEUTRAL, SKIPPED].includes(workflowRun.conclusion)) {
                         return;
                     }
-                    switch (workflowRun.event) {
-                        case "pull_request":
-                        case "push":
-                            yield Promise.all(workflowRun.pull_requests.map((pullRequest) => handlePullRequest(pullRequest.number)));
-                            return;
-                        default:
-                            (0, core_1.error)(`Unimplemented GitHub Action event: ${github_1.context.eventName}/${workflowRun.event}`);
-                            return;
+                    for (const pullRequest of workflowRun.pull_requests) {
+                        yield handlePullRequest(pullRequest.number);
                     }
                 }))();
                 break;
