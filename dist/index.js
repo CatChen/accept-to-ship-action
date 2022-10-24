@@ -11586,6 +11586,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const node_perf_hooks_1 = __nccwpck_require__(8846);
 const github_1 = __nccwpck_require__(5438);
 const core_1 = __nccwpck_require__(2186);
 const getOcktokit_1 = __nccwpck_require__(3193);
@@ -11598,7 +11599,6 @@ const getWorkflowRunJobs_1 = __nccwpck_require__(7833);
 const getCheckRuns_1 = __nccwpck_require__(3530);
 const mergePullRequest_1 = __nccwpck_require__(8867);
 const sleep_1 = __nccwpck_require__(986);
-const node_perf_hooks_1 = __nccwpck_require__(8846);
 const APPROVED = "APPROVED";
 const CHANGES_REQUESTED = "CHANGES_REQUESTED";
 const COMPLETED = "completed";

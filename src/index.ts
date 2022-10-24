@@ -1,3 +1,5 @@
+import { performance } from "node:perf_hooks";
+
 import { context } from "@actions/github";
 import {
   info,
@@ -9,13 +11,6 @@ import {
   endGroup,
   warning,
 } from "@actions/core";
-import {
-  CheckRunEvent,
-  CheckSuiteEvent,
-  PullRequestEvent,
-  PullRequestReviewEvent,
-  WorkflowRunEvent,
-} from "@octokit/webhooks-definitions/schema";
 import { getOctokit } from "./getOcktokit";
 import { getMergeMethod } from "./getMergeMethod";
 import { getPullRequest } from "./getPullRequest";
@@ -26,8 +21,15 @@ import { getWorkflowRunJobs } from "./getWorkflowRunJobs";
 import { getCheckRuns } from "./getCheckRuns";
 import { checkIfPullRequestMerged, mergePullRequest } from "./mergePullRequest";
 import { sleep } from "./sleep";
-import { components } from "@octokit/openapi-types/types";
-import { performance } from "node:perf_hooks";
+
+import type {
+  CheckRunEvent,
+  CheckSuiteEvent,
+  PullRequestEvent,
+  PullRequestReviewEvent,
+  WorkflowRunEvent,
+} from "@octokit/webhooks-definitions/schema";
+import type { components } from "@octokit/openapi-types/types";
 
 const APPROVED = "APPROVED";
 const CHANGES_REQUESTED = "CHANGES_REQUESTED";

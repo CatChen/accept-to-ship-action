@@ -1,5 +1,5 @@
-import { Octokit } from "@octokit/core";
-import { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
+import type { Octokit } from "@octokit/core";
+import type { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
 export declare function getPullRequestReviews(owner: string, repo: string, pullRequestNumber: number, octokit: Octokit & Api): Promise<{
     id: number;
     node_id: string;
