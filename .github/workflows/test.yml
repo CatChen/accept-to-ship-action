@@ -67,7 +67,7 @@ jobs:
           fi
           echo "::notice::Base branch is $BASE_BRANCH_NAME"
           git checkout $BASE_BRANCH_NAME
-          echo "::set-output name=base-branch-name::$BASE_BRANCH_NAME"
+          echo "base-branch-name=$BASE_BRANCH_NAME" >> $GITHUB_OUTPUT
           echo "::notice::Base commit is `git rev-parse --verify HEAD`"
 
       - name: Git checkout test base branch
@@ -108,7 +108,7 @@ jobs:
           echo "::notice::Base PR number is $BASE_PR_NUMBER"
           gh pr create --base "main" --title "Test base PR for #$BASE_PR_NUMBER ($SHA)" --body "Generated from #$BASE_PR_NUMBER. Run $RUN_NUMBER. Attempt $RUN_ATTEMPT."
           TEST_BASE_PR_NUMBER=`gh pr view | grep 'number:' | cut -f 2`
-          echo "::set-output name=test-base-pr-number::$TEST_BASE_PR_NUMBER"
+          echo "test-base-pr-number=$TEST_BASE_PR_NUMBER" >> $GITHUB_OUTPUT
           echo "::notice::Test base PR number is $TEST_BASE_PR_NUMBER"
 
       - name: Git checkout test head branch
@@ -150,7 +150,7 @@ jobs:
 
           #accept2ship"
           TEST_HEAD_PR_NUMBER=`gh pr view | grep 'number:' | cut -f 2`
-          echo "::set-output name=test-head-pr-number::$TEST_HEAD_PR_NUMBER"
+          echo "test-head-pr-number=$TEST_HEAD_PR_NUMBER" >> $GITHUB_OUTPUT
           echo "::notice::Test head PR number is $TEST_HEAD_PR_NUMBER"
 
       - name: Approve PR
@@ -180,7 +180,7 @@ jobs:
 
           $(cat $CHECKS_TEMP_FILE)
           "
-          echo "::set-output name=checks-temp-file::$CHECKS_TEMP_FILE"
+          echo "checks-temp-file=$CHECKS_TEMP_FILE" >> $GITHUB_OUTPUT
 
       - name: Report Checks
         if: ${{ always() && steps.check-pr.outputs.checks-temp-file != '' }}
@@ -202,7 +202,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TEST_PR_STATE=`gh pr view --json 'state' -q '.state'`
-          echo "::set-output name=test_pr_state::$TEST_PR_STATE"
+          echo "test_pr_state=$TEST_PR_STATE" >> $GITHUB_OUTPUT
           echo "::notice::Test PR state is $TEST_PR_STATE"
           if [ "$TEST_PR_STATE" != 'MERGED' ]
           then

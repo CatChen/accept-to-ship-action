@@ -88,7 +88,7 @@ jobs:
           echo "$GITHUB" > "$TEMP_JSON_DIRECTORY/github.json"
           echo "$JOB" > "$TEMP_JSON_DIRECTORY/job.json"
           echo "$INPUTS" > "$TEMP_JSON_DIRECTORY/inputs.json"
-          echo "::set-output name=temp-json-directory::$TEMP_JSON_DIRECTORY"
+          echo "temp-json-directory=$TEMP_JSON_DIRECTORY" >> $GITHUB_OUTPUT
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
