@@ -95,3 +95,4 @@ jobs:
             -f tag_name="$HEAD_TAG" \
             -f name="$HEAD_TAG" \
             -F generate_release_notes=true
+            -F prerelease=true
