@@ -55,7 +55,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: CatChen/accept-to-ship-action@v0.2.0
+      - uses: CatChen/accept-to-ship-action@v0.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }} # optional
           merge-method: merge # optional
@@ -80,7 +80,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: ./
+      - uses: CatChen/accept-to-ship-action@v0.3
         with:
           request-zero-accept-zero: true
           custom-hashtag: "#pass2ship"
