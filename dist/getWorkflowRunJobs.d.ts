@@ -1,5 +1,5 @@
-import type { Octokit } from "@octokit/core";
-import type { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
+import type { Octokit } from '@octokit/core';
+import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
 export declare function getWorkflowRunJobs(owner: string, repo: string, octokit: Octokit & Api): Promise<{
     id: number;
     run_id: number;

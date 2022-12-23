@@ -11341,10 +11341,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getMergeMethod = void 0;
 const core_1 = __nccwpck_require__(2186);
 function getMergeMethod() {
-    const mergeMethod = (0, core_1.getInput)("merge-method");
-    if (mergeMethod !== "merge" &&
-        mergeMethod !== "squash" &&
-        mergeMethod !== "rebase") {
+    const mergeMethod = (0, core_1.getInput)('merge-method');
+    if (mergeMethod !== 'merge' &&
+        mergeMethod !== 'squash' &&
+        mergeMethod !== 'rebase') {
         throw new Error(`Unsupported merge-method: ${mergeMethod}`);
     }
     return mergeMethod;
@@ -11360,12 +11360,12 @@ exports.getMergeMethod = getMergeMethod;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getOctokit = void 0;
-const utils_1 = __nccwpck_require__(3030);
 const core_1 = __nccwpck_require__(2186);
-const plugin_throttling_1 = __nccwpck_require__(9968);
+const utils_1 = __nccwpck_require__(3030);
 const plugin_retry_1 = __nccwpck_require__(6298);
+const plugin_throttling_1 = __nccwpck_require__(9968);
 function getOctokit() {
-    const githubToken = (0, core_1.getInput)("github-token");
+    const githubToken = (0, core_1.getInput)('github-token');
     const Octokit = utils_1.GitHub.plugin(plugin_throttling_1.throttling, plugin_retry_1.retry);
     const octokit = new Octokit((0, utils_1.getOctokitOptions)(githubToken, {
         throttle: {
@@ -11391,7 +11391,7 @@ function getOctokit() {
             },
         },
         retry: {
-            doNotRetry: ["429"],
+            doNotRetry: ['429'],
         },
     }));
     return octokit;
@@ -11567,29 +11567,29 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const node_perf_hooks_1 = __nccwpck_require__(8846);
-const github_1 = __nccwpck_require__(5438);
 const core_1 = __nccwpck_require__(2186);
-const getOcktokit_1 = __nccwpck_require__(3193);
+const github_1 = __nccwpck_require__(5438);
+const getCheckRuns_1 = __nccwpck_require__(3530);
 const getMergeMethod_1 = __nccwpck_require__(7253);
+const getOcktokit_1 = __nccwpck_require__(3193);
 const getPullRequest_1 = __nccwpck_require__(9283);
 const getPullRequestComments_1 = __nccwpck_require__(1795);
 const getPullRequestReviewRequests_1 = __nccwpck_require__(9685);
 const getPullRequestReviews_1 = __nccwpck_require__(2706);
 const getWorkflowRunJobs_1 = __nccwpck_require__(7833);
-const getCheckRuns_1 = __nccwpck_require__(3530);
 const mergePullRequest_1 = __nccwpck_require__(8867);
 const sleep_1 = __nccwpck_require__(986);
-const APPROVED = "APPROVED";
-const CHANGES_REQUESTED = "CHANGES_REQUESTED";
-const COMPLETED = "completed";
-const SUCCESS = "success";
-const NEUTRAL = "neutral";
-const SKIPPED = "skipped";
+const APPROVED = 'APPROVED';
+const CHANGES_REQUESTED = 'CHANGES_REQUESTED';
+const COMPLETED = 'completed';
+const SUCCESS = 'success';
+const NEUTRAL = 'neutral';
+const SKIPPED = 'skipped';
 const LOCALE = Intl.NumberFormat().resolvedOptions().locale;
 const FORMATTER = new Intl.NumberFormat(LOCALE, {
-    style: "unit",
-    unit: "second",
-    unitDisplay: "long",
+    style: 'unit',
+    unit: 'second',
+    unitDisplay: 'long',
 });
 function handlePullRequest(pullRequestNumber) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
@@ -11603,16 +11603,16 @@ function handlePullRequest(pullRequestNumber) {
             (0, core_1.error)(`This Pull Request has been merged already.`);
             return;
         }
-        const customHashTag = (0, core_1.getInput)("custom-hashtag") || "#accept2ship";
-        const hashTagLabel = customHashTag.replace(/^#*/, "");
+        const customHashTag = (0, core_1.getInput)('custom-hashtag') || '#accept2ship';
+        const hashTagLabel = customHashTag.replace(/^#*/, '');
         const hashTag = `#${hashTagLabel}`;
         const pullRequest = yield (0, getPullRequest_1.getPullRequest)(owner, repo, pullRequestNumber, octokit);
         const accept2shipTitle = (_b = (_a = pullRequest.title) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === null || _b === void 0 ? void 0 : _b.includes(hashTag);
-        (0, core_1.info)(`${hashTag} ${accept2shipTitle ? "" : "not "}found in title`);
+        (0, core_1.info)(`${hashTag} ${accept2shipTitle ? '' : 'not '}found in title`);
         const accept2shipBody = (_d = (_c = pullRequest.body) === null || _c === void 0 ? void 0 : _c.toLowerCase()) === null || _d === void 0 ? void 0 : _d.includes(hashTag);
-        (0, core_1.info)(`${hashTag} ${accept2shipBody ? "" : "not "}found in body`);
+        (0, core_1.info)(`${hashTag} ${accept2shipBody ? '' : 'not '}found in body`);
         const accept2shipLabel = pullRequest.labels.some((label) => label.name.toLowerCase() === hashTagLabel);
-        (0, core_1.info)(`${hashTag} ${accept2shipLabel ? "" : "not "}found in labels`);
+        (0, core_1.info)(`${hashTag} ${accept2shipLabel ? '' : 'not '}found in labels`);
         const pullRequestUserId = pullRequest.user.id;
         const comments = yield (0, getPullRequestComments_1.getPullRequestComments)(owner, repo, pullRequestNumber, octokit);
         const accept2shipComment = comments.some((comment) => {
@@ -11620,7 +11620,7 @@ function handlePullRequest(pullRequestNumber) {
             return ((_a = comment.user) === null || _a === void 0 ? void 0 : _a.id) === pullRequestUserId &&
                 comment.body.toLowerCase().includes(hashTag);
         });
-        (0, core_1.info)(`${hashTag} ${accept2shipComment ? "" : "not "}found in comments`);
+        (0, core_1.info)(`${hashTag} ${accept2shipComment ? '' : 'not '}found in comments`);
         const accept2shipTag = accept2shipTitle ||
             accept2shipBody ||
             accept2shipLabel ||
@@ -11643,20 +11643,20 @@ function handlePullRequest(pullRequestNumber) {
             (0, core_1.info)(`Review not requested.`);
         }
         const reviews = yield (0, getPullRequestReviews_1.getPullRequestReviews)(owner, repo, pullRequestNumber, octokit);
-        const acceptZeroApprovals = (0, core_1.getBooleanInput)("request-zero-accept-zero");
+        const acceptZeroApprovals = (0, core_1.getBooleanInput)('request-zero-accept-zero');
         let approved = false;
-        const reviewsSortedByDescendingTime = reviews.sort((x, y) => { var _a, _b; return Date.parse((_a = y.submitted_at) !== null && _a !== void 0 ? _a : "") - Date.parse((_b = x.submitted_at) !== null && _b !== void 0 ? _b : ""); });
+        const reviewsSortedByDescendingTime = reviews.sort((x, y) => { var _a, _b; return Date.parse((_a = y.submitted_at) !== null && _a !== void 0 ? _a : '') - Date.parse((_b = x.submitted_at) !== null && _b !== void 0 ? _b : ''); });
         if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
             if (acceptZeroApprovals) {
                 approved = reviews.every((review) => review.state !== CHANGES_REQUESTED);
-                (0, core_1.info)(`Review states: ${reviews.length || "none"}`);
+                (0, core_1.info)(`Review states: ${reviews.length || 'none'}`);
                 for (const review of reviews) {
-                    (0, core_1.info)(`  ${(_f = (_e = review.user) === null || _e === void 0 ? void 0 : _e.login) !== null && _f !== void 0 ? _f : "Unknown"}: ${review.state}`);
+                    (0, core_1.info)(`  ${(_f = (_e = review.user) === null || _e === void 0 ? void 0 : _e.login) !== null && _f !== void 0 ? _f : 'Unknown'}: ${review.state}`);
                 }
             }
             else {
                 const lastReview = reviewsSortedByDescendingTime[0];
-                (0, core_1.info)(`Last review state: ${(_g = lastReview === null || lastReview === void 0 ? void 0 : lastReview.state) !== null && _g !== void 0 ? _g : "none"}`);
+                (0, core_1.info)(`Last review state: ${(_g = lastReview === null || lastReview === void 0 ? void 0 : lastReview.state) !== null && _g !== void 0 ? _g : 'none'}`);
                 approved = (lastReview === null || lastReview === void 0 ? void 0 : lastReview.state) === APPROVED;
             }
         }
@@ -11672,9 +11672,9 @@ function handlePullRequest(pullRequestNumber) {
             }, {});
             (0, core_1.info)(`Last review by user:`);
             for (const user of reviewRequests.users) {
-                (0, core_1.info)(`  ${user.login}: ${(_j = (_h = lastReviewPerUserId[user.id]) === null || _h === void 0 ? void 0 : _h.state) !== null && _j !== void 0 ? _j : "none"} ${user.id in lastReviewPerUserId
+                (0, core_1.info)(`  ${user.login}: ${(_j = (_h = lastReviewPerUserId[user.id]) === null || _h === void 0 ? void 0 : _h.state) !== null && _j !== void 0 ? _j : 'none'} ${user.id in lastReviewPerUserId
                     ? `(${(_k = lastReviewPerUserId[user.id]) === null || _k === void 0 ? void 0 : _k.html_url})`
-                    : ""}`);
+                    : ''}`);
             }
             approved = reviewUserIds
                 .map((userId) => lastReviewPerUserId[userId])
@@ -11698,13 +11698,13 @@ function handlePullRequest(pullRequestNumber) {
                     (0, core_1.info)(`    Step status/conclusion: ${step.status === COMPLETED ? step.conclusion : step.status}\n`);
                 }
                 (0, core_1.endGroup)();
-                (0, core_1.info)("\n\n");
+                (0, core_1.info)('\n\n');
             }
         }
         const jobIds = jobs.map((job) => job.id);
-        const timeout = parseInt((0, core_1.getInput)("timeout"), 10);
-        const interval = parseInt((0, core_1.getInput)("checks-watch-interval"), 10);
-        const failIfTimeout = (0, core_1.getBooleanInput)("fail-if-timeout");
+        const timeout = parseInt((0, core_1.getInput)('timeout'), 10);
+        const interval = parseInt((0, core_1.getInput)('checks-watch-interval'), 10);
+        const failIfTimeout = (0, core_1.getBooleanInput)('fail-if-timeout');
         let worthChecking = true;
         let externalIds = undefined;
         while (worthChecking) {
@@ -11776,20 +11776,20 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         (0, core_1.info)(`Event name: ${github_1.context.eventName}`);
         switch (github_1.context.eventName) {
-            case "pull_request":
+            case 'pull_request':
                 yield (() => __awaiter(this, void 0, void 0, function* () {
                     const pullRequest = github_1.context.payload.pull_request;
                     yield handlePullRequest(pullRequest.number);
                 }))();
                 break;
-            case "pull_request_review":
+            case 'pull_request_review':
                 yield (() => __awaiter(this, void 0, void 0, function* () {
                     const pullRequest = github_1.context.payload
                         .pull_request;
                     yield handlePullRequest(pullRequest.number);
                 }))();
                 break;
-            case "check_run":
+            case 'check_run':
                 yield (() => __awaiter(this, void 0, void 0, function* () {
                     const checkRun = github_1.context.payload.check_run;
                     if (checkRun.status !== COMPLETED ||
@@ -11802,7 +11802,7 @@ function run() {
                     }
                 }))();
                 return;
-            case "check_suite":
+            case 'check_suite':
                 yield (() => __awaiter(this, void 0, void 0, function* () {
                     const checkSuites = github_1.context.payload.check_suite;
                     if (checkSuites.status !== COMPLETED ||
@@ -11815,7 +11815,7 @@ function run() {
                     }
                 }))();
                 return;
-            case "workflow_run":
+            case 'workflow_run':
                 yield (() => __awaiter(this, void 0, void 0, function* () {
                     const workflowRun = github_1.context.payload.workflow_run;
                     if (workflowRun.status !== COMPLETED ||
@@ -11828,7 +11828,7 @@ function run() {
                     }
                 }))();
                 break;
-            case "workflow_dispatch":
+            case 'workflow_dispatch':
             default:
                 (0, core_1.error)(`Unsupported GitHub Action event: ${github_1.context.eventName}`);
                 return;

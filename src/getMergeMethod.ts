@@ -1,11 +1,11 @@
-import { getInput } from "@actions/core";
+import { getInput } from '@actions/core';
 
 export function getMergeMethod() {
-  const mergeMethod = getInput("merge-method");
+  const mergeMethod = getInput('merge-method');
   if (
-    mergeMethod !== "merge" &&
-    mergeMethod !== "squash" &&
-    mergeMethod !== "rebase"
+    mergeMethod !== 'merge' &&
+    mergeMethod !== 'squash' &&
+    mergeMethod !== 'rebase'
   ) {
     throw new Error(`Unsupported merge-method: ${mergeMethod}`);
   }
