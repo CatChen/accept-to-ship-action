@@ -63,7 +63,7 @@ jobs:
           checks-watch-interval: 10 # optional
           fail-if-timeout: false # optinal
           request-zero-accept-zero: false # optional
-          custom-hashtag: "#accept2ship" #optional
+          custom-hashtag: '#accept2ship' #optional
 
   pass-to-ship:
     name: Pass to Ship
@@ -83,7 +83,7 @@ jobs:
       - uses: CatChen/accept-to-ship-action@v0.3
         with:
           request-zero-accept-zero: true
-          custom-hashtag: "#pass2ship"
+          custom-hashtag: '#pass2ship'
 ```
 
 ## Options

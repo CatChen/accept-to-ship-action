@@ -1,17 +1,17 @@
-import type { Octokit } from "@octokit/core";
-import type { Api } from "@octokit/plugin-rest-endpoint-methods/dist-types/types";
-import type { components } from "@octokit/openapi-types/types";
+import type { Octokit } from '@octokit/core';
+import type { components } from '@octokit/openapi-types/types';
+import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
 
 export async function getCheckRuns(
   owner: string,
   repo: string,
   ref: string,
-  octokit: Octokit & Api
+  octokit: Octokit & Api,
 ) {
   const response = await octokit.rest.checks.listForRef({
     owner,
     repo,
     ref,
   });
-  return response.data.check_runs as components["schemas"]["check-run"][];
+  return response.data.check_runs as components['schemas']['check-run'][];
 }

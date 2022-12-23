@@ -1,48 +1,46 @@
-import { performance } from "node:perf_hooks";
-
-import { context } from "@actions/github";
-import {
-  info,
-  error,
-  setFailed,
-  getInput,
-  getBooleanInput,
-  startGroup,
-  endGroup,
-  warning,
-} from "@actions/core";
-import { getOctokit } from "./getOcktokit";
-import { getMergeMethod } from "./getMergeMethod";
-import { getPullRequest } from "./getPullRequest";
-import { getPullRequestComments } from "./getPullRequestComments";
-import { getPullRequestReviewRequests } from "./getPullRequestReviewRequests";
-import { getPullRequestReviews } from "./getPullRequestReviews";
-import { getWorkflowRunJobs } from "./getWorkflowRunJobs";
-import { getCheckRuns } from "./getCheckRuns";
-import { checkIfPullRequestMerged, mergePullRequest } from "./mergePullRequest";
-import { sleep } from "./sleep";
-
+import type { components } from '@octokit/openapi-types/types';
 import type {
   CheckRunEvent,
   CheckSuiteEvent,
   PullRequestEvent,
   PullRequestReviewEvent,
   WorkflowRunEvent,
-} from "@octokit/webhooks-definitions/schema";
-import type { components } from "@octokit/openapi-types/types";
+} from '@octokit/webhooks-definitions/schema';
+import { performance } from 'node:perf_hooks';
+import {
+  endGroup,
+  error,
+  getBooleanInput,
+  getInput,
+  info,
+  setFailed,
+  startGroup,
+  warning,
+} from '@actions/core';
+import { context } from '@actions/github';
+import { getCheckRuns } from './getCheckRuns';
+import { getMergeMethod } from './getMergeMethod';
+import { getOctokit } from './getOcktokit';
+import { getPullRequest } from './getPullRequest';
+import { getPullRequestComments } from './getPullRequestComments';
+import { getPullRequestReviewRequests } from './getPullRequestReviewRequests';
+import { getPullRequestReviews } from './getPullRequestReviews';
+import { getWorkflowRunJobs } from './getWorkflowRunJobs';
+import { checkIfPullRequestMerged, mergePullRequest } from './mergePullRequest';
+import { sleep } from './sleep';
 
-const APPROVED = "APPROVED";
-const CHANGES_REQUESTED = "CHANGES_REQUESTED";
-const COMPLETED = "completed";
-const SUCCESS = "success";
-const NEUTRAL = "neutral";
-const SKIPPED = "skipped";
+const APPROVED = 'APPROVED';
+const CHANGES_REQUESTED = 'CHANGES_REQUESTED';
+const COMPLETED = 'completed';
+const SUCCESS = 'success';
+const NEUTRAL = 'neutral';
+const SKIPPED = 'skipped';
 
 const LOCALE = Intl.NumberFormat().resolvedOptions().locale;
 const FORMATTER = new Intl.NumberFormat(LOCALE, {
-  style: "unit",
-  unit: "second",
-  unitDisplay: "long",
+  style: 'unit',
+  unit: 'second',
+  unitDisplay: 'long',
 });
 
 async function handlePullRequest(pullRequestNumber: number) {
@@ -55,45 +53,45 @@ async function handlePullRequest(pullRequestNumber: number) {
     owner,
     repo,
     pullRequestNumber,
-    octokit
+    octokit,
   );
   if (mergedBeforeValidations) {
     error(`This Pull Request has been merged already.`);
     return;
   }
 
-  const customHashTag = getInput("custom-hashtag") || "#accept2ship";
-  const hashTagLabel = customHashTag.replace(/^#*/, "");
+  const customHashTag = getInput('custom-hashtag') || '#accept2ship';
+  const hashTagLabel = customHashTag.replace(/^#*/, '');
   const hashTag = `#${hashTagLabel}`;
 
   const pullRequest = await getPullRequest(
     owner,
     repo,
     pullRequestNumber,
-    octokit
+    octokit,
   );
   const accept2shipTitle = pullRequest.title?.toLowerCase()?.includes(hashTag);
-  info(`${hashTag} ${accept2shipTitle ? "" : "not "}found in title`);
+  info(`${hashTag} ${accept2shipTitle ? '' : 'not '}found in title`);
   const accept2shipBody = pullRequest.body?.toLowerCase()?.includes(hashTag);
-  info(`${hashTag} ${accept2shipBody ? "" : "not "}found in body`);
+  info(`${hashTag} ${accept2shipBody ? '' : 'not '}found in body`);
   const accept2shipLabel = pullRequest.labels.some(
-    (label) => label.name.toLowerCase() === hashTagLabel
+    (label) => label.name.toLowerCase() === hashTagLabel,
   );
-  info(`${hashTag} ${accept2shipLabel ? "" : "not "}found in labels`);
+  info(`${hashTag} ${accept2shipLabel ? '' : 'not '}found in labels`);
 
   const pullRequestUserId = pullRequest.user.id;
   const comments = await getPullRequestComments(
     owner,
     repo,
     pullRequestNumber,
-    octokit
+    octokit,
   );
   const accept2shipComment = comments.some(
     (comment) =>
       comment.user?.id === pullRequestUserId &&
-      comment.body.toLowerCase().includes(hashTag)
+      comment.body.toLowerCase().includes(hashTag),
   );
-  info(`${hashTag} ${accept2shipComment ? "" : "not "}found in comments`);
+  info(`${hashTag} ${accept2shipComment ? '' : 'not '}found in comments`);
 
   const accept2shipTag =
     accept2shipTitle ||
@@ -109,20 +107,20 @@ async function handlePullRequest(pullRequestNumber: number) {
     owner,
     repo,
     pullRequestNumber,
-    octokit
+    octokit,
   );
   if (reviewRequests.users.length > 0) {
     info(
       `Review requested from users: ${reviewRequests.users
         .map((user) => `${user.login} (${user.html_url})`)
-        .join()}`
+        .join()}`,
     );
   }
   if (reviewRequests.teams.length > 0) {
     info(
       `Review requested from teams: ${reviewRequests.teams
         .map((team) => team.name)
-        .join()}`
+        .join()}`,
     );
   }
   if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
@@ -133,25 +131,25 @@ async function handlePullRequest(pullRequestNumber: number) {
     owner,
     repo,
     pullRequestNumber,
-    octokit
+    octokit,
   );
 
-  const acceptZeroApprovals = getBooleanInput("request-zero-accept-zero");
+  const acceptZeroApprovals = getBooleanInput('request-zero-accept-zero');
   let approved = false;
   const reviewsSortedByDescendingTime = reviews.sort(
     (x, y) =>
-      Date.parse(y.submitted_at ?? "") - Date.parse(x.submitted_at ?? "")
+      Date.parse(y.submitted_at ?? '') - Date.parse(x.submitted_at ?? ''),
   );
   if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
     if (acceptZeroApprovals) {
       approved = reviews.every((review) => review.state !== CHANGES_REQUESTED);
-      info(`Review states: ${reviews.length || "none"}`);
+      info(`Review states: ${reviews.length || 'none'}`);
       for (const review of reviews) {
-        info(`  ${review.user?.login ?? "Unknown"}: ${review.state}`);
+        info(`  ${review.user?.login ?? 'Unknown'}: ${review.state}`);
       }
     } else {
       const lastReview = reviewsSortedByDescendingTime[0];
-      info(`Last review state: ${lastReview?.state ?? "none"}`);
+      info(`Last review state: ${lastReview?.state ?? 'none'}`);
       approved = lastReview?.state === APPROVED;
     }
   } else {
@@ -165,17 +163,17 @@ async function handlePullRequest(pullRequestNumber: number) {
         return result;
       },
       {} as {
-        [id: string]: components["schemas"]["pull-request-review"];
-      }
+        [id: string]: components['schemas']['pull-request-review'];
+      },
     );
     info(`Last review by user:`);
     for (const user of reviewRequests.users) {
       info(
-        `  ${user.login}: ${lastReviewPerUserId[user.id]?.state ?? "none"} ${
+        `  ${user.login}: ${lastReviewPerUserId[user.id]?.state ?? 'none'} ${
           user.id in lastReviewPerUserId
             ? `(${lastReviewPerUserId[user.id]?.html_url})`
-            : ""
-        }`
+            : ''
+        }`,
       );
     }
     approved = reviewUserIds
@@ -202,18 +200,18 @@ async function handlePullRequest(pullRequestNumber: number) {
         info(
           `    Step status/conclusion: ${
             step.status === COMPLETED ? step.conclusion : step.status
-          }\n`
+          }\n`,
         );
       }
       endGroup();
-      info("\n\n");
+      info('\n\n');
     }
   }
   const jobIds = jobs.map((job) => job.id);
 
-  const timeout = parseInt(getInput("timeout"), 10);
-  const interval = parseInt(getInput("checks-watch-interval"), 10);
-  const failIfTimeout = getBooleanInput("fail-if-timeout");
+  const timeout = parseInt(getInput('timeout'), 10);
+  const interval = parseInt(getInput('checks-watch-interval'), 10);
+  const failIfTimeout = getBooleanInput('fail-if-timeout');
   let worthChecking = true;
   let externalIds: Array<string | null> | undefined = undefined;
   while (worthChecking) {
@@ -221,7 +219,7 @@ async function handlePullRequest(pullRequestNumber: number) {
       owner,
       repo,
       pullRequest.head.sha,
-      octokit
+      octokit,
     );
     info(`Checks:`);
     for (const checkRun of checkRuns) {
@@ -247,7 +245,7 @@ async function handlePullRequest(pullRequestNumber: number) {
       externalIds = checkRuns
         .filter(
           (checkRun) =>
-            jobIds.includes(checkRun.id) && checkRun.external_id !== null
+            jobIds.includes(checkRun.id) && checkRun.external_id !== null,
         )
         .map((checkRun) => checkRun.external_id);
     }
@@ -258,7 +256,7 @@ async function handlePullRequest(pullRequestNumber: number) {
         !externalIds?.includes(checkRun.external_id) &&
         checkRun.status === COMPLETED &&
         (checkRun.conclusion === null ||
-          ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion))
+          ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)),
     );
     if (failedChecks.length > 0) {
       info(`Failed checks: ${failedChecks.length}`);
@@ -269,7 +267,7 @@ async function handlePullRequest(pullRequestNumber: number) {
       (checkRun) =>
         !jobIds.includes(checkRun.id) &&
         !externalIds?.includes(checkRun.external_id) &&
-        checkRun.status !== COMPLETED
+        checkRun.status !== COMPLETED,
     );
     if (incompleteChecks.length > 0) {
       info(`Incomplete checks: ${incompleteChecks.length}`);
@@ -280,8 +278,8 @@ async function handlePullRequest(pullRequestNumber: number) {
         if (failIfTimeout) {
           setFailed(
             `Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(
-              timeout
-            )}`
+              timeout,
+            )}`,
           );
         }
         return;
@@ -298,7 +296,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     owner,
     repo,
     pullRequestNumber,
-    octokit
+    octokit,
   );
   if (mergedAfterValidations) {
     error(`This Pull Request has been merged already.`);
@@ -313,20 +311,20 @@ async function handlePullRequest(pullRequestNumber: number) {
 async function run(): Promise<void> {
   info(`Event name: ${context.eventName}`);
   switch (context.eventName) {
-    case "pull_request":
+    case 'pull_request':
       await (async () => {
         const pullRequest = (context.payload as PullRequestEvent).pull_request;
         await handlePullRequest(pullRequest.number);
       })();
       break;
-    case "pull_request_review":
+    case 'pull_request_review':
       await (async () => {
         const pullRequest = (context.payload as PullRequestReviewEvent)
           .pull_request;
         await handlePullRequest(pullRequest.number);
       })();
       break;
-    case "check_run":
+    case 'check_run':
       await (async () => {
         const checkRun = (context.payload as CheckRunEvent).check_run;
         if (
@@ -341,7 +339,7 @@ async function run(): Promise<void> {
         }
       })();
       return;
-    case "check_suite":
+    case 'check_suite':
       await (async () => {
         const checkSuites = (context.payload as CheckSuiteEvent).check_suite;
         if (
@@ -356,7 +354,7 @@ async function run(): Promise<void> {
         }
       })();
       return;
-    case "workflow_run":
+    case 'workflow_run':
       await (async () => {
         const workflowRun = (context.payload as WorkflowRunEvent).workflow_run;
         if (
@@ -371,7 +369,7 @@ async function run(): Promise<void> {
         }
       })();
       break;
-    case "workflow_dispatch":
+    case 'workflow_dispatch':
     default:
       error(`Unsupported GitHub Action event: ${context.eventName}`);
       return;

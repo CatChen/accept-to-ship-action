@@ -1,37 +1,37 @@
-name: "Accept to Ship"
+name: 'Accept to Ship'
 description: "Automatically merge a Pull Request with #accept2ship after it's approved."
 inputs:
   github-token:
-    description: "GitHub token."
+    description: 'GitHub token.'
     required: false
     default: ${{ github.token }}
   merge-method:
-    description: "Merge method to use. Possible values are `merge`, `squash` or `rebase`. Default is merge."
+    description: 'Merge method to use. Possible values are `merge`, `squash` or `rebase`. Default is merge.'
     required: false
-    default: "merge"
+    default: 'merge'
   timeout:
-    description: "The time allowance in seconds for waiting the checks to pass."
+    description: 'The time allowance in seconds for waiting the checks to pass.'
     required: false
     default: 0
   checks-watch-interval:
-    description: "Refresh interval in seconds when using waiting for checks."
+    description: 'Refresh interval in seconds when using waiting for checks.'
     required: false
     default: 10
   fail-if-timeout:
-    description: "Fail the workflow if tiemout."
+    description: 'Fail the workflow if tiemout.'
     required: false
     default: false
   request-zero-accept-zero:
-    description: "If zero reviews are requested then zero approval are needed."
+    description: 'If zero reviews are requested then zero approval are needed.'
     required: false
     default: false
   custom-hashtag:
-    description: "A different hashtag to use other than #accept2ship."
+    description: 'A different hashtag to use other than #accept2ship.'
     required: false
-    default: "#accept2ship"
+    default: '#accept2ship'
 runs:
-  using: "node16"
-  main: "dist/index.js"
+  using: 'node16'
+  main: 'dist/index.js'
 branding:
-  icon: "git-merge"
-  color: "green"
+  icon: 'git-merge'
+  color: 'green'
