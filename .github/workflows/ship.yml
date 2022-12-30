@@ -105,7 +105,7 @@ jobs:
 
   build:
     needs: [accept-to-ship, pass-to-ship]
-    if: ${{ !accept-to-ship.outputs.skipped || !pass-to-ship.outputs.skipped }}
+    if: ${{ !needs.accept-to-ship.outputs.skipped || !needs.pass-to-ship.outputs.skipped }}
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
@@ -113,7 +113,7 @@ jobs:
 
   test:
     needs: [accept-to-ship, pass-to-ship]
-    if: ${{ !accept-to-ship.outputs.skipped || !pass-to-ship.outputs.skipped }}
+    if: ${{ !needs.accept-to-ship.outputs.skipped || !needs.pass-to-ship.outputs.skipped }}
     uses: ./.github/workflows/test.yml
     secrets: inherit
     with:
@@ -121,14 +121,14 @@ jobs:
 
   eslint:
     needs: [accept-to-ship, pass-to-ship]
-    if: ${{ !accept-to-ship.outputs.skipped || !pass-to-ship.outputs.skipped }}
+    if: ${{ !needs.accept-to-ship.outputs.skipped || !needs.pass-to-ship.outputs.skipped }}
     uses: ./.github/workflows/eslint.yml
     with:
       ref: main
 
   codeql:
     needs: [accept-to-ship, pass-to-ship]
-    if: ${{ !accept-to-ship.outputs.skipped || !pass-to-ship.outputs.skipped }}
+    if: ${{ !needs.accept-to-ship.outputs.skipped || !needs.pass-to-ship.outputs.skipped }}
     uses: ./.github/workflows/codeql.yml
     with:
       ref: main
