@@ -11769,8 +11769,8 @@ function handlePullRequest(pullRequestNumber) {
         }
         const mergeMethod = (0, getMergeMethod_1.getMergeMethod)();
         (0, core_1.info)(`Merging with merge method: ${mergeMethod}`);
-        yield (0, mergePullRequest_1.mergePullRequest)(owner, repo, pullRequestNumber, mergeMethod, octokit);
         (0, core_1.setOutput)('skipped', false);
+        yield (0, mergePullRequest_1.mergePullRequest)(owner, repo, pullRequestNumber, mergeMethod, octokit);
     });
 }
 function run() {
