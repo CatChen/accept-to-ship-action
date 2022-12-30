@@ -14,6 +14,7 @@ import {
   getInput,
   info,
   setFailed,
+  setOutput,
   startGroup,
   warning,
 } from '@actions/core';
@@ -306,10 +307,12 @@ async function handlePullRequest(pullRequestNumber: number) {
   const mergeMethod = getMergeMethod();
   info(`Merging with merge method: ${mergeMethod}`);
   await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
+  setOutput('skipped', false);
 }
 
 async function run(): Promise<void> {
   info(`Event name: ${context.eventName}`);
+  setOutput('skipped', true);
   switch (context.eventName) {
     case 'pull_request':
       await (async () => {

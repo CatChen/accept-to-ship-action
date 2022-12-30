@@ -18,7 +18,7 @@ inputs:
     required: false
     default: 10
   fail-if-timeout:
-    description: 'Fail the workflow if tiemout.'
+    description: 'Fail the workflow if timeout.'
     required: false
     default: false
   request-zero-accept-zero:
@@ -29,6 +29,9 @@ inputs:
     description: 'A different hashtag to use other than #accept2ship.'
     required: false
     default: '#accept2ship'
+outputs:
+  skipped:
+    description: 'A boolean that indicates whether the action skipped merging/squashing/rebasing because the conditions are not met.'
 runs:
   using: 'node16'
   main: 'dist/index.js'
