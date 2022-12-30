@@ -40,7 +40,18 @@ jobs:
         if: ${{ startsWith(github.base_ref, 'workflows/tests/base') }}
 
       - uses: ./
+        id: ship
         if: ${{ startsWith(github.base_ref, 'workflows/tests/base') }}
         with:
           merge-method: squash
           timeout: 600
+
+      - name: Verify outputs
+        env:
+          SKIPPED: ${{ steps.ship.outputs.skipped }}
+        run: |
+          echo "::notice::skipped = $SKIPPED"
+          if [[ "$SKIPPED" = "true" ]]
+          then
+            exit 1
+          fi
