@@ -9,7 +9,7 @@ export declare function getCheckRuns(owner: string, repo: string, ref: string, o
     html_url: string | null;
     details_url: string | null;
     status: "completed" | "queued" | "in_progress";
-    conclusion: "success" | "neutral" | "skipped" | "failure" | "cancelled" | "timed_out" | "action_required" | null;
+    conclusion: "skipped" | "success" | "neutral" | "failure" | "cancelled" | "timed_out" | "action_required" | null;
     started_at: string | null;
     completed_at: string | null;
     output: {
