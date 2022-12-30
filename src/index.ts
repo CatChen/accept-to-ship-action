@@ -306,8 +306,8 @@ async function handlePullRequest(pullRequestNumber: number) {
 
   const mergeMethod = getMergeMethod();
   info(`Merging with merge method: ${mergeMethod}`);
-  await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
   setOutput('skipped', false);
+  await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
 }
 
 async function run(): Promise<void> {
