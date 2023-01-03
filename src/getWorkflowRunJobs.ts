@@ -8,10 +8,12 @@ export async function getWorkflowRunJobs(
   repo: string,
   octokit: Octokit & Api,
 ) {
-  const response = await octokit.rest.actions.listJobsForWorkflowRun({
+  const {
+    data: { jobs },
+  } = await octokit.rest.actions.listJobsForWorkflowRun({
     owner,
     repo,
     run_id: context.runId,
   });
-  return response.data.jobs as components['schemas']['job'][];
+  return jobs as components['schemas']['job'][];
 }

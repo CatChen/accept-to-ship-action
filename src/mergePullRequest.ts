@@ -1,8 +1,10 @@
 import type { Octokit } from '@octokit/core';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
 import { error, setFailed, setOutput, warning } from '@actions/core';
+import { context } from '@actions/github';
 import { RequestError } from '@octokit/request-error';
 import { getMergeMethod } from './getMergeMethod';
+import { getWorkflowRunJobs } from './getWorkflowRunJobs';
 
 export async function checkIfPullRequestMerged(
   owner: string,
@@ -53,6 +55,22 @@ export async function mergePullRequest(
       merge_method: mergeMethod,
     });
     setOutput('skipped', false);
+    try {
+      const { data: job } = await octokit.rest.actions.getWorkflowRun({
+        owner,
+        repo,
+        run_id: context.runId,
+      });
+      await octokit.rest.pulls.createReviewComment({
+        owner,
+        repo,
+        pull_number: pullRequestNumber,
+        body:
+          'This Pull Request is closed by a GitHub Action:\n\n' + job.html_url,
+      });
+    } catch (requestError) {
+      /* empty */
+    }
   } catch (requestError) {
     if (requestError instanceof RequestError) {
       warning(
