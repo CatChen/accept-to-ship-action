@@ -104,6 +104,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     return;
   }
 
+  const acceptZeroApprovals = getBooleanInput('request-zero-accept-zero');
   const reviewRequests = await getPullRequestReviewRequests(
     owner,
     repo,
@@ -126,6 +127,10 @@ async function handlePullRequest(pullRequestNumber: number) {
   }
   if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
     info(`Review not requested.`);
+  } else if (acceptZeroApprovals) {
+    error(
+      '`request-zero-accept-zero: true` has no effect when a reviewer is assigned.',
+    );
   }
 
   const reviews = await getPullRequestReviews(
@@ -135,7 +140,6 @@ async function handlePullRequest(pullRequestNumber: number) {
     octokit,
   );
 
-  const acceptZeroApprovals = getBooleanInput('request-zero-accept-zero');
   let approved = false;
   const reviewsSortedByDescendingTime = reviews.sort(
     (x, y) =>
