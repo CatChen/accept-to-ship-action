@@ -1,6 +1,6 @@
 import type { Octokit } from '@octokit/core';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
-import { setOutput, warning } from '@actions/core';
+import { error, setFailed, setOutput, warning } from '@actions/core';
 import { RequestError } from '@octokit/request-error';
 import { getMergeMethod } from './getMergeMethod';
 
@@ -10,31 +10,30 @@ export async function checkIfPullRequestMerged(
   pullRequestNumber: number,
   octokit: Octokit & Api,
 ) {
-  let response: RequestError['response'];
   try {
-    response = await octokit.rest.pulls.checkIfMerged({
+    const { status } = await octokit.rest.pulls.checkIfMerged({
       owner,
       repo,
       pull_number: pullRequestNumber,
     });
-    if (response.status === 204) {
+    if (status === 204) {
       return true;
     } else {
       return false;
     }
-  } catch (error) {
-    if (error instanceof RequestError) {
-      if (error.status === 204) {
+  } catch (requestError) {
+    if (requestError instanceof RequestError) {
+      if (requestError.status === 204) {
         return true;
-      } else if (error.status === 404) {
+      } else if (requestError.status === 404) {
         return false;
       } else {
         throw new Error(
-          `Failed to check if pull request is merged: [${error.status}] ${error.message}`,
+          `Failed to check if pull request is merged: [${requestError.status}] ${requestError.message}`,
         );
       }
     } else {
-      throw error;
+      throw requestError;
     }
   }
 }
@@ -54,10 +53,10 @@ export async function mergePullRequest(
       merge_method: mergeMethod,
     });
     setOutput('skipped', false);
-  } catch (error) {
-    if (error instanceof RequestError) {
+  } catch (requestError) {
+    if (requestError instanceof RequestError) {
       warning(
-        `Failed to merge pull request: [${error.status}] ${error.message}`,
+        `Failed to merge pull request: [${requestError.status}] ${requestError.message}`,
       );
 
       // If it's merged by someone else in a race condition we treat it as skipped,
@@ -68,9 +67,27 @@ export async function mergePullRequest(
         pullRequestNumber,
         octokit,
       );
+      if (merged) {
+        try {
+          const { data: pullRequest } = await octokit.rest.pulls.get({
+            owner,
+            repo,
+            pull_number: pullRequestNumber,
+          });
+          warning(
+            `This Pull Request has been merged by: ${pullRequest.merged_by?.login} (${pullRequest.merged_by?.html_url})`,
+          );
+        } catch {
+          warning(`This Pull Request has been merged by unknown user.`);
+        }
+      } else {
+        // If it's not merged by someone else in a race condition then we treat it as a real error.
+        error(`This Pull Request remains unmerged.`);
+        setFailed(`Failed to merge this Pull Request when conditions are met.`);
+      }
       setOutput('skipped', !merged);
     } else {
-      throw error;
+      throw requestError;
     }
   }
 }
