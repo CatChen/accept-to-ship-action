@@ -11539,12 +11539,12 @@ exports.getWorkflowRunJobs = void 0;
 const github_1 = __nccwpck_require__(5438);
 function getWorkflowRunJobs(owner, repo, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
-        const response = yield octokit.rest.actions.listJobsForWorkflowRun({
+        const { data: { jobs }, } = yield octokit.rest.actions.listJobsForWorkflowRun({
             owner,
             repo,
             run_id: github_1.context.runId,
         });
-        return response.data.jobs;
+        return jobs;
     });
 }
 exports.getWorkflowRunJobs = getWorkflowRunJobs;
@@ -11860,6 +11860,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.mergePullRequest = exports.checkIfPullRequestMerged = void 0;
 const core_1 = __nccwpck_require__(2186);
+const github_1 = __nccwpck_require__(5438);
 const request_error_1 = __nccwpck_require__(537);
 function checkIfPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -11906,6 +11907,22 @@ function mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit) 
                 merge_method: mergeMethod,
             });
             (0, core_1.setOutput)('skipped', false);
+            try {
+                const { data: job } = yield octokit.rest.actions.getWorkflowRun({
+                    owner,
+                    repo,
+                    run_id: github_1.context.runId,
+                });
+                yield octokit.rest.pulls.createReviewComment({
+                    owner,
+                    repo,
+                    pull_number: pullRequestNumber,
+                    body: 'This Pull Request is closed by a GitHub Action:\n\n' + job.html_url,
+                });
+            }
+            catch (requestError) {
+                /* empty */
+            }
         }
         catch (requestError) {
             if (requestError instanceof request_error_1.RequestError) {
