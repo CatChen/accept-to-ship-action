@@ -11628,6 +11628,7 @@ function handlePullRequest(pullRequestNumber) {
         if (!accept2shipTag) {
             return;
         }
+        const acceptZeroApprovals = (0, core_1.getBooleanInput)('request-zero-accept-zero');
         const reviewRequests = yield (0, getPullRequestReviewRequests_1.getPullRequestReviewRequests)(owner, repo, pullRequestNumber, octokit);
         if (reviewRequests.users.length > 0) {
             (0, core_1.info)(`Review requested from users: ${reviewRequests.users
@@ -11642,8 +11643,10 @@ function handlePullRequest(pullRequestNumber) {
         if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
             (0, core_1.info)(`Review not requested.`);
         }
+        else if (acceptZeroApprovals) {
+            (0, core_1.error)('`request-zero-accept-zero: true` has no effect when a reviewer is assigned.');
+        }
         const reviews = yield (0, getPullRequestReviews_1.getPullRequestReviews)(owner, repo, pullRequestNumber, octokit);
-        const acceptZeroApprovals = (0, core_1.getBooleanInput)('request-zero-accept-zero');
         let approved = false;
         const reviewsSortedByDescendingTime = reviews.sort((x, y) => { var _a, _b; return Date.parse((_a = y.submitted_at) !== null && _a !== void 0 ? _a : '') - Date.parse((_b = x.submitted_at) !== null && _b !== void 0 ? _b : ''); });
         if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
