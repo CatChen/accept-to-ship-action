@@ -1,5 +1,6 @@
 import type { Octokit } from '@octokit/core';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
+import { info } from 'console';
 import { error, setFailed, setOutput, warning } from '@actions/core';
 import { context } from '@actions/github';
 import { RequestError } from '@octokit/request-error';
@@ -55,11 +56,13 @@ export async function mergePullRequest(
     });
     setOutput('skipped', false);
     try {
+      info(`Run ID: ${context.runId}`);
       const { data: job } = await octokit.rest.actions.getWorkflowRun({
         owner,
         repo,
         run_id: context.runId,
       });
+      info(`Job ID: ${job.id} (${job.html_url})`);
       await octokit.rest.pulls.createReviewComment({
         owner,
         repo,
@@ -68,12 +71,16 @@ export async function mergePullRequest(
           'This Pull Request is closed by a GitHub Action:\n\n' + job.html_url,
       });
     } catch (requestError) {
-      /* empty */
+      if (requestError instanceof RequestError) {
+        info(
+          `Failed to comment on the Pull Request: [${requestError.status}] ${requestError.message}`,
+        );
+      }
     }
   } catch (requestError) {
     if (requestError instanceof RequestError) {
       warning(
-        `Failed to merge pull request: [${requestError.status}] ${requestError.message}`,
+        `Failed to merge the Pull Request: [${requestError.status}] ${requestError.message}`,
       );
 
       // If it's merged by someone else in a race condition we treat it as skipped,
