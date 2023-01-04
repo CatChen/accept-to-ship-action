@@ -63,13 +63,13 @@ export async function mergePullRequest(
         run_id: context.runId,
       });
       info(`Job ID: ${job.id} (${job.html_url})`);
-      await octokit.rest.issues.createComment({
+      const { data: comment } = await octokit.rest.issues.createComment({
         owner,
         repo,
         issue_number: pullRequestNumber,
-        body:
-          'This Pull Request is closed by a GitHub Action:\n\n' + job.html_url,
+        body: 'This Pull Request is closed by a [GitHub Action](${job.html_url})',
       });
+      info(`Comment is created: ${comment.html_url}`);
     } catch (requestError) {
       if (requestError instanceof RequestError) {
         info(
