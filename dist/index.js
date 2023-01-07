@@ -11920,7 +11920,7 @@ function mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit) 
                     owner,
                     repo,
                     issue_number: pullRequestNumber,
-                    body: 'This Pull Request is closed by a [GitHub Action](${job.html_url})',
+                    body: `This Pull Request is closed by a [GitHub Action](${job.html_url})`,
                 });
                 (0, console_1.info)(`Comment is created: ${comment.html_url}`);
             }

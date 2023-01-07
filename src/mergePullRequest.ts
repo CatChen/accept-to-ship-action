@@ -67,7 +67,7 @@ export async function mergePullRequest(
         owner,
         repo,
         issue_number: pullRequestNumber,
-        body: 'This Pull Request is closed by a [GitHub Action](${job.html_url})',
+        body: `This Pull Request is closed by a [GitHub Action](${job.html_url})`,
       });
       info(`Comment is created: ${comment.html_url}`);
     } catch (requestError) {
