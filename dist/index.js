@@ -4151,7 +4151,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var BottleneckLight = _interopDefault(__nccwpck_require__(1174));
 
-const VERSION = "4.3.2";
+const VERSION = "5.0.1";
 
 const noop = () => Promise.resolve();
 // @ts-expect-error
@@ -4293,7 +4293,7 @@ function throttling(octokit, octokitOptions) {
   if (typeof (isUsingDeprecatedOnAbuseLimitHandler ? state.onAbuseLimit : state.onSecondaryRateLimit) !== "function" || typeof state.onRateLimit !== "function") {
     throw new Error(`octokit/plugin-throttling error:
         You must pass the onSecondaryRateLimit and onRateLimit error handlers.
-        See https://github.com/octokit/rest.js#throttling
+        See https://octokit.github.io/rest.js/#throttling
 
         const octokit = new Octokit({
           throttle: {
