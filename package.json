@@ -22,6 +22,7 @@
     "url": "https://github.com/CatChen/accept-to-ship-action/issues"
   },
   "homepage": "https://github.com/CatChen/accept-to-ship-action#readme",
+  "funding": "https://github.com/CatChen/accept-to-ship-action?sponsor=1",
   "devDependencies": {
     "@serverless-guru/prettier-plugin-import-order": "^0.4.1",
     "@types/node": "^18.11.3",
