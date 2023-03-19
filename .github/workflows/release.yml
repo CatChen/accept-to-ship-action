@@ -42,17 +42,23 @@ on:
 jobs:
   build:
     uses: ./.github/workflows/build.yml
-    secrets: inherit
+    permissions:
+      pull-requests: write
+      contents: write
 
   test:
     uses: ./.github/workflows/test.yml
-    secrets: inherit
+    permissions: write-all
 
   eslint:
     uses: ./.github/workflows/eslint.yml
 
   codeql:
     uses: ./.github/workflows/codeql.yml
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
 
   release:
     name: Release
@@ -72,10 +78,11 @@ jobs:
         uses: CatChen/node-package-release-action@v1
         with:
           release-type: ${{ inputs.release-type || 'patch' }}
-          prerelease: ${{ inputs.prerelease || true }}
+          prerelease: ${{ inputs.prerelease || false }}
           update-shorthand-release: true
           dry-run: ${{ inputs.dry-run || false }}
           skip-if-no-diff: ${{ inputs.skip-if-no-diff || true }}
+          diff-targets: ${{ inputs.diff-targets || 'dist/**/*' }}
 
   publish:
     name: Publish

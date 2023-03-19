@@ -66,14 +66,15 @@ jobs:
         contains(github.event.workflow_run.pull_requests.*.base.ref, 'main')
       }}
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      pull-requests: write
+      contents: write
     outputs:
       skipped: ${{ steps.ship.outputs.skipped }}
     steps:
       - uses: actions/checkout@v3
 
-      - id: ship
-        uses: ./
+      - uses: CatChen/accept-to-ship-action@v0.4
         with:
           merge-method: squash
           timeout: 0
@@ -89,7 +90,9 @@ jobs:
         contains(github.event.workflow_run.pull_requests.*.base.ref, 'main')
       }}
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      pull-requests: write
+      contents: write
     outputs:
       skipped: ${{ steps.ship.outputs.skipped }}
     steps:
@@ -106,16 +109,18 @@ jobs:
   build:
     needs: [accept-to-ship, pass-to-ship]
     if: ${{ !needs.accept-to-ship.outputs.skipped || !needs.pass-to-ship.outputs.skipped }}
+    permissions:
+      pull-requests: write
+      contents: write
     uses: ./.github/workflows/build.yml
-    secrets: inherit
     with:
       ref: 'refs/heads/main'
 
   test:
     needs: [accept-to-ship, pass-to-ship]
     if: ${{ !needs.accept-to-ship.outputs.skipped || !needs.pass-to-ship.outputs.skipped }}
+    permissions: write-all
     uses: ./.github/workflows/test.yml
-    secrets: inherit
     with:
       ref: 'refs/heads/main'
 
@@ -129,6 +134,10 @@ jobs:
   codeql:
     needs: [accept-to-ship, pass-to-ship]
     if: ${{ !needs.accept-to-ship.outputs.skipped || !needs.pass-to-ship.outputs.skipped }}
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     uses: ./.github/workflows/codeql.yml
     with:
       ref: 'refs/heads/main'
