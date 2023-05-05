@@ -25,7 +25,7 @@
   "funding": "https://github.com/CatChen/accept-to-ship-action?sponsor=1",
   "devDependencies": {
     "@serverless-guru/prettier-plugin-import-order": "^0.4.1",
-    "@types/node": "^18.11.3",
+    "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^5.40.1",
     "@typescript-eslint/parser": "^5.40.1",
     "@vercel/ncc": "^0.36.0",
