@@ -12,12 +12,12 @@ export function getOctokit() {
         onRateLimit: (
           retryAfter: number,
           options: {
-            method: string;
-            url: string;
-            request: { retryCount: number };
+            method?: string;
+            url?: string;
+            request?: { retryCount?: number };
           },
         ) => {
-          if (options.request.retryCount === 0) {
+          if (options.request?.retryCount === 0) {
             octokit.log.warn(
               `Request quota exhausted for request ${options.method} ${options.url}`,
             );
@@ -32,12 +32,12 @@ export function getOctokit() {
         onSecondaryRateLimit: (
           retryAfter: number,
           options: {
-            method: string;
-            url: string;
-            request: { retryCount: number };
+            method?: string;
+            url?: string;
+            request?: { retryCount?: number };
           },
         ) => {
-          if (options.request.retryCount === 0) {
+          if (options.request?.retryCount === 0) {
             octokit.log.warn(
               `Abuse detected for request ${options.method} ${options.url}`,
             );
