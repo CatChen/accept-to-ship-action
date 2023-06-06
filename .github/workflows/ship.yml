@@ -77,7 +77,7 @@ jobs:
       - id: get-github-app-token
         uses: getsentry/action-github-app-token@v2
         with:
-          app_id: ${{ secrets.ACCEPT_TO_SHIP_BOT_APP_ID }}
+          app_id: ${{ env.ACCEPT_TO_SHIP_BOT_APP_ID }}
           private_key: ${{ secrets.ACCEPT_TO_SHIP_BOT_APP_PRIVATE_KEY }}
 
       - uses: CatChen/accept-to-ship-action@v0.4
@@ -108,7 +108,7 @@ jobs:
       - id: get-github-app-token
         uses: getsentry/action-github-app-token@v2
         with:
-          app_id: ${{ secrets.ACCEPT_TO_SHIP_BOT_APP_ID }}
+          app_id: ${{ env.ACCEPT_TO_SHIP_BOT_APP_ID }}
           private_key: ${{ secrets.ACCEPT_TO_SHIP_BOT_APP_PRIVATE_KEY }}
 
       - id: ship
