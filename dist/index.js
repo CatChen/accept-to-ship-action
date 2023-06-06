@@ -4151,7 +4151,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var BottleneckLight = _interopDefault(__nccwpck_require__(1174));
 
-const VERSION = "5.0.1";
+const VERSION = "5.2.2";
 
 const noop = () => Promise.resolve();
 // @ts-expect-error
@@ -11370,7 +11370,8 @@ function getOctokit() {
     const octokit = new Octokit((0, utils_1.getOctokitOptions)(githubToken, {
         throttle: {
             onRateLimit: (retryAfter, options) => {
-                if (options.request.retryCount === 0) {
+                var _a;
+                if (((_a = options.request) === null || _a === void 0 ? void 0 : _a.retryCount) === 0) {
                     octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
                     octokit.log.info(`Retrying after ${retryAfter} seconds!`);
                     return true;
@@ -11380,7 +11381,8 @@ function getOctokit() {
                 }
             },
             onSecondaryRateLimit: (retryAfter, options) => {
-                if (options.request.retryCount === 0) {
+                var _a;
+                if (((_a = options.request) === null || _a === void 0 ? void 0 : _a.retryCount) === 0) {
                     octokit.log.warn(`Abuse detected for request ${options.method} ${options.url}`);
                     octokit.log.info(`Retrying after ${retryAfter} seconds!`);
                     return true;
