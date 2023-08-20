@@ -33,8 +33,8 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
     "husky": "^8.0.1",
+    "lint-staged": "^14.0.0",
     "prettier": "^2.7.1",
-    "pretty-quick": "^3.1.3",
     "typescript": "^5.0.2"
   },
   "dependencies": {
@@ -43,5 +43,11 @@
     "@octokit/plugin-retry": "^3.0.9",
     "@octokit/plugin-throttling": "^5.0.1",
     "@octokit/webhooks-definitions": "^3.67.3"
+  },
+  "lint-staged": {
+    "*.(ts,js)": "yarn lint --fix",
+    "*.json": "yarn prettier -w",
+    "*.(yml,yaml)": "yarn prettier -w",
+    "*.(md,markdown)": "yarn prettier -w"
   }
 }
