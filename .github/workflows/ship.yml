@@ -72,7 +72,7 @@ jobs:
     outputs:
       skipped: ${{ steps.ship.outputs.skipped }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - id: get-github-app-token
         uses: getsentry/action-github-app-token@v2
@@ -103,7 +103,7 @@ jobs:
     outputs:
       skipped: ${{ steps.ship.outputs.skipped }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - id: get-github-app-token
         uses: getsentry/action-github-app-token@v2
