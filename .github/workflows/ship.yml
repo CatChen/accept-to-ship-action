@@ -74,8 +74,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - id: get-github-app-token
-        uses: getsentry/action-github-app-token@v3
+      - uses: getsentry/action-github-app-token@v3
+        id: get-github-app-token
         with:
           app_id: ${{ secrets.ACCEPT_TO_SHIP_BOT_APP_ID }}
           private_key: ${{ secrets.ACCEPT_TO_SHIP_BOT_APP_PRIVATE_KEY }}
@@ -106,8 +106,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - id: get-github-app-token
-        uses: getsentry/action-github-app-token@v3
+      - uses: getsentry/action-github-app-token@v3
+        id: get-github-app-token
         with:
           app_id: ${{ secrets.ACCEPT_TO_SHIP_BOT_APP_ID }}
           private_key: ${{ secrets.ACCEPT_TO_SHIP_BOT_APP_PRIVATE_KEY }}
