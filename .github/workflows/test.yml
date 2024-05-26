@@ -89,7 +89,7 @@ jobs:
           SHA: ${{ github.sha }}
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-          BASE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests.*.number }}
         run: |
           git commit --allow-empty -m "Test base commit for #$BASE_PR_NUMBER ($SHA) by $RUN_NUMBER-$RUN_ATTEMPT"
           echo "::notice::Test base commit is `git rev-parse --verify HEAD`"
@@ -109,12 +109,12 @@ jobs:
           RUN_ID: ${{ github.run_id }}
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-          BASE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests.*.number }}
         run: |
           echo "::notice::Run number is $RUN_NUMBER"
           echo "::notice::Run attempt is $RUN_ATTEMPT"
           echo "::notice::Base PR number is $BASE_PR_NUMBER"
-          gh pr create --base "main" --title "Push Test PR for #$BASE_PR_NUMBER ($SHA)" --body "Generated from #$BASE_PR_NUMBER.
+          gh pr create --base "main" --title "Test base PR for #$BASE_PR_NUMBER ($SHA)" --body "Generated from #$BASE_PR_NUMBER.
 
           Run ID: [$RUN_ID]($(gh run view $RUN_ID --json 'url' --jq '.url')). Number: $RUN_NUMBER. Attempt: $RUN_ATTEMPT."
           TEST_BASE_PR_NUMBER=`gh pr view | grep 'number:' | cut -f 2`
@@ -133,7 +133,7 @@ jobs:
           SHA: ${{ github.sha }}
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-          BASE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests.*.number }}
         run: |
           git commit --allow-empty -m "Test head commit for #$BASE_PR_NUMBER ($SHA) by $RUN_NUMBER-$RUN_ATTEMPT"
           echo "::notice::Test head commit is `git rev-parse --verify HEAD`"
@@ -154,10 +154,10 @@ jobs:
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
           TEST_BASE_BRANCH_NAME: ${{ format('workflows/tests/base/id-{0}/run-{1}/attempt-{2}/sha-{3}', github.run_id, github.run_number, github.run_attempt, github.sha) }}
-          BASE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests.*.number }}
         run: |
           echo "::notice::Base PR number is $BASE_PR_NUMBER"
-          gh pr create --base "$TEST_BASE_BRANCH_NAME" --title "Push Test PR for #$BASE_PR_NUMBER ($SHA)" --body "Generated from #$BASE_PR_NUMBER.
+          gh pr create --base "$TEST_BASE_BRANCH_NAME" --title "Test head PR for #$BASE_PR_NUMBER ($SHA)" --body "Generated from #$BASE_PR_NUMBER.
 
           Run ID: [$RUN_ID]($(gh run view $RUN_ID --json 'url' --jq '.url')). Number: $RUN_NUMBER. Attempt: $RUN_ATTEMPT.
 
@@ -199,7 +199,7 @@ jobs:
         if: ${{ always() && steps.check-pr.outputs.checks-temp-file != '' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BASE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests.*.number }}
           TEST_HEAD_PR_NUMBER: ${{ steps.open-head-pr.outputs.test-head-pr-number }}
           CHECKS_TEMP_FILE: ${{ steps.check-pr.outputs.checks-temp-file }}
         run: |
