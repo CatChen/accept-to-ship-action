@@ -57,13 +57,12 @@ export declare function getCheckRuns(owner: string, repo: string, ref: string, o
         created_at: string;
         updated_at: string;
         permissions: {
+            [key: string]: string | undefined;
             issues?: string | undefined;
             checks?: string | undefined;
             metadata?: string | undefined;
             contents?: string | undefined;
             deployments?: string | undefined;
-        } & {
-            [key: string]: string;
         };
         events: string[];
         installations_count?: number | undefined;
@@ -143,13 +142,12 @@ export declare function getCheckRuns(owner: string, repo: string, ref: string, o
             created_at: string;
             updated_at: string;
             permissions: {
+                [key: string]: string | undefined;
                 issues?: string | undefined;
                 checks?: string | undefined;
                 metadata?: string | undefined;
                 contents?: string | undefined;
                 deployments?: string | undefined;
-            } & {
-                [key: string]: string;
             };
             events: string[];
             installations_count?: number | undefined;

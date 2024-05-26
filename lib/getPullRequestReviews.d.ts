@@ -39,7 +39,7 @@ export declare function getPullRequestReviews(owner: string, repo: string, pullR
         };
     };
     submitted_at?: string | undefined;
-    commit_id: string;
+    commit_id: string | null;
     body_html?: string | undefined;
     body_text?: string | undefined;
     author_association: "COLLABORATOR" | "CONTRIBUTOR" | "FIRST_TIMER" | "FIRST_TIME_CONTRIBUTOR" | "MANNEQUIN" | "MEMBER" | "NONE" | "OWNER";

@@ -9,8 +9,9 @@ export declare function getWorkflowRunJobs(owner: string, repo: string, octokit:
     head_sha: string;
     url: string;
     html_url: string | null;
-    status: "completed" | "queued" | "in_progress";
-    conclusion: string | null;
+    status: "completed" | "queued" | "in_progress" | "waiting";
+    conclusion: "success" | "neutral" | "skipped" | "failure" | "cancelled" | "timed_out" | "action_required" | null;
+    created_at: string;
     started_at: string;
     completed_at: string | null;
     name: string;
@@ -28,4 +29,6 @@ export declare function getWorkflowRunJobs(owner: string, repo: string, octokit:
     runner_name: string | null;
     runner_group_id: number | null;
     runner_group_name: string | null;
+    workflow_name: string | null;
+    head_branch: string | null;
 }[]>;
