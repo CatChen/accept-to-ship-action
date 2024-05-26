@@ -1,5 +1,4 @@
 import type { Octokit } from '@octokit/core';
-import type { components } from '@octokit/openapi-types/types';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
 import { context } from '@actions/github';
 
@@ -15,5 +14,5 @@ export async function getWorkflowRunJobs(
     repo,
     run_id: context.runId,
   });
-  return jobs as components['schemas']['job'][];
+  return jobs;
 }

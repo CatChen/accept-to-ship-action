@@ -382,4 +382,4 @@ async function run(): Promise<void> {
   }
 }
 
-run();
+run().catch((error: Error) => setFailed(error));
