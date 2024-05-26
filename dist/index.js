@@ -11592,8 +11592,8 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
     unitDisplay: 'long',
 });
 function handlePullRequest(pullRequestNumber) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         (0, core_1.startGroup)(`Pull Request number: ${pullRequestNumber}`);
         const octokit = (0, getOcktokit_1.getOctokit)();
         const owner = github_1.context.repo.owner;
@@ -11898,8 +11898,8 @@ function checkIfPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
 }
 exports.checkIfPullRequestMerged = checkIfPullRequestMerged;
 function mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit) {
-    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b;
         try {
             yield octokit.rest.pulls.merge({
                 owner,
