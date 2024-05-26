@@ -80,7 +80,8 @@ jobs:
           app_id: ${{ secrets.ACCEPT_TO_SHIP_BOT_APP_ID }}
           private_key: ${{ secrets.ACCEPT_TO_SHIP_BOT_APP_PRIVATE_KEY }}
 
-      - uses: CatChen/accept-to-ship-action@v0.4
+      - id: ship
+        uses: ./
         with:
           github-token: ${{ steps.get-github-app-token.outputs.token }}
           merge-method: squash
