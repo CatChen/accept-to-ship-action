@@ -89,7 +89,7 @@ jobs:
           SHA: ${{ github.sha }}
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-          BASE_PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests.*.number }}
+          BASE_PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number }}
         run: |
           git commit --allow-empty -m "Test base commit for #$BASE_PR_NUMBER ($SHA) by $RUN_NUMBER-$RUN_ATTEMPT"
           echo "::notice::Test base commit is `git rev-parse --verify HEAD`"
@@ -109,7 +109,7 @@ jobs:
           RUN_ID: ${{ github.run_id }}
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-          BASE_PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests.*.number }}
+          BASE_PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number }}
         run: |
           echo "::notice::Run number is $RUN_NUMBER"
           echo "::notice::Run attempt is $RUN_ATTEMPT"
@@ -133,7 +133,7 @@ jobs:
           SHA: ${{ github.sha }}
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-          BASE_PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests.*.number }}
+          BASE_PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number }}
         run: |
           git commit --allow-empty -m "Test head commit for #$BASE_PR_NUMBER ($SHA) by $RUN_NUMBER-$RUN_ATTEMPT"
           echo "::notice::Test head commit is `git rev-parse --verify HEAD`"
