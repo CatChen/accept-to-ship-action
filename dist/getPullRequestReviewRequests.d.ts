@@ -31,6 +31,7 @@ export declare function getPullRequestReviewRequests(owner: string, repo: string
         slug: string;
         description: string | null;
         privacy?: string | undefined;
+        notification_setting?: string | undefined;
         permission: string;
         permissions?: {
             pull: boolean;
@@ -52,6 +53,7 @@ export declare function getPullRequestReviewRequests(owner: string, repo: string
             description: string | null;
             permission: string;
             privacy?: string | undefined;
+            notification_setting?: string | undefined;
             html_url: string;
             repositories_url: string;
             slug: string;
