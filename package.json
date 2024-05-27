@@ -42,7 +42,7 @@
     "@actions/core": "^1.10.0",
     "@actions/github": "^6.0.0",
     "@octokit/plugin-retry": "^6.0.1",
-    "@octokit/plugin-throttling": "^8.2.0",
+    "@octokit/plugin-throttling": "^9.3.0",
     "@octokit/webhooks-definitions": "^3.67.3"
   },
   "lint-staged": {
