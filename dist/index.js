@@ -31464,6 +31464,14 @@ function run() {
                     yield handlePullRequest(pullRequest.number);
                 }))();
                 break;
+            case 'issue_comment':
+                yield (() => __awaiter(this, void 0, void 0, function* () {
+                    const issue = github_1.context.payload.issue;
+                    if (issue.pull_request !== undefined) {
+                        yield handlePullRequest(issue.number);
+                    }
+                }))();
+                break;
             case 'check_run':
                 yield (() => __awaiter(this, void 0, void 0, function* () {
                     const checkRun = github_1.context.payload.check_run;
@@ -31476,7 +31484,7 @@ function run() {
                         yield handlePullRequest(pullRequest.number);
                     }
                 }))();
-                return;
+                break;
             case 'check_suite':
                 yield (() => __awaiter(this, void 0, void 0, function* () {
                     const checkSuites = github_1.context.payload.check_suite;
@@ -31489,7 +31497,7 @@ function run() {
                         yield handlePullRequest(pullRequest.number);
                     }
                 }))();
-                return;
+                break;
             case 'workflow_run':
                 yield (() => __awaiter(this, void 0, void 0, function* () {
                     const workflowRun = github_1.context.payload.workflow_run;
@@ -31506,7 +31514,7 @@ function run() {
             case 'workflow_dispatch':
             default:
                 (0, core_1.error)(`Unsupported GitHub Action event: ${github_1.context.eventName}`);
-                return;
+                break;
         }
     });
 }
