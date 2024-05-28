@@ -2,6 +2,7 @@ import type { components } from '@octokit/openapi-types/types';
 import type {
   CheckRunEvent,
   CheckSuiteEvent,
+  IssueCommentEvent,
   PullRequestEvent,
   PullRequestReviewEvent,
   WorkflowRunEvent,
@@ -330,6 +331,14 @@ async function run(): Promise<void> {
         await handlePullRequest(pullRequest.number);
       })();
       break;
+    case 'issue_comment':
+      await (async () => {
+        const issue = (context.payload as IssueCommentEvent).issue;
+        if (issue.pull_request !== undefined) {
+          await handlePullRequest(issue.number);
+        }
+      })();
+      break;
     case 'check_run':
       await (async () => {
         const checkRun = (context.payload as CheckRunEvent).check_run;
@@ -344,7 +353,7 @@ async function run(): Promise<void> {
           await handlePullRequest(pullRequest.number);
         }
       })();
-      return;
+      break;
     case 'check_suite':
       await (async () => {
         const checkSuites = (context.payload as CheckSuiteEvent).check_suite;
@@ -359,7 +368,7 @@ async function run(): Promise<void> {
           await handlePullRequest(pullRequest.number);
         }
       })();
-      return;
+      break;
     case 'workflow_run':
       await (async () => {
         const workflowRun = (context.payload as WorkflowRunEvent).workflow_run;
@@ -378,7 +387,7 @@ async function run(): Promise<void> {
     case 'workflow_dispatch':
     default:
       error(`Unsupported GitHub Action event: ${context.eventName}`);
-      return;
+      break;
   }
 }
 
