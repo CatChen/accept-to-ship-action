@@ -31403,16 +31403,16 @@ function handlePullRequest(pullRequestNumber) {
             for (const checkRun of checkRuns) {
                 (0, core_1.info)(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
                 (0, core_1.info)(`  Check name: ${checkRun.name}`);
-                if (checkRun.status === COMPLETED) {
-                    if (jobIds.includes(checkRun.id)) {
-                        (0, core_1.info)(`  Check status/conclusion: ${checkRun.conclusion}`);
-                        (0, core_1.info)('  This check is a job in the current Workflow.\n\n');
-                    }
-                    else if (externalIds === null || externalIds === void 0 ? void 0 : externalIds.includes(checkRun.external_id)) {
-                        (0, core_1.info)(`  Check status/conclusion: ${checkRun.conclusion}`);
-                        (0, core_1.info)('  This check is a job in another instance of the same Workflow.\n\n');
-                    }
-                    else if (checkRun.conclusion !== null &&
+                if (jobIds.includes(checkRun.id)) {
+                    (0, core_1.info)(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`);
+                    (0, core_1.info)('  This check is a job in the current Workflow.\n\n');
+                }
+                else if (externalIds === null || externalIds === void 0 ? void 0 : externalIds.includes(checkRun.external_id)) {
+                    (0, core_1.info)(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`);
+                    (0, core_1.info)('  This check is a job in another instance of the same Workflow.\n\n');
+                }
+                else if (checkRun.status === COMPLETED) {
+                    if (checkRun.conclusion !== null &&
                         [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)) {
                         (0, core_1.info)(`  Check status/conclusion: ${checkRun.conclusion}\n\n`);
                     }

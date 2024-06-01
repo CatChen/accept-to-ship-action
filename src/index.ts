@@ -251,16 +251,20 @@ async function handlePullRequest(pullRequestNumber: number) {
     for (const checkRun of checkRuns) {
       info(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
       info(`  Check name: ${checkRun.name}`);
-      if (checkRun.status === COMPLETED) {
-        if (jobIds.includes(checkRun.id)) {
-          info(`  Check status/conclusion: ${checkRun.conclusion}`);
-          info('  This check is a job in the current Workflow.\n\n');
-        } else if (externalIds?.includes(checkRun.external_id)) {
-          info(`  Check status/conclusion: ${checkRun.conclusion}`);
-          info(
-            '  This check is a job in another instance of the same Workflow.\n\n',
-          );
-        } else if (
+      if (jobIds.includes(checkRun.id)) {
+        info(
+          `  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`,
+        );
+        info('  This check is a job in the current Workflow.\n\n');
+      } else if (externalIds?.includes(checkRun.external_id)) {
+        info(
+          `  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`,
+        );
+        info(
+          '  This check is a job in another instance of the same Workflow.\n\n',
+        );
+      } else if (checkRun.status === COMPLETED) {
+        if (
           checkRun.conclusion !== null &&
           [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)
         ) {
