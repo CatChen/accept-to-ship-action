@@ -206,11 +206,11 @@ async function handlePullRequest(pullRequestNumber: number) {
         info(
           `    Step status/conclusion: ${
             step.status === COMPLETED ? step.conclusion : step.status
-          }\n`,
+          }`,
         );
+        info('    ---');
       }
       endGroup();
-      info('\n\n');
     }
   }
   const jobIds = jobs.map((job) => job.id);
@@ -255,25 +255,28 @@ async function handlePullRequest(pullRequestNumber: number) {
         info(
           `  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`,
         );
-        info('  This check is a job in the current Workflow.\n\n');
+        info('  This check is a job in the current Workflow.');
+        info('  ---');
       } else if (externalIds?.includes(checkRun.external_id)) {
         info(
           `  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`,
         );
-        info(
-          '  This check is a job in another instance of the same Workflow.\n\n',
-        );
+        info('  This check is a job in another instance of the same Workflow.');
+        info('  ---');
       } else if (checkRun.status === COMPLETED) {
         if (
           checkRun.conclusion !== null &&
           [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)
         ) {
-          info(`  Check status/conclusion: ${checkRun.conclusion}\n\n`);
+          info(`  Check status/conclusion: ${checkRun.conclusion}`);
+          info('  ---');
         } else {
-          error(`  Check status/conclusion: ${checkRun.conclusion}\n\n`);
+          error(`  Check status/conclusion: ${checkRun.conclusion}`);
+          info('  ---');
         }
       } else {
-        warning(`  Check status/conclusion: ${checkRun.status}\n\n`);
+        warning(`  Check status/conclusion: ${checkRun.status}`);
+        info('  ---');
       }
     }
 
@@ -312,7 +315,8 @@ async function handlePullRequest(pullRequestNumber: number) {
         return;
       }
 
-      info(`Sleeping: ${FORMATTER.format(interval)}\n`);
+      info(`Sleeping: ${FORMATTER.format(interval)}`);
+      info('---');
       await sleep(interval * 1000);
     } else {
       worthChecking = false;
