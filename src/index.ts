@@ -227,12 +227,40 @@ async function handlePullRequest(pullRequestNumber: number) {
       pullRequest.head.sha,
       octokit,
     );
+
+    if (externalIds === undefined) {
+      // Two instances of the same job's execution share the same external id but not the same job id.
+      // We use external id to identify other instances of the job.
+      externalIds = checkRuns
+        .filter((checkRun) => {
+          if (checkRun.external_id === null) {
+            return false;
+          }
+          if (jobIds.includes(checkRun.id)) {
+            info(
+              `External ID associated with a job in current Workflow: ${checkRun.external_id} (job id: ${checkRun.id})`,
+            );
+            return true;
+          }
+          return false;
+        })
+        .map((checkRun) => checkRun.external_id);
+    }
+
     info(`Checks:`);
     for (const checkRun of checkRuns) {
       info(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
       info(`  Check name: ${checkRun.name}`);
       if (checkRun.status === COMPLETED) {
-        if (
+        if (jobIds.includes(checkRun.id)) {
+          info(`  Check status/conclusion: ${checkRun.conclusion}`);
+          info('  This check is a job in the current Workflow.\n\n');
+        } else if (externalIds?.includes(checkRun.external_id)) {
+          info(`  Check status/conclusion: ${checkRun.conclusion}`);
+          info(
+            '  This check is a job in another instance of the same Workflow.\n\n',
+          );
+        } else if (
           checkRun.conclusion !== null &&
           [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)
         ) {
@@ -243,17 +271,6 @@ async function handlePullRequest(pullRequestNumber: number) {
       } else {
         warning(`  Check status/conclusion: ${checkRun.status}\n\n`);
       }
-    }
-
-    if (externalIds === undefined) {
-      // Two instances of the same job's execution share the same external id but not the same job id.
-      // We use external id to identify other instances of the job.
-      externalIds = checkRuns
-        .filter(
-          (checkRun) =>
-            jobIds.includes(checkRun.id) && checkRun.external_id !== null,
-        )
-        .map((checkRun) => checkRun.external_id);
     }
 
     const failedChecks = checkRuns.filter(
