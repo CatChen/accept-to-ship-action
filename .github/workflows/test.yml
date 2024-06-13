@@ -10,12 +10,6 @@ on:
     types:
       - completed
   workflow_dispatch:
-  workflow_call:
-    inputs:
-      ref:
-        description: 'Checkout a different git ref instead of the SHA from the GitHub event.'
-        required: false
-        type: string
 
 jobs:
   test:
@@ -38,7 +32,6 @@ jobs:
       - uses: actions/checkout@v4
         if: ${{ github.event_name != 'workflow_run' }}
         with:
-          ref: ${{ inputs.ref }}
           fetch-depth: 0
 
       - uses: actions/checkout@v4
@@ -176,24 +169,37 @@ jobs:
         id: check-pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TEST_HEAD_PR_NUMBER: ${{ steps.open-head-pr.outputs.test-head-pr-number }}
         run: |
           CHECKS_TEMP_FILE="$(mktemp)"
+          echo "checks-temp-file=$CHECKS_TEMP_FILE" >> $GITHUB_OUTPUT;
+
           sleep 10
-          PENDING=$(gh pr checks | cut -f2 | grep pending | wc -l)
-          while [ $PENDING -ne 0 ]
+          CHECKS=$(gh pr checks "$TEST_HEAD_PR_NUMBER" | tee -a $CHECKS_TEMP_FILE)
+          PENDING=$(echo "$CHECKS" | cut -f2 | grep pending | wc -l)
+
+          while [[ $PENDING -gt 0 && -n "$PENDING" ]]
           do
             echo "::group::Pending checks: $PENDING"
-            gh pr checks --watch
+            gh pr checks "$TEST_HEAD_PR_NUMBER" --watch --fail-fast | tee -a $CHECKS_TEMP_FILE
+
             sleep 10
-            PENDING=$(gh pr checks | cut -f2 | grep pending | wc -l)
+            CHECKS=$(gh pr checks "$TEST_HEAD_PR_NUMBER" | tee -a $CHECKS_TEMP_FILE)
+            PENDING=$(echo "$CHECKS" | cut -f2 | grep pending | wc -l)
+
             echo "::endgroup::"
           done
-          gh pr checks >> $CHECKS_TEMP_FILE
-          echo "::notice::Temp file content:
 
-          $(cat $CHECKS_TEMP_FILE)
-          "
-          echo "checks-temp-file=$CHECKS_TEMP_FILE" >> $GITHUB_OUTPUT
+          if [[ -s $CHECKS_TEMP_FILE ]]
+          then
+            echo "::group::Temp file content"
+            cat $CHECKS_TEMP_FILE
+            echo "::endgroup::"
+          else
+            echo "checks-temp-file=" >> $GITHUB_OUTPUT;
+          fi
+
+          gh pr checks "$TEST_HEAD_PR_NUMBER" # Let check outcome determine the step exit code
 
       - name: Report Checks
         if: ${{ always() && steps.check-pr.outputs.checks-temp-file != '' }}
@@ -203,11 +209,19 @@ jobs:
           TEST_HEAD_PR_NUMBER: ${{ steps.open-head-pr.outputs.test-head-pr-number }}
           CHECKS_TEMP_FILE: ${{ steps.check-pr.outputs.checks-temp-file }}
         run: |
-          gh pr comment "$BASE_PR_NUMBER" --body "**Checks from #$TEST_HEAD_PR_NUMBER**
+          gh pr comment "$BASE_PR_NUMBER" --body "**Checks from Push Test PR #$TEST_HEAD_PR_NUMBER**
 
-          | Check | Status |
-          | --- | --- |
-          $(cat $CHECKS_TEMP_FILE | grep -E 'https://' | tac | awk 'BEGIN { FS ="\t" } ; { if (! seen[$1]++) print }' | sed -E 's/(.*)\t(.*)\t(.*)\t(.*)\t(.*)/| [\1](\4) | \2 |/')"
+          | Check | Status | Time |
+          | --- | --- | --: |
+          $(cat $CHECKS_TEMP_FILE |
+            grep -E 'https://' |
+            tac |
+            awk 'BEGIN { FS ="\t" } ; { if (! seen[$1]++) print }' |
+            sed -E 's/(.*)\t(pass)\t(.*)\t(.*)\t(.*)/| [**\1**](\4) | ✅ | \3 |/;
+              s/(.*)\t(fail)\t(.*)\t(.*)\t(.*)/| [*\1*](\4) | ⛔ | \3 |/;
+              s/(.*)\t(skipping)\t(.*)\t(.*)\t(.*)/| [~\1~](\4) | ⏭️ | |/;
+              s/(.*)\t(pending)\t(.*)\t(.*)\t(.*)/| [\1](\4) | 🔄 | |/;
+              s/(.*)\t(.*)\t(.*)\t(.*)\t(.*)/| [\1](\4) | \2 | \3 |/')"
           rm -f $CHECKS_TEMP_FILE
 
       - name: Verify PR
