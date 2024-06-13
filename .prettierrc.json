@@ -18,5 +18,9 @@
   "importOrderSortIndividualImports": true,
   "importOrderMergeDuplicateImports": true,
   "importOrderBuiltinModulesToTop": true,
-  "importOrderTypeImportsToTop": true
+  "importOrderTypeImportsToTop": true,
+  "plugins": [
+    "@prettier/plugin-xml",
+    "@serverless-guru/prettier-plugin-import-order"
+  ]
 }
