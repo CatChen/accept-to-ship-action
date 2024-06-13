@@ -24,6 +24,7 @@
   "homepage": "https://github.com/CatChen/accept-to-ship-action#readme",
   "funding": "https://github.com/CatChen/accept-to-ship-action?sponsor=1",
   "devDependencies": {
+    "@prettier/plugin-xml": "^3.4.1",
     "@serverless-guru/prettier-plugin-import-order": "^0.4.1",
     "@types/node": "^20.1.0",
     "@typescript-eslint/eslint-plugin": "^7.10.0",
@@ -34,7 +35,7 @@
     "eslint-plugin-prettier": "^5.0.0",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.5",
-    "prettier": "^3.0.2",
+    "prettier": "^3.3.2",
     "typescript": "^5.0.2",
     "typescript-eslint": "^7.10.0"
   },
@@ -49,6 +50,7 @@
     "*.(ts,js)": "yarn lint --fix",
     "*.json": "yarn prettier -w",
     "*.(yml,yaml)": "yarn prettier -w",
-    "*.(md,markdown)": "yarn prettier -w"
+    "*.(md,markdown)": "yarn prettier -w",
+    "*.(svg)": "yarn prettier -w"
   }
 }
