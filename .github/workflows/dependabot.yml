@@ -1,4 +1,4 @@
-name: Test for Dependabot
+name: Dependabot
 
 on:
   pull_request:
@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  dependabot-test:
-    name: Test for Dependabot
+  dependabot:
+    name: Dependabot
     if: ${{ !startsWith(github.head_ref, 'workflows/tests/') && github.actor == 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     steps:
