@@ -16,23 +16,35 @@ on:
 jobs:
   build:
     name: Build
+    if: ${{ !startsWith(github.head_ref, 'workflows/tests/') }}
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
       contents: write
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: get-github-app-token
+        with:
+          app-id: ${{ secrets.CHECK_GIT_STATUS_BOT_APP_ID }}
+          private-key: ${{ secrets.CHECK_GIT_STATUS_BOT_APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ inputs.ref || github.head_ref }}
+          token: ${{ steps.get-github-app-token.outputs.token }}
 
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           check-latest: true
+          cache: yarn
 
       - name: Install dependencies
         run: yarn
+
+      - name: Lint
+        run: yarn lint --fix
 
       - name: Build
         run: yarn build
@@ -45,5 +57,5 @@ jobs:
         with:
           fail-if-not-clean: ${{ github.actor != 'dependabot[bot]' || github.actor_id != 49699333 }}
           push-if-not-clean: true
-          push-token: ${{ secrets.CHECK_GIT_STATUS_ACTION_TOKEN }}
-          request-changes-token: ${{ secrets.GITHUB_TOKEN }}
+          request-changes-if-not-clean: false
+          push-token: ${{ steps.get-github-app-token.outputs.token }}
