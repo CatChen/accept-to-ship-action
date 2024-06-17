@@ -193,11 +193,18 @@ async function handlePullRequest(pullRequestNumber: number) {
   endGroup();
 
   const jobs = await getWorkflowRunJobs(owner, repo, octokit);
+  info(`Current workflow name: ${context.workflow}`);
+  info(`Current run id: ${context.runId}`);
+  info(`Current run number: ${context.runNumber}`);
+  info(
+    `Current run attempt: ${parseInt(process.env.GITHUB_RUN_ATTEMPT as string, 10)}`,
+  ); // context.runAttempt in the future release of @actions/github
+  info(`Current job static id: ${context.job}`);
+  info(`Current step static id: ${context.action}`);
   info(`Jobs in current Workflow: ${jobs.length}`);
   for (const job of jobs) {
     info(`  Job id: ${job.id} (${job.html_url})`);
     info(`  Job name: ${job.name}`);
-    info(`  Job run id/attempt: ${job.run_id}-${job.run_attempt}`);
     if (job.steps !== undefined) {
       startGroup(`  Job steps: ${job.steps.length}`);
       for (const step of job.steps) {
