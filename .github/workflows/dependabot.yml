@@ -6,9 +6,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  dependabot:
-    name: Dependabot
-    if: ${{ !startsWith(github.head_ref, 'workflows/tests/') && github.actor == 'dependabot[bot]' }}
+  label:
+    name: Label
+    if: ${{ !startsWith(github.head_ref, 'workflows/tests/') && github.actor == 'dependabot[bot]' && github.actor_id == 49699333 }}
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
-      - run: exit 0
+      - name: Add label for types group
+        if: ${{ contains(github.event.pull_request.title, 'Bump the types group') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr edit "$PR_NUMBER" --repo "$REPO" --add-label "pass2ship" --remove-reviewer "catchen"
+
+      - name: Add label for development-dependencies group
+        if: ${{ contains(github.event.pull_request.title, 'Bump the development-dependencies group') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr edit "$PR_NUMBER" --repo "$REPO" --add-label "pass2ship" --remove-reviewer "catchen"
