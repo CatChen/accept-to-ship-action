@@ -8,8 +8,8 @@ export declare function getCheckRuns(owner: string, repo: string, ref: string, o
     url: string;
     html_url: string | null;
     details_url: string | null;
-    status: "completed" | "queued" | "in_progress";
-    conclusion: "skipped" | "success" | "neutral" | "failure" | "cancelled" | "timed_out" | "action_required" | null;
+    status: "queued" | "in_progress" | "completed";
+    conclusion: "success" | "failure" | "neutral" | "cancelled" | "skipped" | "timed_out" | "action_required" | null;
     started_at: string | null;
     completed_at: string | null;
     output: {
@@ -25,11 +25,11 @@ export declare function getCheckRuns(owner: string, repo: string, ref: string, o
     } | null;
     app: {
         id: number;
-        slug?: string | undefined;
+        slug?: string;
         node_id: string;
         owner: {
-            name?: string | null | undefined;
-            email?: string | null | undefined;
+            name?: string | null;
+            email?: string | null;
             login: string;
             id: number;
             node_id: string;
@@ -48,7 +48,7 @@ export declare function getCheckRuns(owner: string, repo: string, ref: string, o
             received_events_url: string;
             type: string;
             site_admin: boolean;
-            starred_at?: string | undefined;
+            starred_at?: string;
         } | null;
         name: string;
         description: string | null;
@@ -57,19 +57,19 @@ export declare function getCheckRuns(owner: string, repo: string, ref: string, o
         created_at: string;
         updated_at: string;
         permissions: {
+            issues?: string;
+            checks?: string;
+            metadata?: string;
+            contents?: string;
+            deployments?: string;
             [key: string]: string | undefined;
-            issues?: string | undefined;
-            checks?: string | undefined;
-            metadata?: string | undefined;
-            contents?: string | undefined;
-            deployments?: string | undefined;
         };
         events: string[];
-        installations_count?: number | undefined;
-        client_id?: string | undefined;
-        client_secret?: string | undefined;
-        webhook_secret?: string | null | undefined;
-        pem?: string | undefined;
+        installations_count?: number;
+        client_id?: string;
+        client_secret?: string;
+        webhook_secret?: string | null;
+        pem?: string;
     } | null;
     pull_requests: {
         id: number;
@@ -99,22 +99,22 @@ export declare function getCheckRuns(owner: string, repo: string, ref: string, o
         id: number;
         node_id: string;
         task: string;
-        original_environment?: string | undefined;
+        original_environment?: string;
         environment: string;
         description: string | null;
         created_at: string;
         updated_at: string;
         statuses_url: string;
         repository_url: string;
-        transient_environment?: boolean | undefined;
-        production_environment?: boolean | undefined;
+        transient_environment?: boolean;
+        production_environment?: boolean;
         performed_via_github_app?: {
             id: number;
-            slug?: string | undefined;
+            slug?: string;
             node_id: string;
             owner: {
-                name?: string | null | undefined;
-                email?: string | null | undefined;
+                name?: string | null;
+                email?: string | null;
                 login: string;
                 id: number;
                 node_id: string;
@@ -133,7 +133,7 @@ export declare function getCheckRuns(owner: string, repo: string, ref: string, o
                 received_events_url: string;
                 type: string;
                 site_admin: boolean;
-                starred_at?: string | undefined;
+                starred_at?: string;
             } | null;
             name: string;
             description: string | null;
@@ -142,19 +142,19 @@ export declare function getCheckRuns(owner: string, repo: string, ref: string, o
             created_at: string;
             updated_at: string;
             permissions: {
+                issues?: string;
+                checks?: string;
+                metadata?: string;
+                contents?: string;
+                deployments?: string;
                 [key: string]: string | undefined;
-                issues?: string | undefined;
-                checks?: string | undefined;
-                metadata?: string | undefined;
-                contents?: string | undefined;
-                deployments?: string | undefined;
             };
             events: string[];
-            installations_count?: number | undefined;
-            client_id?: string | undefined;
-            client_secret?: string | undefined;
-            webhook_secret?: string | null | undefined;
-            pem?: string | undefined;
-        } | null | undefined;
-    } | undefined;
+            installations_count?: number;
+            client_id?: string;
+            client_secret?: string;
+            webhook_secret?: string | null;
+            pem?: string;
+        } | null;
+    };
 }[]>;

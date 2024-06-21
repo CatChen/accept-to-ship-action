@@ -4,8 +4,8 @@ export declare function getPullRequestReviews(owner: string, repo: string, pullR
     id: number;
     node_id: string;
     user: {
-        name?: string | null | undefined;
-        email?: string | null | undefined;
+        name?: string | null;
+        email?: string | null;
         login: string;
         id: number;
         node_id: string;
@@ -24,7 +24,7 @@ export declare function getPullRequestReviews(owner: string, repo: string, pullR
         received_events_url: string;
         type: string;
         site_admin: boolean;
-        starred_at?: string | undefined;
+        starred_at?: string;
     } | null;
     body: string;
     state: string;
@@ -38,9 +38,9 @@ export declare function getPullRequestReviews(owner: string, repo: string, pullR
             href: string;
         };
     };
-    submitted_at?: string | undefined;
+    submitted_at?: string;
     commit_id: string | null;
-    body_html?: string | undefined;
-    body_text?: string | undefined;
+    body_html?: string;
+    body_text?: string;
     author_association: "COLLABORATOR" | "CONTRIBUTOR" | "FIRST_TIMER" | "FIRST_TIME_CONTRIBUTOR" | "MANNEQUIN" | "MEMBER" | "NONE" | "OWNER";
 }[]>;
