@@ -30737,7 +30737,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getCheckRuns = void 0;
+exports.getCheckRuns = getCheckRuns;
 function getCheckRuns(owner, repo, ref, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield octokit.rest.checks.listForRef({
@@ -30748,7 +30748,6 @@ function getCheckRuns(owner, repo, ref, octokit) {
         return response.data.check_runs;
     });
 }
-exports.getCheckRuns = getCheckRuns;
 
 
 /***/ }),
@@ -30758,7 +30757,7 @@ exports.getCheckRuns = getCheckRuns;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getMergeMethod = void 0;
+exports.getMergeMethod = getMergeMethod;
 const core_1 = __nccwpck_require__(2186);
 function getMergeMethod() {
     const mergeMethod = (0, core_1.getInput)('merge-method');
@@ -30769,7 +30768,6 @@ function getMergeMethod() {
     }
     return mergeMethod;
 }
-exports.getMergeMethod = getMergeMethod;
 
 
 /***/ }),
@@ -30779,7 +30777,7 @@ exports.getMergeMethod = getMergeMethod;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getOctokit = void 0;
+exports.getOctokit = getOctokit;
 const core_1 = __nccwpck_require__(2186);
 const utils_1 = __nccwpck_require__(3030);
 const plugin_retry_1 = __nccwpck_require__(6298);
@@ -30816,7 +30814,6 @@ function getOctokit() {
     }));
     return octokit;
 }
-exports.getOctokit = getOctokit;
 
 
 /***/ }),
@@ -30835,7 +30832,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPullRequest = void 0;
+exports.getPullRequest = getPullRequest;
 function getPullRequest(owner, repo, pullRequestNumber, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield octokit.rest.pulls.get({
@@ -30846,7 +30843,6 @@ function getPullRequest(owner, repo, pullRequestNumber, octokit) {
         return response.data;
     });
 }
-exports.getPullRequest = getPullRequest;
 
 
 /***/ }),
@@ -30865,7 +30861,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPullRequestComments = void 0;
+exports.getPullRequestComments = getPullRequestComments;
 function getPullRequestComments(owner, repo, pullRequestNumber, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield octokit.rest.pulls.listReviewComments({
@@ -30876,7 +30872,6 @@ function getPullRequestComments(owner, repo, pullRequestNumber, octokit) {
         return response.data;
     });
 }
-exports.getPullRequestComments = getPullRequestComments;
 
 
 /***/ }),
@@ -30895,7 +30890,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPullRequestReviewRequests = void 0;
+exports.getPullRequestReviewRequests = getPullRequestReviewRequests;
 function getPullRequestReviewRequests(owner, repo, pullRequestNumber, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield octokit.rest.pulls.listRequestedReviewers({
@@ -30906,7 +30901,6 @@ function getPullRequestReviewRequests(owner, repo, pullRequestNumber, octokit) {
         return response.data;
     });
 }
-exports.getPullRequestReviewRequests = getPullRequestReviewRequests;
 
 
 /***/ }),
@@ -30925,7 +30919,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPullRequestReviews = void 0;
+exports.getPullRequestReviews = getPullRequestReviews;
 function getPullRequestReviews(owner, repo, pullRequestNumber, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield octokit.rest.pulls.listReviews({
@@ -30936,7 +30930,6 @@ function getPullRequestReviews(owner, repo, pullRequestNumber, octokit) {
         return response.data;
     });
 }
-exports.getPullRequestReviews = getPullRequestReviews;
 
 
 /***/ }),
@@ -30955,7 +30948,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getWorkflowRunJobs = void 0;
+exports.getWorkflowRunJobs = getWorkflowRunJobs;
 const github_1 = __nccwpck_require__(5438);
 function getWorkflowRunJobs(owner, repo, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -30967,7 +30960,6 @@ function getWorkflowRunJobs(owner, repo, octokit) {
         return jobs;
     });
 }
-exports.getWorkflowRunJobs = getWorkflowRunJobs;
 
 
 /***/ }),
@@ -31314,7 +31306,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.mergePullRequest = exports.checkIfPullRequestMerged = void 0;
+exports.checkIfPullRequestMerged = checkIfPullRequestMerged;
+exports.mergePullRequest = mergePullRequest;
 const console_1 = __nccwpck_require__(6206);
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
@@ -31352,7 +31345,6 @@ function checkIfPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
         }
     });
 }
-exports.checkIfPullRequestMerged = checkIfPullRequestMerged;
 function mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b;
@@ -31418,7 +31410,6 @@ function mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit) 
         }
     });
 }
-exports.mergePullRequest = mergePullRequest;
 
 
 /***/ }),
@@ -31437,7 +31428,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.sleep = void 0;
+exports.sleep = sleep;
 function sleep(ms) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve) => {
@@ -31445,7 +31436,6 @@ function sleep(ms) {
         });
     });
 }
-exports.sleep = sleep;
 
 
 /***/ }),
