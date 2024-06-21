@@ -28,21 +28,23 @@ on:
   pull_request_review:
     types: [submitted, edited, dismissed]
   check_run:
-    type: [created, rerequested, completed, requested_action]
+    types: [created, rerequested, completed, requested_action]
   check_suite:
-    type: [completed]
+    types: [completed]
   workflow_run:
-    workflows: ['Debug for Dependabot', 'Build']
-    types: [completed, requested]
+    workflows: ['Build', 'Test', 'ESLint', 'Dependabot']
+    types: [completed]
   workflow_dispatch:
 
 jobs:
   debug_information:
     name: Debug Information
-    if: ${{ github.actor != 'dependabot[bot]' || github.event_name == 'workflow_run' }}
     runs-on: ubuntu-latest
 
     steps:
+      - name: Print environment variables
+        run: printenv
+
       - name: Print events
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -67,27 +69,43 @@ jobs:
       - name: Print contexts
         env:
           GITHUB: ${{ toJSON(github) }}
+          ENV: ${{ toJSON(env)}}
+          VARS: ${{ toJSON(vars)}}
           JOB: ${{ toJSON(job) }}
           INPUTS: ${{ toJSON(inputs) }}
+          STEPS: ${{ toJSON(steps) }}
         run: |
           echo "::debug::github =
           $GITHUB"
+          echo "::debug::env =
+          $ENV"
+          echo "::debug::vars =
+          $VARS"
           echo "::debug::job =
           $JOB"
           echo "::debug::inputs =
           $INPUTS"
+          echo "::debug::steps =
+          $STEPS"
 
       - name: Create JSON files
         id: create-json-files
         env:
           GITHUB: ${{ toJSON(github) }}
+          ENV: ${{ toJSON(env)}}
+          VARS: ${{ toJSON(vars)}}
           JOB: ${{ toJSON(job) }}
           INPUTS: ${{ toJSON(inputs) }}
+          STEPS: ${{ toJSON(steps) }}
         run: |
           TEMP_JSON_DIRECTORY="$(mktemp -d)"
+          printenv > "$TEMP_JSON_DIRECTORY/.env"
           echo "$GITHUB" > "$TEMP_JSON_DIRECTORY/github.json"
+          echo "$ENV" > "$TEMP_JSON_DIRECTORY/env.json"
+          echo "$VARS" > "$TEMP_JSON_DIRECTORY/vars.json"
           echo "$JOB" > "$TEMP_JSON_DIRECTORY/job.json"
           echo "$INPUTS" > "$TEMP_JSON_DIRECTORY/inputs.json"
+          echo "$STEPS" > "$TEMP_JSON_DIRECTORY/steps.json"
           echo "temp-json-directory=$TEMP_JSON_DIRECTORY" >> $GITHUB_OUTPUT
 
       - name: Upload Artifact
