@@ -2,8 +2,8 @@ import type { Octokit } from '@octokit/core';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
 export declare function getPullRequestReviewRequests(owner: string, repo: string, pullRequestNumber: number, octokit: Octokit & Api): Promise<{
     users: {
-        name?: string | null | undefined;
-        email?: string | null | undefined;
+        name?: string | null;
+        email?: string | null;
         login: string;
         id: number;
         node_id: string;
@@ -22,7 +22,7 @@ export declare function getPullRequestReviewRequests(owner: string, repo: string
         received_events_url: string;
         type: string;
         site_admin: boolean;
-        starred_at?: string | undefined;
+        starred_at?: string;
     }[];
     teams: {
         id: number;
@@ -30,8 +30,8 @@ export declare function getPullRequestReviewRequests(owner: string, repo: string
         name: string;
         slug: string;
         description: string | null;
-        privacy?: string | undefined;
-        notification_setting?: string | undefined;
+        privacy?: string;
+        notification_setting?: string;
         permission: string;
         permissions?: {
             pull: boolean;
@@ -39,7 +39,7 @@ export declare function getPullRequestReviewRequests(owner: string, repo: string
             push: boolean;
             maintain: boolean;
             admin: boolean;
-        } | undefined;
+        };
         url: string;
         html_url: string;
         members_url: string;
@@ -52,12 +52,12 @@ export declare function getPullRequestReviewRequests(owner: string, repo: string
             name: string;
             description: string | null;
             permission: string;
-            privacy?: string | undefined;
-            notification_setting?: string | undefined;
+            privacy?: string;
+            notification_setting?: string;
             html_url: string;
             repositories_url: string;
             slug: string;
-            ldap_dn?: string | undefined;
+            ldap_dn?: string;
         } | null;
     }[];
 }>;
