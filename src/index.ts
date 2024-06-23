@@ -17,6 +17,7 @@ import {
   setFailed,
   setOutput,
   startGroup,
+  summary,
   warning,
 } from '@actions/core';
 import { context } from '@actions/github';
@@ -344,6 +345,7 @@ async function handlePullRequest(pullRequestNumber: number) {
   const mergeMethod = getMergeMethod();
   info(`Merging with merge method: ${mergeMethod}`);
   await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
+  summary.addRaw(`Pull Request #${pullRequestNumber} has been merged.`, true);
 }
 
 async function run(): Promise<void> {

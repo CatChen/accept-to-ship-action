@@ -31213,6 +31213,7 @@ function handlePullRequest(pullRequestNumber) {
         const mergeMethod = (0, getMergeMethod_1.getMergeMethod)();
         (0, core_1.info)(`Merging with merge method: ${mergeMethod}`);
         yield (0, mergePullRequest_1.mergePullRequest)(owner, repo, pullRequestNumber, mergeMethod, octokit);
+        core_1.summary.addRaw(`Pull Request #${pullRequestNumber} has been merged.`, true);
     });
 }
 function run() {
