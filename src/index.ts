@@ -18,7 +18,6 @@ import {
   setOutput,
   startGroup,
   summary,
-  warning,
 } from '@actions/core';
 import { context } from '@actions/github';
 import { getCheckRuns } from './getCheckRuns';
@@ -279,11 +278,11 @@ async function handlePullRequest(pullRequestNumber: number) {
           info(`  Check status/conclusion: ${checkRun.conclusion}`);
           info('  ---');
         } else {
-          error(`  Check status/conclusion: ${checkRun.conclusion}`);
+          info(`  Check status/conclusion: ${checkRun.conclusion}`);
           info('  ---');
         }
       } else {
-        warning(`  Check status/conclusion: ${checkRun.status}`);
+        info(`  Check status/conclusion: ${checkRun.status}`);
         info('  ---');
       }
     }
@@ -297,7 +296,7 @@ async function handlePullRequest(pullRequestNumber: number) {
           ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)),
     );
     if (failedChecks.length > 0) {
-      info(`Failed checks: ${failedChecks.length}`);
+      error(`Failed checks: ${failedChecks.length}`);
       return;
     }
 
