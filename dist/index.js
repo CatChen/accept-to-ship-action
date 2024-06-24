@@ -31166,12 +31166,12 @@ function handlePullRequest(pullRequestNumber) {
                         (0, core_1.info)('  ---');
                     }
                     else {
-                        (0, core_1.error)(`  Check status/conclusion: ${checkRun.conclusion}`);
+                        (0, core_1.info)(`  Check status/conclusion: ${checkRun.conclusion}`);
                         (0, core_1.info)('  ---');
                     }
                 }
                 else {
-                    (0, core_1.warning)(`  Check status/conclusion: ${checkRun.status}`);
+                    (0, core_1.info)(`  Check status/conclusion: ${checkRun.status}`);
                     (0, core_1.info)('  ---');
                 }
             }
@@ -31181,7 +31181,7 @@ function handlePullRequest(pullRequestNumber) {
                 (checkRun.conclusion === null ||
                     ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
             if (failedChecks.length > 0) {
-                (0, core_1.info)(`Failed checks: ${failedChecks.length}`);
+                (0, core_1.error)(`Failed checks: ${failedChecks.length}`);
                 return;
             }
             const incompleteChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
