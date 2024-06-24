@@ -31,7 +31,7 @@ on:
       diff-targets:
         description: 'Diff Targets'
         required: false
-        default: '{README.md,dist/**/*}'
+        default: '{README.md,LICENSE,dist/**/*}'
         type: string
       dry-run:
         description: 'Dry run'
@@ -71,10 +71,17 @@ jobs:
       tag: ${{ steps.release.outputs.tag }}
       skipped: ${{ steps.release.outputs.skipped }}
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: get-github-app-token
+        with:
+          app-id: ${{ secrets.CHECK_GIT_STATUS_BOT_APP_ID }}
+          private-key: ${{ secrets.CHECK_GIT_STATUS_BOT_APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           ref: 'main'
           fetch-depth: 0
+          token: ${{ steps.get-github-app-token.outputs.token }}
 
       - id: release
         uses: CatChen/node-package-release-action@v2
@@ -84,7 +91,8 @@ jobs:
           update-shorthand-release: true
           dry-run: ${{ inputs.dry-run || false }}
           skip-if-no-diff: ${{ inputs.skip-if-no-diff || true }}
-          diff-targets: ${{ inputs.diff-targets || '{README.md,dist/**/*}' }}
+          diff-targets: ${{ inputs.diff-targets || '{README.md,LICENSE,dist/**/*}' }}
+          github-token: ${{ steps.get-github-app-token.outputs.token }}
 
   publish:
     name: Publish
