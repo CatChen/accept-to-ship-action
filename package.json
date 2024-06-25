@@ -1,6 +1,6 @@
 {
   "name": "accept-to-ship-action",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.js",
