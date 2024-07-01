@@ -42,8 +42,10 @@ jobs:
       - name: Install dependencies
         run: yarn
 
-      - name: Lint
-        run: yarn lint --fix
+      - name: Reformat
+        run: |
+          yarn prettier --write .
+          yarn lint --fix
 
       - name: Build
         run: yarn build
