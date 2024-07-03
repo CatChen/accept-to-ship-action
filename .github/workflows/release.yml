@@ -58,9 +58,10 @@ jobs:
   codeql:
     uses: ./.github/workflows/codeql.yml
     permissions:
+      security-events: write
+      packages: read
       actions: read
       contents: read
-      security-events: write
 
   release:
     name: Release
@@ -135,7 +136,7 @@ jobs:
           npm config ls -l
           echo "::endgroup::"
 
-          echo "::group::npm config"
+          echo "::group::npm publish"
           if [[ "$DRY_RUN" = true ]]
           then
             npm publish --dry-run
