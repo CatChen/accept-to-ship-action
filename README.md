@@ -1,10 +1,9 @@
 # accept-to-ship-action
 
-[![Build](https://github.com/CatChen/accept-to-ship-action/actions/workflows/build.yml/badge.svg)](https://github.com/CatChen/accept-to-ship-action/actions/workflows/build.yml)
-[![Test](https://github.com/CatChen/accept-to-ship-action/actions/workflows/test.yml/badge.svg)](https://github.com/CatChen/accept-to-ship-action/actions/workflows/test.yml)
-[![ESLint](https://github.com/CatChen/accept-to-ship-action/actions/workflows/eslint.yml/badge.svg)](https://github.com/CatChen/accept-to-ship-action/actions/workflows/eslint.yml)
-[![CodeQL](https://github.com/CatChen/accept-to-ship-action/actions/workflows/codeql.yml/badge.svg)](https://github.com/CatChen/accept-to-ship-action/actions/workflows/codeql.yml)
-[![Ship](https://github.com/CatChen/accept-to-ship-action/actions/workflows/ship.yml/badge.svg)](https://github.com/CatChen/accept-to-ship-action/actions/workflows/ship.yml)
+[![Build](https://github.com/CatChen/accept-to-ship-action/actions/workflows/build.yml/badge.svg?branch=main&event=push)](https://github.com/CatChen/accept-to-ship-action/actions/workflows/build.yml)
+[![Test](https://github.com/CatChen/accept-to-ship-action/actions/workflows/test.yml/badge.svg?branch=main&event=push)](https://github.com/CatChen/accept-to-ship-action/actions/workflows/test.yml)
+[![ESLint](https://github.com/CatChen/accept-to-ship-action/actions/workflows/eslint.yml/badge.svg?branch=main&event=push)](https://github.com/CatChen/accept-to-ship-action/actions/workflows/eslint.yml)
+[![CodeQL](https://github.com/CatChen/accept-to-ship-action/actions/workflows/codeql.yml/badge.svg?branch=main&event=schedule)](https://github.com/CatChen/accept-to-ship-action/actions/workflows/codeql.yml)
 
 Want to merge a Pull Request automatically after someone approved it? Set up this Action and add a `#accept2ship` hashtag to the Pull Request. It will be merged automatically without involving you or the approver.
 
