@@ -51,7 +51,9 @@ jobs:
         contains(github.event.workflow_run.pull_requests.*.base.ref, 'main')
       }}
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      pull-requests: write
+      contents: write
     steps:
       - uses: actions/checkout@v3
 
