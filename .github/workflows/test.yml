@@ -32,10 +32,9 @@ jobs:
           ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 0
 
-      - name: Config Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - uses: CatChen/config-git-with-token-action@v1
+        with:
+          github-token: ${{ github.token }}
 
       - name: Git checkout base branch
         id: git-checkout
