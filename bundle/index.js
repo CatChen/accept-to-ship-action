@@ -30778,14 +30778,12 @@ function getMergeMethod() {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getOctokit = getOctokit;
-const core_1 = __nccwpck_require__(7484);
-const utils_1 = __nccwpck_require__(8006);
+const utils_js_1 = __nccwpck_require__(8006);
 const plugin_retry_1 = __nccwpck_require__(3450);
 const plugin_throttling_1 = __nccwpck_require__(6856);
-function getOctokit() {
-    const githubToken = (0, core_1.getInput)('github-token');
-    const Octokit = utils_1.GitHub.plugin(plugin_throttling_1.throttling, plugin_retry_1.retry);
-    const octokit = new Octokit((0, utils_1.getOctokitOptions)(githubToken, {
+function getOctokit(githubToken) {
+    const Octokit = utils_js_1.GitHub.plugin(plugin_throttling_1.throttling, plugin_retry_1.retry);
+    const octokit = new Octokit((0, utils_js_1.getOctokitOptions)(githubToken, {
         throttle: {
             onRateLimit: (retryAfter, options, _, retryCount) => {
                 if (retryCount === 0) {
@@ -30812,6 +30810,11 @@ function getOctokit() {
             doNotRetry: ['429'],
         },
     }));
+    octokit.graphql = octokit.graphql.defaults({
+        headers: {
+            'X-GitHub-Next-Global-ID': 1,
+        },
+    });
     return octokit;
 }
 
@@ -31007,7 +31010,8 @@ function handlePullRequest(pullRequestNumber) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         (0, core_1.startGroup)(`Pull Request number: ${pullRequestNumber}`);
-        const octokit = (0, getOcktokit_1.getOctokit)();
+        const githubToken = (0, core_1.getInput)('github-token');
+        const octokit = (0, getOcktokit_1.getOctokit)(githubToken);
         const owner = github_1.context.repo.owner;
         const repo = github_1.context.repo.repo;
         const mergedBeforeValidations = yield (0, mergePullRequest_1.checkIfPullRequestMerged)(owner, repo, pullRequestNumber, octokit);
