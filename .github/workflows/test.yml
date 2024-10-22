@@ -24,7 +24,7 @@ jobs:
       PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number }}
       PULL_REQUEST_HEAD_REF: |-
         ${{
-          (github.event.pull_request.head.repo.full_name || github.repository)
+          (github.event.pull_request.head.repo.full_name == github.repository)
             && (github.event.pull_request.head.ref || github.event.workflow_run.head_branch)
             || (github.event.pull_request.head.sha || github.event.workflow_run.head_sha)
         }}
