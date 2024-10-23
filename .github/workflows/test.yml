@@ -48,7 +48,7 @@ jobs:
 
       - uses: CatChen/config-git-with-token-action@v1
         with:
-          github-token: ${{ github.token }}
+          github-token: ${{ secrets.CREATE_PULL_REQUEST_ACTION_TOKEN }}
 
       - name: Git checkout PR head commit
         id: git-checkout
