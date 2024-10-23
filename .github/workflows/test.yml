@@ -197,7 +197,7 @@ jobs:
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SHA: ${{ github.sha }}
+          TEST_HEAD_PR_NUMBER: ${{ steps.open-head-pr.outputs.test-head-pr-number }}
         run: |
           TEST_PR_STATE=`gh pr view $TEST_HEAD_PR_NUMBER --json 'state' -q '.state'`
           if [ "$TEST_PR_STATE" = 'MERGED' ]
@@ -220,14 +220,13 @@ jobs:
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TEST_BASE_PR_NUMBER: ${{ steps.open-base-pr.outputs.test-base-pr-number }}
         run: |
           gh pr close $TEST_BASE_PR_NUMBER -d -c "Finished testing $SHA by $RUN_NUMBER-$RUN_ATTEMPT. Closing PR."
 
       - name: Delete remote test base branch
         if: ${{ always() }}
         continue-on-error: true
-        env:
-          TEST_BASE_BRANCH_NAME: ${{ format('workflows/tests/base/id-{0}/run-{1}/attempt-{2}/sha-{3}', github.run_id, github.run_number, github.run_attempt, github.sha) }}
         run: |
           if test $(git ls-remote origin --heads "$TEST_BASE_BRANCH_NAME" | wc -l ) != 0
           then
