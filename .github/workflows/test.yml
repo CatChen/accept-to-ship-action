@@ -20,7 +20,7 @@ jobs:
       ${{
         (!startsWith(github.head_ref, 'workflows/tests/')) &&
           (github.event.pull_request.head.repo.full_name == github.repository ||
-            github.event.event_name == 'workflow_run')
+            github.event_name == 'workflow_run')
       }}
     runs-on: ubuntu-latest
     permissions: write-all
