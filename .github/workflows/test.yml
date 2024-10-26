@@ -52,11 +52,13 @@ jobs:
           ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 0
 
-      - if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_repository.full_name != github.repository }}
+      - name: Replace the fork repo in git remote origin with the base repo
+        if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_repository.full_name != github.repository }}
         env:
-          REPO: ${{ github.repositoryUrl }}
+          SERVER: ${{ github.server_url }}
+          REPO: ${{ github.repository }}
         run: |
-          git remote set-url origin "$REPO"
+          git remote set-url origin "$SERVER/$REPO"
 
       - uses: CatChen/config-git-with-token-action@v1
         with:
