@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main, '[0-9]+-[0-9]+-*']
   workflow_run:
-    workflows: ['Dependabot']
+    workflows: ['Dependabot', 'Fork']
     branches-ignore: ['workflows/tests/*']
     types:
       - completed
@@ -16,7 +16,12 @@ on:
 jobs:
   test:
     name: Test
-    if: ${{ !startsWith(github.head_ref, 'workflows/tests/') }}
+    if: |-
+      ${{
+        (!startsWith(github.head_ref, 'workflows/tests/')) &&
+          (github.event.pull_request.head.repo.full_name == github.repository ||
+            github.event.event_name == 'workflow_run')
+      }}
     runs-on: ubuntu-latest
     permissions: write-all
     env:
