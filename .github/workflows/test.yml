@@ -52,6 +52,12 @@ jobs:
           ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 0
 
+      - if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_repository.full_name != github.repository }}
+        env:
+          REPO: ${{ github.repositoryUrl }}
+        run: |
+          git remote set-url origin "$REPO"
+
       - uses: CatChen/config-git-with-token-action@v1
         with:
           github-token: ${{ secrets.CREATE_PULL_REQUEST_ACTION_TOKEN }}
