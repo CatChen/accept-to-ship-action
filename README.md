@@ -51,6 +51,9 @@ jobs:
         contains(github.event.workflow_run.pull_requests.*.base.ref, 'main')
       }}
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
     steps:
       - uses: actions/checkout@v3
 
@@ -60,7 +63,7 @@ jobs:
           merge-method: merge # optional
           timeout: 0 # optional
           checks-watch-interval: 10 # optional
-          fail-if-timeout: false # optinal
+          fail-if-timeout: false # optional
           request-zero-accept-zero: false # optional
           custom-hashtag: '#accept2ship' #optional
 
