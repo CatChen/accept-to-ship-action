@@ -1,53 +1,22 @@
 import type { Octokit } from '@octokit/core';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
-import { info } from 'console';
-import { error, setFailed, setOutput, warning } from '@actions/core';
+import { error, info, setFailed, setOutput, warning } from '@actions/core';
 import { context } from '@actions/github';
 import { RequestError } from '@octokit/request-error';
+import { PullRequest } from '@octokit/webhooks-definitions/schema';
 import { getMergeMethod } from './getMergeMethod';
 import { isPullRequestMerged } from './isPullRequestMerged';
 
 export async function enablePullRequestAutoMerge(
   owner: string,
   repo: string,
-  pullRequestNumber: number,
+  pullRequest: PullRequest,
+  pullRequestId: string,
   mergeMethod: ReturnType<typeof getMergeMethod>,
   octokit: Octokit & Api,
 ) {
+  const pullRequestNumber = pullRequest.number;
   try {
-    const {
-      repository: {
-        pullRequest: { pullRequestId, viewerCanEnableAutoMerge },
-      },
-    } = await octokit.graphql<{
-      repository: {
-        pullRequest: {
-          pullRequestId: string;
-          viewerCanEnableAutoMerge: boolean;
-        };
-      };
-    }>(
-      `
-        query($owner: String!, $repo: String!, $pullRequestNumber: Int!) {
-          repository(owner: $owner, name: $repo) {
-            pullRequest(number: $pullRequestNumber) {
-              pullRequestId: id
-              viewerCanEnableAutoMerge
-            }
-          }
-        }
-      `,
-      {
-        owner,
-        repo,
-        pullRequestNumber,
-      },
-    );
-
-    if (!viewerCanEnableAutoMerge) {
-      throw new Error(`Auto-merge is not allowed for this Pull Request`);
-    }
-
     await octokit.graphql<unknown>(
       `
         mutation($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod) {
@@ -99,6 +68,7 @@ export async function enablePullRequestAutoMerge(
         pullRequestNumber,
         octokit,
       );
+      setOutput('skipped', !merged);
       if (merged) {
         try {
           const { data: pullRequest } = await octokit.rest.pulls.get({
@@ -117,7 +87,6 @@ export async function enablePullRequestAutoMerge(
         error(`This Pull Request remains unmerged.`);
         setFailed(`Failed to merge this Pull Request when conditions are met.`);
       }
-      setOutput('skipped', !merged);
     } else {
       throw requestError;
     }

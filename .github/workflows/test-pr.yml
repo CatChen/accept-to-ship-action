@@ -62,3 +62,51 @@ jobs:
           then
             exit 1
           fi
+
+  auto_merge_test_in_pull_request:
+    name: Auto-merge Test in Pull Request
+    if: ${{ startsWith(github.head_ref, 'workflows/tests/auto-merge/head') }}
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: Concurrency group
+        env:
+          CONCURRENCY_GROUP: |-
+            ${{
+              github.event.pull_request.number ||
+              github.event.check_run.pull_requests[0].number ||
+              github.event.check_suite.pull_requests[0].number ||
+              github.event.workflow_run.pull_requests[0].number ||
+              github.sha ||
+              github.ref
+            }}
+        run: |
+          echo "::notice::Concurrency group is $CONCURRENCY_GROUP"
+
+      - uses: actions/checkout@v4
+        if: ${{ startsWith(github.base_ref, 'workflows/tests/auto-merge/base') }}
+
+      - uses: actions/create-github-app-token@v1
+        id: get-github-app-token
+        with:
+          app-id: ${{ secrets.ACCEPT_TO_SHIP_BOT_APP_ID }}
+          private-key: ${{ secrets.ACCEPT_TO_SHIP_BOT_APP_PRIVATE_KEY }}
+
+      - uses: ./
+        id: ship
+        if: ${{ startsWith(github.base_ref, 'workflows/tests/auto-merge/base') }}
+        with:
+          github-token: ${{ steps.get-github-app-token.outputs.token }}
+          merge-method: squash
+          timeout: 600
+          use-auto-merge: true
+
+      - name: Verify outputs
+        env:
+          SKIPPED: ${{ steps.ship.outputs.skipped }}
+        run: |
+          echo "::notice::skipped = $SKIPPED"
+          if [[ "$SKIPPED" = "true" ]]
+          then
+            exit 1
+          fi

@@ -24,6 +24,8 @@ jobs:
         config:
           - name: Synchronized
             id: synchronized
+          - name: Auto-merge
+            id: auto-merge
     permissions: write-all
     env:
       SHA: ${{ github.sha }}

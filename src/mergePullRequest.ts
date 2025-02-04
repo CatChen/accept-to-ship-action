@@ -58,6 +58,7 @@ export async function mergePullRequest(
         pullRequestNumber,
         octokit,
       );
+      setOutput('skipped', !merged);
       if (merged) {
         try {
           const { data: pullRequest } = await octokit.rest.pulls.get({
@@ -76,7 +77,6 @@ export async function mergePullRequest(
         error(`This Pull Request remains unmerged.`);
         setFailed(`Failed to merge this Pull Request when conditions are met.`);
       }
-      setOutput('skipped', !merged);
     } else {
       throw requestError;
     }
