@@ -20,6 +20,8 @@ import {
   summary,
 } from '@actions/core';
 import { context } from '@actions/github';
+import { canRepoAutoMerge } from './canRepoAutoMerge';
+import { enablePullRequestAutoMerge } from './enablePullRequestAutoMerge';
 import { getCheckRuns } from './getCheckRuns';
 import { getMergeMethod } from './getMergeMethod';
 import { getOctokit } from './getOcktokit';
@@ -28,7 +30,8 @@ import { getPullRequestComments } from './getPullRequestComments';
 import { getPullRequestReviewRequests } from './getPullRequestReviewRequests';
 import { getPullRequestReviews } from './getPullRequestReviews';
 import { getWorkflowRunJobs } from './getWorkflowRunJobs';
-import { checkIfPullRequestMerged, mergePullRequest } from './mergePullRequest';
+import { isPullRequestMerged } from './isPullRequestMerged';
+import { mergePullRequest } from './mergePullRequest';
 import { sleep } from './sleep';
 
 const APPROVED = 'APPROVED';
@@ -52,7 +55,7 @@ async function handlePullRequest(pullRequestNumber: number) {
   const owner = context.repo.owner;
   const repo = context.repo.repo;
 
-  const mergedBeforeValidations = await checkIfPullRequestMerged(
+  const mergedBeforeValidations = await isPullRequestMerged(
     owner,
     repo,
     pullRequestNumber,
@@ -193,6 +196,30 @@ async function handlePullRequest(pullRequestNumber: number) {
   }
   endGroup();
 
+  const useAutoMerge = getBooleanInput('use-auto-merge');
+  if (useAutoMerge) {
+    if (await canRepoAutoMerge(owner, repo, octokit)) {
+      const mergeMethod = getMergeMethod();
+      info(`Enabling auto-merge with merge method: ${mergeMethod}`);
+      await enablePullRequestAutoMerge(
+        owner,
+        repo,
+        pullRequestNumber,
+        mergeMethod,
+        octokit,
+      );
+      summary.addRaw(
+        `Pull Request #${pullRequestNumber} has auto-merge enabled.`,
+        true,
+      );
+      return;
+    } else {
+      error(
+        `Auto-merge is not enabled for the base repository: ${pullRequest.base.repo.html_url}`,
+      );
+    }
+  }
+
   const jobs = await getWorkflowRunJobs(owner, repo, octokit);
   info(`Current workflow name: ${context.workflow}`);
   info(`Current run id: ${context.runId}`);
@@ -331,7 +358,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     }
   }
 
-  const mergedAfterValidations = await checkIfPullRequestMerged(
+  const mergedAfterValidations = await isPullRequestMerged(
     owner,
     repo,
     pullRequestNumber,
