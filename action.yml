@@ -29,6 +29,10 @@ inputs:
     description: 'A different hashtag to use other than #accept2ship.'
     required: false
     default: '#accept2ship'
+  use-auto-merge:
+    description: 'Use GitHub auto-merge instead of waiting for checks in the workflow'
+    required: false
+    default: false
 outputs:
   skipped:
     description: 'A boolean that indicates whether the action skipped merging/squashing/rebasing because the conditions are not met.'

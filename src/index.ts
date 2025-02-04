@@ -20,6 +20,8 @@ import {
   summary,
 } from '@actions/core';
 import { context } from '@actions/github';
+import { checkIfPullRequestMerged } from './checkIfPullRequestMerged';
+import { enablePullRequestAutoMerge } from './enablePullRequestAutoMerge';
 import { getCheckRuns } from './getCheckRuns';
 import { getMergeMethod } from './getMergeMethod';
 import { getOctokit } from './getOcktokit';
@@ -28,7 +30,7 @@ import { getPullRequestComments } from './getPullRequestComments';
 import { getPullRequestReviewRequests } from './getPullRequestReviewRequests';
 import { getPullRequestReviews } from './getPullRequestReviews';
 import { getWorkflowRunJobs } from './getWorkflowRunJobs';
-import { checkIfPullRequestMerged, mergePullRequest } from './mergePullRequest';
+import { mergePullRequest } from './mergePullRequest';
 import { sleep } from './sleep';
 
 const APPROVED = 'APPROVED';
@@ -192,6 +194,33 @@ async function handlePullRequest(pullRequestNumber: number) {
     return;
   }
   endGroup();
+
+  const useAutoMerge = getBooleanInput('use-auto-merge');
+  if (useAutoMerge) {
+    if (
+      'allow_auto_merge' in pullRequest.base.repo &&
+      (pullRequest.base.repo.allow_auto_merge as boolean | null)
+    ) {
+      const mergeMethod = getMergeMethod();
+      info(`Enabling auto-merge with merge method: ${mergeMethod}`);
+      await enablePullRequestAutoMerge(
+        owner,
+        repo,
+        pullRequestNumber,
+        mergeMethod,
+        octokit,
+      );
+      summary.addRaw(
+        `Pull Request #${pullRequestNumber} has auto-merge enabled.`,
+        true,
+      );
+      return;
+    } else {
+      error(
+        `Auto-merge is not enabled for the base repository: ${pullRequest.base.repo.html_url}`,
+      );
+    }
+  }
 
   const jobs = await getWorkflowRunJobs(owner, repo, octokit);
   info(`Current workflow name: ${context.workflow}`);
