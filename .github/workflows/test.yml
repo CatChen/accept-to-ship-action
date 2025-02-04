@@ -15,9 +15,17 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: Test (${{ matrix.config.name }})
     if: ${{ !startsWith(github.head_ref, 'workflows/tests/') }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: Synchronized
+            id: synchronized
+          - name: Auto-merge
+            id: auto-merge
     permissions: write-all
     env:
       SHA: ${{ github.sha }}
@@ -31,8 +39,8 @@ jobs:
       RUN_ID: ${{ github.run_id }}
       RUN_NUMBER: ${{ github.run_number }}
       RUN_ATTEMPT: ${{ github.run_attempt }}
-      TEST_BASE_BRANCH_NAME: ${{ format('workflows/tests/base/id-{0}/run-{1}/attempt-{2}/sha-{3}', github.run_id, github.run_number, github.run_attempt, github.sha) }}
-      TEST_HEAD_BRANCH_NAME: ${{ format('workflows/tests/head/id-{0}/run-{1}/attempt-{2}/sha-{3}', github.run_id, github.run_number, github.run_attempt, github.sha) }}
+      TEST_BASE_BRANCH_NAME: ${{ format('workflows/tests/{0}/base/id-{1}/run-{2}/attempt-{3}/sha-{4}', matrix.config.id, github.run_id, github.run_number, github.run_attempt, github.sha) }}
+      TEST_HEAD_BRANCH_NAME: ${{ format('workflows/tests/{0}/head/id-{1}/run-{2}/attempt-{3}/sha-{4}', matrix.config.id, github.run_id, github.run_number, github.run_attempt, github.sha) }}
 
     steps:
       - uses: actions/checkout@v4
