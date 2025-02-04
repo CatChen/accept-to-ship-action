@@ -7,7 +7,7 @@ import { RequestError } from '@octokit/request-error';
 import { getMergeMethod } from './getMergeMethod';
 import { isPullRequestMerged } from './isPullRequestMerged';
 
-export async function mergePullRequest(
+export async function enablePullRequestAutoMerge(
   owner: string,
   repo: string,
   pullRequestNumber: number,
@@ -15,12 +15,52 @@ export async function mergePullRequest(
   octokit: Octokit & Api,
 ) {
   try {
-    await octokit.rest.pulls.merge({
-      owner,
-      repo,
-      pull_number: pullRequestNumber,
-      merge_method: mergeMethod,
-    });
+    const {
+      repository: {
+        pullRequest: { pullRequestId, viewerCanEnableAutoMerge },
+      },
+    } = await octokit.graphql<{
+      repository: {
+        pullRequest: {
+          pullRequestId: string;
+          viewerCanEnableAutoMerge: boolean;
+        };
+      };
+    }>(
+      `
+        query($owner: String!, $repo: String!, $pullRequestNumber: Int!) {
+          repository(owner: $owner, name: $repo) {
+            pullRequest(number: $pullRequestNumber) {
+              pullRequestId: id
+              viewerCanEnableAutoMerge
+            }
+          }
+        }
+      `,
+      {
+        owner,
+        repo,
+        pullRequestNumber,
+      },
+    );
+
+    if (!viewerCanEnableAutoMerge) {
+      throw new Error(`Auto-merge is not allowed for this Pull Request`);
+    }
+
+    await octokit.graphql<unknown>(
+      `
+        mutation($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod) {
+          enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: $mergeMethod }) {
+          }
+        }
+      `,
+      {
+        pullRequestId,
+        mergeMethod: mergeMethod.toUpperCase() as Uppercase<typeof mergeMethod>,
+      },
+    );
+
     setOutput('skipped', false);
     try {
       info(`Run ID: ${context.runId}`);
@@ -34,7 +74,7 @@ export async function mergePullRequest(
         owner,
         repo,
         issue_number: pullRequestNumber,
-        body: `This Pull Request is closed by a [GitHub Action](${job.html_url})`,
+        body: `Auto-merge is enabled by a [GitHub Action](${job.html_url})`,
       });
       info(`Comment is created: ${comment.html_url}`);
     } catch (requestError) {
@@ -47,7 +87,7 @@ export async function mergePullRequest(
   } catch (requestError) {
     if (requestError instanceof RequestError) {
       warning(
-        `Failed to merge the Pull Request: [${requestError.status}] ${requestError.message}`,
+        `Failed to enable auto-merge for the Pull Request: [${requestError.status}] ${requestError.message}`,
       );
 
       // If it's merged by someone else in a race condition we treat it as skipped,
