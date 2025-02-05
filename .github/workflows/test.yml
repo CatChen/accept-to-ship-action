@@ -15,9 +15,15 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: Test (${{ matrix.config.name }})
     if: ${{ !startsWith(github.head_ref, 'workflows/tests/') }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: Synchronized
+            id: synchronized
     permissions: write-all
     env:
       SHA: ${{ github.sha }}
@@ -31,8 +37,9 @@ jobs:
       RUN_ID: ${{ github.run_id }}
       RUN_NUMBER: ${{ github.run_number }}
       RUN_ATTEMPT: ${{ github.run_attempt }}
-      TEST_BASE_BRANCH_NAME: ${{ format('workflows/tests/base/id-{0}/run-{1}/attempt-{2}/sha-{3}', github.run_id, github.run_number, github.run_attempt, github.sha) }}
-      TEST_HEAD_BRANCH_NAME: ${{ format('workflows/tests/head/id-{0}/run-{1}/attempt-{2}/sha-{3}', github.run_id, github.run_number, github.run_attempt, github.sha) }}
+      TEST_BASE_BRANCH_NAME: ${{ format('workflows/tests/{0}/base/id-{1}/run-{2}/attempt-{3}/sha-{4}', matrix.config.id, github.run_id, github.run_number, github.run_attempt, github.sha) }}
+      TEST_HEAD_BRANCH_NAME: ${{ format('workflows/tests/{0}/head/id-{1}/run-{2}/attempt-{3}/sha-{4}', matrix.config.id, github.run_id, github.run_number, github.run_attempt, github.sha) }}
+      CONFIG_TYPE: ${{ matrix.config.name }}
 
     steps:
       - uses: actions/checkout@v4
@@ -79,7 +86,7 @@ jobs:
           echo "::notice::Run number is $RUN_NUMBER"
           echo "::notice::Run attempt is $RUN_ATTEMPT"
           echo "::notice::Base PR number is $PULL_REQUEST_NUMBER"
-          gh pr create --base "main" --title "Test base PR for #$PULL_REQUEST_NUMBER ($SHA)" --body "Generated from #$PULL_REQUEST_NUMBER.
+          gh pr create --base "main" --title "$CONFIG_TYPE Test base PR for #$PULL_REQUEST_NUMBER ($SHA)" --body "Generated from #$PULL_REQUEST_NUMBER.
 
           Run ID: [$RUN_ID]($(gh run view $RUN_ID --json 'url' --jq '.url')). Number: $RUN_NUMBER. Attempt: $RUN_ATTEMPT."
           TEST_BASE_PR_NUMBER=`gh pr view | grep 'number:' | cut -f 2`
@@ -107,7 +114,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CREATE_PULL_REQUEST_ACTION_TOKEN }}
         run: |
           echo "::notice::Base PR number is $PULL_REQUEST_NUMBER"
-          gh pr create --base "$TEST_BASE_BRANCH_NAME" --title "Test head PR for #$PULL_REQUEST_NUMBER ($SHA)" --body "Generated from #$PULL_REQUEST_NUMBER.
+          gh pr create --base "$TEST_BASE_BRANCH_NAME" --title "$CONFIG_TYPE Test head PR for #$PULL_REQUEST_NUMBER ($SHA)" --body "Generated from #$PULL_REQUEST_NUMBER.
 
           Run ID: [$RUN_ID]($(gh run view $RUN_ID --json 'url' --jq '.url')). Number: $RUN_NUMBER. Attempt: $RUN_ATTEMPT.
 
@@ -165,7 +172,7 @@ jobs:
           TEST_HEAD_PR_NUMBER: ${{ steps.open-head-pr.outputs.test-head-pr-number }}
           CHECKS_TEMP_FILE: ${{ steps.check-pr.outputs.checks-temp-file }}
         run: |
-          gh pr comment $PULL_REQUEST_NUMBER --body "**Checks from Test PR #$TEST_HEAD_PR_NUMBER**
+          gh pr comment $PULL_REQUEST_NUMBER --body "**Checks from $CONFIG_TYPE Test PR #$TEST_HEAD_PR_NUMBER**
 
           | Check | Status | Time |
           | --- | --- | --: |

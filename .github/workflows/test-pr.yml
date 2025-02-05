@@ -16,9 +16,9 @@ concurrency:
     }}
 
 jobs:
-  test_in_pull_request:
-    name: Test in Pull Request
-    if: ${{ startsWith(github.head_ref, 'workflows/tests/head') }}
+  synchronized_test_in_pull_request:
+    name: Synchronized Test in Pull Request
+    if: ${{ startsWith(github.head_ref, 'workflows/tests/synchronized/head') }}
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
@@ -37,7 +37,7 @@ jobs:
           echo "::notice::Concurrency group is $CONCURRENCY_GROUP"
 
       - uses: actions/checkout@v4
-        if: ${{ startsWith(github.base_ref, 'workflows/tests/base') }}
+        if: ${{ startsWith(github.base_ref, 'workflows/tests/synchronized/base') }}
 
       - uses: actions/create-github-app-token@v1
         id: get-github-app-token
@@ -47,7 +47,7 @@ jobs:
 
       - uses: ./
         id: ship
-        if: ${{ startsWith(github.base_ref, 'workflows/tests/base') }}
+        if: ${{ startsWith(github.base_ref, 'workflows/tests/synchronized/base') }}
         with:
           github-token: ${{ steps.get-github-app-token.outputs.token }}
           merge-method: squash
