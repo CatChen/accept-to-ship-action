@@ -31398,9 +31398,9 @@ function enablePullRequestAutoMerge(owner, repo, pullRequestNumber, mergeMethod,
                 repo,
                 pullRequestNumber,
             });
-            if (!viewerCanEnableAutoMerge) {
-                throw new Error(`Auto-merge is not allowed for this Pull Request`);
-            }
+            // if (!viewerCanEnableAutoMerge) {
+            //   throw new Error(`Auto-merge is not allowed for this Pull Request`);
+            // }
             yield octokit.graphql(`
         mutation($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod) {
           enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: $mergeMethod }) {
