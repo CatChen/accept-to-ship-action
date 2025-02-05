@@ -1,3 +1,4 @@
+import { error, info, warning } from '@actions/core';
 import { GitHub, getOctokitOptions } from '@actions/github/lib/utils.js';
 import { type Octokit } from '@octokit/core/dist-types/index.js';
 import { type PaginateInterface } from '@octokit/plugin-paginate-rest';
@@ -15,33 +16,33 @@ export function getOctokit(githubToken: string): Octokit &
       throttle: {
         onRateLimit: (retryAfter, options, _, retryCount) => {
           if (retryCount === 0) {
-            octokit.log.warn(
+            warning(
               `Request quota exhausted for request ${options.method} ${options.url}`,
             );
-            octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+            info(`Retrying after ${retryAfter} seconds!`);
             return true;
           } else {
-            octokit.log.error(
+            error(
               `Request quota exhausted for request ${options.method} ${options.url}`,
             );
           }
         },
         onSecondaryRateLimit: (retryAfter, options, _, retryCount) => {
           if (retryCount === 0) {
-            octokit.log.warn(
+            warning(
               `Abuse detected for request ${options.method} ${options.url}`,
             );
-            octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+            info(`Retrying after ${retryAfter} seconds!`);
             return true;
           } else {
-            octokit.log.warn(
+            warning(
               `Abuse detected for request ${options.method} ${options.url}`,
             );
           }
         },
       },
       retry: {
-        doNotRetry: ['429'],
+        doNotRetry: ['403', '429'],
       },
     }),
   );
