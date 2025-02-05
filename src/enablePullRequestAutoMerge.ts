@@ -44,9 +44,9 @@ export async function enablePullRequestAutoMerge(
       },
     );
 
-    if (!viewerCanEnableAutoMerge) {
-      throw new Error(`Auto-merge is not allowed for this Pull Request`);
-    }
+    // if (!viewerCanEnableAutoMerge) {
+    //   throw new Error(`Auto-merge is not allowed for this Pull Request`);
+    // }
 
     await octokit.graphql<unknown>(
       `
