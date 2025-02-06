@@ -57,7 +57,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: CatChen/accept-to-ship-action@v0.3
+      - uses: CatChen/accept-to-ship-action@v0.7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }} # optional
           merge-method: merge # optional
@@ -65,7 +65,8 @@ jobs:
           checks-watch-interval: 10 # optional
           fail-if-timeout: false # optional
           request-zero-accept-zero: false # optional
-          custom-hashtag: '#accept2ship' #optional
+          custom-hashtag: '#accept2ship' # optional
+          use-auto-merge: false # optional
 
   pass-to-ship:
     name: Pass to Ship
@@ -82,7 +83,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: CatChen/accept-to-ship-action@v0.3
+      - uses: CatChen/accept-to-ship-action@v0.7
         with:
           request-zero-accept-zero: true
           custom-hashtag: '#pass2ship'
@@ -117,6 +118,16 @@ Change `#accept2ship` to another hashtag. Use multiple instances of this Action 
 ### `request-zero-accept-zero`
 
 When this option is set to `true` this Action will not wait for any approval if no review was requested. Otherwise, this Action will wait for at least one approval if no review was requested. It's useful to set this to `true` with a different hashtag set in `custom-hashtag` to merge certain Pull Requests after running and passing all the checks. See the `#pass2ship` configuration in the examples from above. The default value is `false`.
+
+### `use-auto-merge`
+
+When this option is set to `true` this Action will try to use GitHub's auto-merge after the Pull Request receives the necessary approvals. Otherwise, this Action will wait for the Pull Request's checks and merge the Pull Request when the checks pass.
+
+Auto-merge is only available when:
+
+1. Auto-merge is [enabled for the repo](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-auto-merge-for-pull-requests-in-your-repository).
+2. The base branch of the Pull Request is a [protected branch](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) or protected by [rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets).
+3. At least one of the branch protection conditions isn't met. (When all conditions are met the Pull Request is mergeable and the auto-merge is no longer available.)
 
 ## FAQ
 
