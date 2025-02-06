@@ -1,6 +1,6 @@
 import type { Octokit } from '@octokit/core';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
-import type { PullRequest } from '@octokit/webhooks-definitions/schema';
+import type { PullRequest } from '@octokit/webhooks-types/schema';
 
 export async function getPullRequest(
   owner: string,

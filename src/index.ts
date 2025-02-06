@@ -6,7 +6,7 @@ import type {
   PullRequestEvent,
   PullRequestReviewEvent,
   WorkflowRunEvent,
-} from '@octokit/webhooks-definitions/schema';
+} from '@octokit/webhooks-types/schema';
 import { performance } from 'node:perf_hooks';
 import {
   endGroup,
@@ -78,6 +78,17 @@ async function handlePullRequest(pullRequestNumber: number) {
     pullRequestNumber,
     octokit,
   );
+  if (pullRequest.auto_merge !== null) {
+    if (pullRequest.auto_merge.enabled_by !== null) {
+      info(
+        `Auto-merge is enabled by ${pullRequest.auto_merge.enabled_by.login} (${pullRequest.auto_merge.enabled_by.html_url})`,
+      );
+    } else {
+      info(`Auto-merge is enabled`);
+    }
+    setOutput('skipped', true);
+    return;
+  }
   const accept2shipTitle = pullRequest.title?.toLowerCase()?.includes(hashTag);
   info(`${hashTag} ${accept2shipTitle ? '' : 'not '}found in title`);
   const accept2shipBody = pullRequest.body?.toLowerCase()?.includes(hashTag);
