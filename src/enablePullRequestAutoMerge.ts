@@ -3,7 +3,7 @@ import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types
 import { error, info, setFailed, setOutput, warning } from '@actions/core';
 import { context } from '@actions/github';
 import { RequestError } from '@octokit/request-error';
-import { PullRequest } from '@octokit/webhooks-definitions/schema';
+import { PullRequest } from '@octokit/webhooks-types/schema';
 import { getMergeMethod } from './getMergeMethod';
 import { isPullRequestMerged } from './isPullRequestMerged';
 

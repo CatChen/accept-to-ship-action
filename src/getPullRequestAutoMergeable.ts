@@ -1,9 +1,6 @@
 import type { Octokit } from '@octokit/core';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
-import { info, warning } from '@actions/core';
-import { PullRequest } from '@octokit/webhooks-definitions/schema';
-import { getPullRequest } from './getPullRequest';
-import { isPullRequestMerged } from './isPullRequestMerged';
+import { PullRequest } from '@octokit/webhooks-types/schema';
 
 export async function getPullRequestAutoMergeable(
   owner: string,

@@ -31800,6 +31800,16 @@ function handlePullRequest(pullRequestNumber) {
         const hashTagLabel = customHashTag.replace(/^#*/, '');
         const hashTag = `#${hashTagLabel}`;
         const pullRequest = yield (0, getPullRequest_1.getPullRequest)(owner, repo, pullRequestNumber, octokit);
+        if (pullRequest.auto_merge !== null) {
+            if (pullRequest.auto_merge.enabled_by !== null) {
+                (0, core_1.info)(`Auto-merge is enabled by ${pullRequest.auto_merge.enabled_by.login} (${pullRequest.auto_merge.enabled_by.html_url})`);
+            }
+            else {
+                (0, core_1.info)(`Auto-merge is enabled`);
+            }
+            (0, core_1.setOutput)('skipped', true);
+            return;
+        }
         const accept2shipTitle = (_b = (_a = pullRequest.title) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === null || _b === void 0 ? void 0 : _b.includes(hashTag);
         (0, core_1.info)(`${hashTag} ${accept2shipTitle ? '' : 'not '}found in title`);
         const accept2shipBody = (_d = (_c = pullRequest.body) === null || _c === void 0 ? void 0 : _c.toLowerCase()) === null || _d === void 0 ? void 0 : _d.includes(hashTag);
