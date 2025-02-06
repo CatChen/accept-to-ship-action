@@ -52,6 +52,15 @@ jobs:
       CONFIG_TYPE: ${{ matrix.config.name }}
 
     steps:
+      - name: Print rate limits
+        env:
+          GH_TOKEN: ${{ secrets.CREATE_PULL_REQUEST_ACTION_TOKEN }}
+        run: |
+          gh api \                                                                                                                main  20
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /rate_limit
+
       - uses: actions/checkout@v4
         if: ${{ github.event_name != 'workflow_run' }}
         with:
