@@ -37,6 +37,13 @@ jobs:
             && (github.event.pull_request.head.ref || github.event.workflow_run.head_branch)
             || (github.event.pull_request.head.sha || github.event.workflow_run.head_sha)
         }}
+      PUSH_HEAD_REF: ${{ github.ref }}
+      EVENT_REF_TEXT: |-
+        ${{
+          (github.event_name != 'workflow_run' && github.event_name != 'pull_request')
+            && format('{0} ({1})', github.ref, github.sha)
+            || format('#{0} ({1})', (github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number), github.sha)
+        }}
       RUN_ID: ${{ github.run_id }}
       RUN_NUMBER: ${{ github.run_number }}
       RUN_ATTEMPT: ${{ github.run_attempt }}
@@ -61,10 +68,16 @@ jobs:
           github-token: ${{ secrets.CREATE_PULL_REQUEST_ACTION_TOKEN }}
 
       - name: Git checkout PR head commit
-        id: git-checkout
+        if: ${{ github.event_name == 'workflow_run' || github.event_name == 'pull_request' }}
         run: |
           echo "::notice::PR head ref is $PULL_REQUEST_HEAD_REF"
           git checkout $PULL_REQUEST_HEAD_REF
+
+      - name: Git checkout push head commit
+        if: ${{ github.event_name != 'workflow_run' && github.event_name != 'pull_request' }}
+        run: |
+          echo "::notice::Push head ref is $PUSH_HEAD_REF"
+          git checkout $PUSH_HEAD_REF
 
       - name: Git checkout test base branch
         run: |
@@ -73,7 +86,7 @@ jobs:
 
       - name: Make test base commit
         run: |
-          git commit --allow-empty -m "Test base commit for #$PULL_REQUEST_NUMBER ($SHA) by $RUN_NUMBER-$RUN_ATTEMPT"
+          git commit --allow-empty -m "$CONFIG_TYPE test base commit for $EVENT_REF_TEXT by $RUN_NUMBER-$RUN_ATTEMPT"
           echo "::notice::Test base commit is `git rev-parse --verify HEAD`"
 
       - name: Git push test base branch
@@ -88,8 +101,14 @@ jobs:
         run: |
           echo "::notice::Run number is $RUN_NUMBER"
           echo "::notice::Run attempt is $RUN_ATTEMPT"
-          echo "::notice::Base PR number is $PULL_REQUEST_NUMBER"
-          gh pr create --base "main" --title "$CONFIG_TYPE Test base PR for #$PULL_REQUEST_NUMBER ($SHA)" --body "Generated from #$PULL_REQUEST_NUMBER.
+          if [[ -z "$PULL_REQUEST_NUMBER" ]]
+          then
+            echo "::notice::Base ref is $PUSH_HEAD_REF"
+            exit 1
+          else
+            echo "::notice::Base PR number is $PULL_REQUEST_NUMBER"
+          fi
+          gh pr create --base "main" --title "$CONFIG_TYPE test base PR for $EVENT_REF_TEXT" --body "Generated from $EVENT_REF_TEXT.
 
           Run ID: [$RUN_ID]($(gh run view $RUN_ID --json 'url' --jq '.url')). Number: $RUN_NUMBER. Attempt: $RUN_ATTEMPT."
           TEST_BASE_PR_NUMBER=`gh pr view | grep 'number:' | cut -f 2`
@@ -103,7 +122,7 @@ jobs:
 
       - name: Make test head commit
         run: |
-          git commit --allow-empty -m "Test head commit for #$PULL_REQUEST_NUMBER ($SHA) by $RUN_NUMBER-$RUN_ATTEMPT"
+          git commit --allow-empty -m "$CONFIG_TYPE test head commit for $EVENT_REF_TEXT by $RUN_NUMBER-$RUN_ATTEMPT"
           echo "::notice::Test head commit is `git rev-parse --verify HEAD`"
 
       - name: Git push test head branch
@@ -115,9 +134,10 @@ jobs:
         id: open-head-pr
         env:
           GH_TOKEN: ${{ secrets.CREATE_PULL_REQUEST_ACTION_TOKEN }}
+          TEST_BASE_PR_NUMBER: ${{ steps.open-base-pr.outputs.test-base-pr-number }}
         run: |
-          echo "::notice::Base PR number is $PULL_REQUEST_NUMBER"
-          gh pr create --base "$TEST_BASE_BRANCH_NAME" --title "$CONFIG_TYPE Test head PR for #$PULL_REQUEST_NUMBER ($SHA)" --body "Generated from #$PULL_REQUEST_NUMBER.
+          echo "::notice::Test base PR number is $TEST_BASE_PR_NUMBER"
+          gh pr create --base "$TEST_BASE_BRANCH_NAME" --title "$CONFIG_TYPE test head PR for $EVENT_REF_TEXT" --body "Generated from $EVENT_REF_TEXT.
 
           Run ID: [$RUN_ID]($(gh run view $RUN_ID --json 'url' --jq '.url')). Number: $RUN_NUMBER. Attempt: $RUN_ATTEMPT.
 
@@ -175,7 +195,7 @@ jobs:
           TEST_HEAD_PR_NUMBER: ${{ steps.open-head-pr.outputs.test-head-pr-number }}
           CHECKS_TEMP_FILE: ${{ steps.check-pr.outputs.checks-temp-file }}
         run: |
-          gh pr comment $PULL_REQUEST_NUMBER --body "**Checks from $CONFIG_TYPE Test PR #$TEST_HEAD_PR_NUMBER**
+          gh pr comment $PULL_REQUEST_NUMBER --body "**Checks from $CONFIG_TYPE test PR #$TEST_HEAD_PR_NUMBER**
 
           | Check | Status | Time |
           | --- | --- | --: |
