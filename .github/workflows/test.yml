@@ -29,6 +29,7 @@ jobs:
             id: auto-merge
     permissions: write-all
     env:
+      REPO: ${{ github.repository }}
       SHA: ${{ github.sha }}
       PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number }}
       PULL_REQUEST_HEAD_REF: |-
@@ -198,7 +199,8 @@ jobs:
               s/(.*)\t(.*)\t(.*)\t(.*)\t(.*)/| [\1](\4) | \2 | \3 |/')"
           rm -f $CHECKS_TEMP_FILE
 
-      - name: Verify PR
+      - name: Verify PR merged
+        if: ${{ matrix.config.id != 'auto-merge' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TEST_HEAD_PR_NUMBER: ${{ steps.open-head-pr.outputs.test-head-pr-number }}
@@ -207,6 +209,25 @@ jobs:
           echo "::notice::Test PR state is $TEST_PR_STATE"
           if [ "$TEST_PR_STATE" != 'MERGED' ]
           then
+            echo "::error::Test PR is not merged"
+            exit 1
+          fi
+
+      - name: Verify PR auto-merge enabled
+        if: ${{ matrix.config.id == 'auto-merge' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TEST_HEAD_PR_NUMBER: ${{ steps.open-head-pr.outputs.test-head-pr-number }}
+        run: |
+          TEST_PR_AUTO_MERGE=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/$REPO/pulls/$TEST_HEAD_PR_NUMBER" |
+            jq -r '.auto_merge')
+          echo "::notice::Test PR auto-merge is $TEST_PR_AUTO_MERGE"
+          if [ "$TEST_PR_AUTO_MERGE" != 'null' ]
+          then
+            echo "::error::Test PR does not have auto-merge enabled"
             exit 1
           fi
 
