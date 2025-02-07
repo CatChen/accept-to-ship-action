@@ -110,9 +110,12 @@ jobs:
           git checkout -b "$TEST_HEAD_BRANCH_NAME"
 
       - name: Make test head commit
+        id: make-test-head-commit
         run: |
           git commit --allow-empty -m "$CONFIG_TYPE test head commit for $EVENT_REF_TEXT by $RUN_NUMBER-$RUN_ATTEMPT"
-          echo "::notice::Test head commit is `git rev-parse --verify HEAD`"
+          TEST_HEAD_COMMIT=$(git rev-parse --verify HEAD)
+          echo "test-head-commit=$TEST_HEAD_COMMIT" >> $GITHUB_OUTPUT
+          echo "::notice::Test head commit is $TEST_HEAD_COMMIT"
 
       - name: Git push test head branch
         run: |
@@ -146,6 +149,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TEST_HEAD_PR_NUMBER: ${{ steps.open-head-pr.outputs.test-head-pr-number }}
+          TEST_HEAD_COMMIT: ${{ steps.make-test-head-commit.outputs.test-head-commit }}
         run: |
           CHECKS_TEMP_FILE="$(mktemp)"
           echo "checks-temp-file=$CHECKS_TEMP_FILE" >> $GITHUB_OUTPUT;
@@ -154,14 +158,26 @@ jobs:
           CHECKS=$(gh pr checks $TEST_HEAD_PR_NUMBER | tee -a $CHECKS_TEMP_FILE)
           PENDING=$(echo "$CHECKS" | cut -f2 | grep pending | wc -l)
 
-          while [[ $PENDING -gt 0 && -n "$PENDING" ]]
+          TEST_IN_PR_JOB_COUNT=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/$REPO/commits/$TEST_HEAD_COMMIT/check-runs" |
+            jq -r '[.check_runs[] | pick (.name, .conclusion, .status) | select (.name | contains("Test in Pull Request"))] | length')
+
+          while [[ -n "$PENDING" && -n "$$TEST_IN_PR_JOB_COUNT" && $PENDING -gt 0 || $TEST_IN_PR_JOB_COUNT -lt 2 ]]
           do
-            echo "::group::Pending checks: $PENDING"
+            echo "::group::Pending checks: $PENDING; expected jobs: $TEST_IN_PR_JOB_COUNT/2"
             gh pr checks $TEST_HEAD_PR_NUMBER --watch --fail-fast | tee -a $CHECKS_TEMP_FILE
 
             sleep 10
             CHECKS=$(gh pr checks $TEST_HEAD_PR_NUMBER | tee -a $CHECKS_TEMP_FILE)
             PENDING=$(echo "$CHECKS" | cut -f2 | grep pending | wc -l)
+
+            TEST_IN_PR_JOB_COUNT=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/$REPO/commits/$TEST_HEAD_COMMIT/check-runs" |
+              jq -r '[.check_runs[] | pick (.name, .conclusion, .status) | select (.name | contains("Test in Pull Request"))] | length')
 
             echo "::endgroup::"
           done
