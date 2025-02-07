@@ -14,9 +14,11 @@ name: 'CodeQL'
 on:
   push:
     branches: [main, '[0-9]+-[0-9]+-*']
+    branches-ignore: ['workflows/tests/*']
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [main, '[0-9]+-[0-9]+-*']
+    branches-ignore: ['workflows/tests/*']
   schedule:
     - cron: '0 0 * * *'
   workflow_call:
