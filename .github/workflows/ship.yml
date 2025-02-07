@@ -3,6 +3,7 @@ name: Ship
 on:
   pull_request:
     branches: [main]
+    branches-ignore: ['workflows/tests/*']
     types:
       - labeled
       - unlabeled
