@@ -37,7 +37,7 @@ jobs:
             && (github.event.pull_request.head.ref || github.event.workflow_run.head_branch)
             || (github.event.pull_request.head.sha || github.event.workflow_run.head_sha)
         }}
-      PUSH_HEAD_REF: ${{ github.ref }}
+      PUSH_HEAD_REF: ${{ github.ref_name }}
       EVENT_REF_TEXT: |-
         ${{
           (github.event_name != 'workflow_run' && github.event_name != 'pull_request')
@@ -53,31 +53,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        if: ${{ github.event_name != 'workflow_run' }}
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_run' }}
         with:
+          ref: ${{ env.PULL_REQUEST_HEAD_REF }}
           fetch-depth: 0
 
       - uses: actions/checkout@v4
-        if: ${{ github.event_name == 'workflow_run' }}
+        if: ${{ github.event_name != 'workflow_run' && github.event_name != 'pull_request' }}
         with:
-          ref: ${{ github.event.workflow_run.head_branch }}
+          ref: ${{ env.PUSH_HEAD_REF }}
           fetch-depth: 0
 
       - uses: CatChen/config-git-with-token-action@v2
         with:
           github-token: ${{ secrets.CREATE_PULL_REQUEST_ACTION_TOKEN }}
-
-      - name: Git checkout PR head commit
-        if: ${{ github.event_name == 'workflow_run' || github.event_name == 'pull_request' }}
-        run: |
-          echo "::notice::PR head ref is $PULL_REQUEST_HEAD_REF"
-          git checkout $PULL_REQUEST_HEAD_REF
-
-      - name: Git checkout push head commit
-        if: ${{ github.event_name != 'workflow_run' && github.event_name != 'pull_request' }}
-        run: |
-          echo "::notice::Push head ref is $PUSH_HEAD_REF"
-          git checkout $PUSH_HEAD_REF
 
       - name: Git checkout test base branch
         run: |
