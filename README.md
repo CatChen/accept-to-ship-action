@@ -9,6 +9,84 @@ Want to merge a Pull Request automatically after someone approved it? Set up thi
 
 ## Examples
 
+If auto-merge is enabled for a repository it's better to let this Action use auto-merge:
+
+```yaml
+name: Ship
+
+on:
+  pull_request:
+    types:
+      [
+        labeled,
+        unlabeled,
+        edited,
+        closed,
+        reopened,
+        synchronize,
+        review_requested,
+        review_request_removed,
+      ]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+
+concurrency:
+  group: ${{ github.event.pull_request.number || github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  accept_to_ship:
+    name: Accept to Ship
+    if: |-
+      ${{
+        github.base_ref == 'main' ||
+        github.event.pull_request.base.ref == 'main' ||
+        contains(github.event.check_run.pull_requests.*.base.ref, 'main') ||
+        contains(github.event.check_suite.pull_requests.*.base.ref, 'main') ||
+        contains(github.event.workflow_run.pull_requests.*.base.ref, 'main')
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: CatChen/accept-to-ship-action@v0.7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }} # optional
+          merge-method: merge # optional
+          timeout: 0 # optional
+          checks-watch-interval: 10 # optional
+          fail-if-timeout: false # optional
+          request-zero-accept-zero: false # optional
+          custom-hashtag: '#accept2ship' # optional
+          use-auto-merge: true
+
+  pass-to-ship:
+    name: Pass to Ship
+    if: |-
+      ${{
+        github.base_ref == 'main' ||
+        github.event.pull_request.base.ref == 'main' ||
+        contains(github.event.check_run.pull_requests.*.base.ref, 'main') ||
+        contains(github.event.check_suite.pull_requests.*.base.ref, 'main') ||
+        contains(github.event.workflow_run.pull_requests.*.base.ref, 'main')
+      }}
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: CatChen/accept-to-ship-action@v0.7
+        with:
+          request-zero-accept-zero: true
+          custom-hashtag: '#pass2ship'
+          use-auto-merge: true
+```
+
+Otherwise, this Action can wait for checks and trigger the merge by itself:
+
 ```yaml
 name: Ship
 
