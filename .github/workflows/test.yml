@@ -53,6 +53,15 @@ jobs:
       CONFIG_TYPE: ${{ matrix.config.name }}
 
     steps:
+      - if: ${{ github.event_name == 'workflow_run' }}
+        run: |
+          echo "::notice::This Workflow run is triggered by an upstream Workflow run"
+          echo "::notice::Upstream Workflow run is ${{ github.event.workflow_run.id }} (${{ github.event.workflow_run.html_url }})"
+          echo "::notice::Upstream Workflow run event is ${{ github.event.workflow_run.event }}"
+          echo "::notice::Upstream Workflow run head branch is ${{ github.event.workflow_run.head_branch }}"
+          echo "::notice::Upstream Workflow is ${{ github.event.workflow.name }} (${{ github.event.workflow.html_url }})"
+          echo "::notice::The current workflow head ref is ${{ github.head_ref}}"
+
       - uses: actions/checkout@v4
         if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_run' }}
         with:
