@@ -2,9 +2,9 @@ name: Test Pull Request
 
 on:
   push:
-    branches: ['workflows/tests/*']
+    branches: ['workflows/tests/**/*']
   pull_request:
-    branches: ['workflows/tests/*']
+    branches: ['workflows/tests/**/*']
 
 concurrency:
   group: |-
