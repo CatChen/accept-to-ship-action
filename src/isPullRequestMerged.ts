@@ -1,6 +1,5 @@
 import type { Octokit } from '@octokit/core';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
-import { RequestError } from '@octokit/request-error';
 
 export async function isPullRequestMerged(
   owner: string,
@@ -20,7 +19,16 @@ export async function isPullRequestMerged(
       return false;
     }
   } catch (requestError) {
-    if (requestError instanceof RequestError) {
+    if (
+      // It should be `requestError instanceof RequestError`
+      // but  versions are in conflict with each other
+      requestError &&
+      typeof requestError === 'object' &&
+      'status' in requestError &&
+      typeof requestError.status === 'number' &&
+      'message' in requestError &&
+      typeof requestError.message === 'string'
+    ) {
       if (requestError.status === 204) {
         return true;
       } else if (requestError.status === 404) {

@@ -32119,7 +32119,7 @@ run().catch((error) => (0, core_1.setFailed)(error));
 /***/ }),
 
 /***/ 1043:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ (function(__unused_webpack_module, exports) {
 
 
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -32133,7 +32133,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isPullRequestMerged = isPullRequestMerged;
-const request_error_1 = __nccwpck_require__(1015);
 function isPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -32150,7 +32149,15 @@ function isPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
             }
         }
         catch (requestError) {
-            if (requestError instanceof request_error_1.RequestError) {
+            if (
+            // It should be `requestError instanceof RequestError`
+            // but  versions are in conflict with each other
+            requestError &&
+                typeof requestError === 'object' &&
+                'status' in requestError &&
+                typeof requestError.status === 'number' &&
+                'message' in requestError &&
+                typeof requestError.message === 'string') {
                 if (requestError.status === 204) {
                     return true;
                 }
