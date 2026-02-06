@@ -109,7 +109,7 @@ jobs:
           echo "temp-json-directory=$TEMP_JSON_DIRECTORY" >> $GITHUB_OUTPUT
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: debug
           path: ${{ steps.create-json-files.outputs.temp-json-directory }}
