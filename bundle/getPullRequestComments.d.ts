@@ -1,6 +1,6 @@
 import type { Octokit } from '@octokit/core';
-import type { components } from '@octokit/openapi-types/types';
-import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
+import type { components } from '@octokit/openapi-types';
+import type { Api } from '@octokit/plugin-rest-endpoint-methods';
 export declare function getPullRequestComments(owner: string, repo: string, pullRequestNumber: number, octokit: Octokit & Api): Promise<{
     url: string;
     pull_request_review_id: number | null;
@@ -34,4 +34,5 @@ export declare function getPullRequestComments(owner: string, repo: string, pull
     original_line?: number;
     start_line?: number | null;
     original_start_line?: number | null;
+    subject_type?: "line" | "file";
 }[]>;

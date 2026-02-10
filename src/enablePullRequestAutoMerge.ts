@@ -1,16 +1,18 @@
 import type { Octokit } from '@octokit/core';
-import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
+import type {
+  Api,
+  RestEndpointMethodTypes,
+} from '@octokit/plugin-rest-endpoint-methods';
 import { error, info, setFailed, setOutput, warning } from '@actions/core';
 import { context } from '@actions/github';
 import { RequestError } from '@octokit/request-error';
-import { PullRequest } from '@octokit/webhooks-types/schema';
-import { getMergeMethod } from './getMergeMethod';
-import { isPullRequestMerged } from './isPullRequestMerged';
+import { getMergeMethod } from './getMergeMethod.js';
+import { isPullRequestMerged } from './isPullRequestMerged.js';
 
 export async function enablePullRequestAutoMerge(
   owner: string,
   repo: string,
-  pullRequest: PullRequest,
+  pullRequest: RestEndpointMethodTypes['pulls']['get']['response']['data'],
   pullRequestId: string,
   mergeMethod: ReturnType<typeof getMergeMethod>,
   octokit: Octokit & Api,
