@@ -6,8 +6,8 @@ import type {
 import { error, info, setFailed, setOutput, warning } from '@actions/core';
 import { context } from '@actions/github';
 import { RequestError } from '@octokit/request-error';
-import { getMergeMethod } from './getMergeMethod';
-import { isPullRequestMerged } from './isPullRequestMerged';
+import { getMergeMethod } from './getMergeMethod.js';
+import { isPullRequestMerged } from './isPullRequestMerged.js';
 
 export async function enablePullRequestAutoMerge(
   owner: string,

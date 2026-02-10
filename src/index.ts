@@ -1,4 +1,3 @@
-import type { components } from '@octokit/openapi-types/types';
 import type {
   CheckRunEvent,
   CheckSuiteEvent,
@@ -6,7 +5,7 @@ import type {
   PullRequestEvent,
   PullRequestReviewEvent,
   WorkflowRunEvent,
-} from '@octokit/webhooks-types/schema';
+} from '@octokit/webhooks-types';
 import { performance } from 'node:perf_hooks';
 import {
   endGroup,
@@ -21,20 +20,20 @@ import {
   warning,
 } from '@actions/core';
 import { context } from '@actions/github';
-import { canRepoAutoMerge } from './canRepoAutoMerge';
-import { enablePullRequestAutoMerge } from './enablePullRequestAutoMerge';
-import { getCheckRuns } from './getCheckRuns';
-import { getMergeMethod } from './getMergeMethod';
-import { getOctokit } from './getOcktokit';
-import { getPullRequest } from './getPullRequest';
-import { getPullRequestAutoMergeable } from './getPullRequestAutoMergeable';
-import { getPullRequestComments } from './getPullRequestComments';
-import { getPullRequestReviewRequests } from './getPullRequestReviewRequests';
-import { getPullRequestReviews } from './getPullRequestReviews';
-import { getWorkflowRunJobs } from './getWorkflowRunJobs';
-import { isPullRequestMerged } from './isPullRequestMerged';
-import { mergePullRequest } from './mergePullRequest';
-import { sleep } from './sleep';
+import { canRepoAutoMerge } from './canRepoAutoMerge.js';
+import { enablePullRequestAutoMerge } from './enablePullRequestAutoMerge.js';
+import { getCheckRuns } from './getCheckRuns.js';
+import { getMergeMethod } from './getMergeMethod.js';
+import { getOctokit } from './getOcktokit.js';
+import { getPullRequest } from './getPullRequest.js';
+import { getPullRequestAutoMergeable } from './getPullRequestAutoMergeable.js';
+import { getPullRequestComments } from './getPullRequestComments.js';
+import { getPullRequestReviewRequests } from './getPullRequestReviewRequests.js';
+import { getPullRequestReviews } from './getPullRequestReviews.js';
+import { getWorkflowRunJobs } from './getWorkflowRunJobs.js';
+import { isPullRequestMerged } from './isPullRequestMerged.js';
+import { mergePullRequest } from './mergePullRequest.js';
+import { sleep } from './sleep.js';
 
 const APPROVED = 'APPROVED';
 const CHANGES_REQUESTED = 'CHANGES_REQUESTED';
@@ -94,7 +93,8 @@ async function handlePullRequest(pullRequestNumber: number) {
   const accept2shipBody = pullRequest.body?.toLowerCase()?.includes(hashTag);
   info(`${hashTag} ${accept2shipBody ? '' : 'not '}found in body`);
   const accept2shipLabel = pullRequest.labels.some(
-    (label) => label.name.toLowerCase() === hashTagLabel,
+    (label: (typeof pullRequest.labels)[number]) =>
+      label.name.toLowerCase() === hashTagLabel,
   );
   info(`${hashTag} ${accept2shipLabel ? '' : 'not '}found in labels`);
 
@@ -106,7 +106,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     octokit,
   );
   const accept2shipComment = comments.some(
-    (comment) =>
+    (comment: (typeof comments)[number]) =>
       comment.user?.id === pullRequestUserId &&
       comment.body.toLowerCase().includes(hashTag),
   );
@@ -132,14 +132,17 @@ async function handlePullRequest(pullRequestNumber: number) {
   if (reviewRequests.users.length > 0) {
     info(
       `Review requested from users: ${reviewRequests.users
-        .map((user) => `${user.login} (${user.html_url})`)
+        .map(
+          (user: (typeof reviewRequests.users)[number]) =>
+            `${user.login} (${user.html_url})`,
+        )
         .join()}`,
     );
   }
   if (reviewRequests.teams.length > 0) {
     info(
       `Review requested from teams: ${reviewRequests.teams
-        .map((team) => team.name)
+        .map((team: (typeof reviewRequests.teams)[number]) => team.name)
         .join()}`,
     );
   }
@@ -159,13 +162,16 @@ async function handlePullRequest(pullRequestNumber: number) {
   );
 
   let approved = false;
+  type Review = (typeof reviews)[number];
   const reviewsSortedByDescendingTime = reviews.sort(
-    (x, y) =>
+    (x: Review, y: Review) =>
       Date.parse(y.submitted_at ?? '') - Date.parse(x.submitted_at ?? ''),
   );
   if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
     if (acceptZeroApprovals) {
-      approved = reviews.every((review) => review.state !== CHANGES_REQUESTED);
+      approved = reviews.every(
+        (review: Review) => review.state !== CHANGES_REQUESTED,
+      );
       info(`Review states: ${reviews.length || 'none'}`);
       for (const review of reviews) {
         info(`  ${review.user?.login ?? 'Unknown'}: ${review.state}`);
@@ -176,18 +182,18 @@ async function handlePullRequest(pullRequestNumber: number) {
       approved = lastReview?.state === APPROVED;
     }
   } else {
-    const reviewUserIds = reviewRequests.users.map((user) => user.id);
+    const reviewUserIds = reviewRequests.users.map(
+      (user: (typeof reviewRequests.users)[number]) => user.id,
+    );
     const lastReviewPerUserId = reviewsSortedByDescendingTime.reduce(
-      (result, review) => {
+      (result: Record<number, Review>, review: Review) => {
         const user = review.user;
         if (user) {
           result[user.id] = result[user.id] ?? review;
         }
         return result;
       },
-      {} as {
-        [id: string]: components['schemas']['pull-request-review'];
-      },
+      {} as Record<number, Review>,
     );
     info(`Last review by user:`);
     for (const user of reviewRequests.users) {
@@ -200,8 +206,8 @@ async function handlePullRequest(pullRequestNumber: number) {
       );
     }
     approved = reviewUserIds
-      .map((userId) => lastReviewPerUserId[userId])
-      .every((review) => review?.state === APPROVED);
+      .map((userId: number) => lastReviewPerUserId[userId])
+      .every((review: Review | undefined) => review?.state === APPROVED);
   }
 
   if (!approved) {
@@ -299,7 +305,8 @@ async function handlePullRequest(pullRequestNumber: number) {
       endGroup();
     }
   }
-  const jobIds = jobs.map((job) => job.id);
+  type Job = (typeof jobs)[number];
+  const jobIds = jobs.map((job: Job) => job.id);
 
   const timeout = parseInt(getInput('timeout'), 10);
   const interval = parseInt(getInput('checks-watch-interval'), 10);
@@ -314,11 +321,12 @@ async function handlePullRequest(pullRequestNumber: number) {
       octokit,
     );
 
+    type CheckRun = (typeof checkRuns)[number];
     if (externalIds === undefined) {
       // Two instances of the same job's execution share the same external id but not the same job id.
       // We use external id to identify other instances of the job.
       externalIds = checkRuns
-        .filter((checkRun) => {
+        .filter((checkRun: CheckRun) => {
           if (checkRun.external_id === null) {
             return false;
           }
@@ -330,7 +338,7 @@ async function handlePullRequest(pullRequestNumber: number) {
           }
           return false;
         })
-        .map((checkRun) => checkRun.external_id);
+        .map((checkRun: CheckRun) => checkRun.external_id);
     }
 
     info(`Checks:`);
@@ -367,7 +375,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     }
 
     const failedChecks = checkRuns.filter(
-      (checkRun) =>
+      (checkRun: CheckRun) =>
         !jobIds.includes(checkRun.id) &&
         !externalIds?.includes(checkRun.external_id) &&
         checkRun.status === COMPLETED &&
@@ -380,7 +388,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     }
 
     const incompleteChecks = checkRuns.filter(
-      (checkRun) =>
+      (checkRun: CheckRun) =>
         !jobIds.includes(checkRun.id) &&
         !externalIds?.includes(checkRun.external_id) &&
         checkRun.status !== COMPLETED,

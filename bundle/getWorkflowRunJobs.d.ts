@@ -1,5 +1,5 @@
 import type { Octokit } from '@octokit/core';
-import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
+import type { Api } from '@octokit/plugin-rest-endpoint-methods';
 export declare function getWorkflowRunJobs(owner: string, repo: string, octokit: Octokit & Api): Promise<{
     id: number;
     run_id: number;
@@ -9,7 +9,7 @@ export declare function getWorkflowRunJobs(owner: string, repo: string, octokit:
     head_sha: string;
     url: string;
     html_url: string | null;
-    status: "queued" | "in_progress" | "completed" | "waiting";
+    status: "queued" | "in_progress" | "completed" | "waiting" | "requested" | "pending";
     conclusion: "success" | "failure" | "neutral" | "cancelled" | "skipped" | "timed_out" | "action_required" | null;
     created_at: string;
     started_at: string;
