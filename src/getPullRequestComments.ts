@@ -1,6 +1,6 @@
 import type { Octokit } from '@octokit/core';
-import type { components } from '@octokit/openapi-types/types';
-import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
+import type { components } from '@octokit/openapi-types';
+import type { Api } from '@octokit/plugin-rest-endpoint-methods';
 
 export async function getPullRequestComments(
   owner: string,
