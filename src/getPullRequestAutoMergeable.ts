@@ -1,11 +1,13 @@
 import type { Octokit } from '@octokit/core';
-import type { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
-import { PullRequest } from '@octokit/webhooks-types/schema';
+import type {
+  Api,
+  RestEndpointMethodTypes,
+} from '@octokit/plugin-rest-endpoint-methods';
 
 export async function getPullRequestAutoMergeable(
   owner: string,
   repo: string,
-  pullRequest: PullRequest,
+  pullRequest: RestEndpointMethodTypes['pulls']['get']['response']['data'],
   octokit: Octokit & Api,
 ): Promise<{
   pullRequestId: string;
