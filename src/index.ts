@@ -1,4 +1,3 @@
-import type { components } from '@octokit/openapi-types/types';
 import type {
   CheckRunEvent,
   CheckSuiteEvent,
@@ -6,7 +5,7 @@ import type {
   PullRequestEvent,
   PullRequestReviewEvent,
   WorkflowRunEvent,
-} from '@octokit/webhooks-types/schema';
+} from '@octokit/webhooks-types';
 import { performance } from 'node:perf_hooks';
 import {
   endGroup,
@@ -21,20 +20,20 @@ import {
   warning,
 } from '@actions/core';
 import { context } from '@actions/github';
-import { canRepoAutoMerge } from './canRepoAutoMerge';
-import { enablePullRequestAutoMerge } from './enablePullRequestAutoMerge';
-import { getCheckRuns } from './getCheckRuns';
-import { getMergeMethod } from './getMergeMethod';
-import { getOctokit } from './getOcktokit';
-import { getPullRequest } from './getPullRequest';
-import { getPullRequestAutoMergeable } from './getPullRequestAutoMergeable';
-import { getPullRequestComments } from './getPullRequestComments';
-import { getPullRequestReviewRequests } from './getPullRequestReviewRequests';
-import { getPullRequestReviews } from './getPullRequestReviews';
-import { getWorkflowRunJobs } from './getWorkflowRunJobs';
-import { isPullRequestMerged } from './isPullRequestMerged';
-import { mergePullRequest } from './mergePullRequest';
-import { sleep } from './sleep';
+import { canRepoAutoMerge } from './canRepoAutoMerge.js';
+import { enablePullRequestAutoMerge } from './enablePullRequestAutoMerge.js';
+import { getCheckRuns } from './getCheckRuns.js';
+import { getMergeMethod } from './getMergeMethod.js';
+import { getOctokit } from './getOcktokit.js';
+import { getPullRequest } from './getPullRequest.js';
+import { getPullRequestAutoMergeable } from './getPullRequestAutoMergeable.js';
+import { getPullRequestComments } from './getPullRequestComments.js';
+import { getPullRequestReviewRequests } from './getPullRequestReviewRequests.js';
+import { getPullRequestReviews } from './getPullRequestReviews.js';
+import { getWorkflowRunJobs } from './getWorkflowRunJobs.js';
+import { isPullRequestMerged } from './isPullRequestMerged.js';
+import { mergePullRequest } from './mergePullRequest.js';
+import { sleep } from './sleep.js';
 
 const APPROVED = 'APPROVED';
 const CHANGES_REQUESTED = 'CHANGES_REQUESTED';
@@ -185,9 +184,7 @@ async function handlePullRequest(pullRequestNumber: number) {
         }
         return result;
       },
-      {} as {
-        [id: string]: components['schemas']['pull-request-review'];
-      },
+      {} as Record<number, (typeof reviews)[number]>,
     );
     info(`Last review by user:`);
     for (const user of reviewRequests.users) {
