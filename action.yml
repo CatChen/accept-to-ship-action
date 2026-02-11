@@ -37,7 +37,7 @@ outputs:
   skipped:
     description: 'A boolean that indicates whether the action skipped merging/squashing/rebasing because the conditions are not met.'
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'bundle/index.js'
 branding:
   icon: 'git-merge'
