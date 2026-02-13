@@ -27,6 +27,7 @@
   "homepage": "https://github.com/CatChen/accept-to-ship-action#readme",
   "funding": "https://github.com/CatChen/accept-to-ship-action?sponsor=1",
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.3",
     "@prettier/plugin-xml": "^3.4.1",
     "@serverless-guru/prettier-plugin-import-order": "^0.4.1",
     "@types/node": "^25.0.0",
