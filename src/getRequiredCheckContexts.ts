@@ -1,6 +1,6 @@
-import { warning } from '@actions/core';
 import type { Octokit } from '@octokit/core';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods';
+import { warning } from '@actions/core';
 
 type RuleWithRequiredStatusChecks = {
   type: string;

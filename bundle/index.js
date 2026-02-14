@@ -38067,6 +38067,84 @@ function getPullRequestReviews(owner, repo, pullRequestNumber, octokit) {
     });
 }
 
+;// CONCATENATED MODULE: ./src/getRequiredCheckContexts.ts
+var getRequiredCheckContexts_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+function getStatusCode(error) {
+    if (typeof error !== 'object' || error === null) {
+        return undefined;
+    }
+    if (!('status' in error)) {
+        return undefined;
+    }
+    if (typeof error.status !== 'number') {
+        return undefined;
+    }
+    return error.status;
+}
+function getErrorMessage(error) {
+    if (error instanceof Error) {
+        return error.message;
+    }
+    return 'Unknown error';
+}
+function uniqueContexts(contexts) {
+    return [...new Set(contexts)];
+}
+function getRequiredCheckContexts(owner, repo, branch, octokit) {
+    return getRequiredCheckContexts_awaiter(this, void 0, void 0, function* () {
+        try {
+            const response = yield octokit.request('GET /repos/{owner}/{repo}/rules/branches/{branch}', {
+                owner,
+                repo,
+                branch,
+                per_page: 100,
+            });
+            const rules = response.data;
+            const contexts = rules
+                .filter((rule) => rule.type === 'required_status_checks')
+                .flatMap((rule) => { var _a, _b; return (_b = (_a = rule.parameters) === null || _a === void 0 ? void 0 : _a.required_status_checks) !== null && _b !== void 0 ? _b : []; })
+                .map((requiredStatusCheck) => requiredStatusCheck.context)
+                .filter((context) => context !== undefined && context.trim().length > 0);
+            return uniqueContexts(contexts);
+        }
+        catch (error) {
+            const status = getStatusCode(error);
+            if (status !== 404) {
+                warning(`Failed to fetch required checks from rules API for ${owner}/${repo}#${branch}: ${getErrorMessage(error)}`);
+                return [];
+            }
+        }
+        try {
+            const response = yield octokit.request('GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks', {
+                owner,
+                repo,
+                branch,
+            });
+            const policy = response.data;
+            return uniqueContexts([
+                ...policy.contexts,
+                ...policy.checks.map((check) => check.context),
+            ]);
+        }
+        catch (error) {
+            const status = getStatusCode(error);
+            if (status !== 403 && status !== 404) {
+                warning(`Failed to fetch required checks from branch protection API for ${owner}/${repo}#${branch}: ${getErrorMessage(error)}`);
+            }
+            return [];
+        }
+    });
+}
+
 ;// CONCATENATED MODULE: ./src/getWorkflowRunJobs.ts
 var getWorkflowRunJobs_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -38217,6 +38295,7 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
 
 
 
+
 const APPROVED = 'APPROVED';
 const CHANGES_REQUESTED = 'CHANGES_REQUESTED';
 const COMPLETED = 'completed';
@@ -38296,7 +38375,7 @@ function handlePullRequest(pullRequestNumber) {
             error('`request-zero-accept-zero: true` has no effect when a reviewer is assigned.');
         }
         const reviews = yield getPullRequestReviews(owner, repo, pullRequestNumber, octokit);
-        let approved = false;
+        let approved;
         const reviewsSortedByDescendingTime = reviews.sort((x, y) => { var _a, _b; return Date.parse((_a = y.submitted_at) !== null && _a !== void 0 ? _a : '') - Date.parse((_b = x.submitted_at) !== null && _b !== void 0 ? _b : ''); });
         if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
             if (acceptZeroApprovals) {
@@ -38393,6 +38472,18 @@ function handlePullRequest(pullRequestNumber) {
             }
         }
         const jobIds = jobs.map((job) => job.id);
+        const currentWorkflowJobNames = new Set(jobs.map((job) => job.name));
+        const requiredCheckContexts = yield getRequiredCheckContexts(owner, repo, pullRequest.base.ref, octokit);
+        const requiredCheckContextsToWaitFor = requiredCheckContexts.filter((checkContext) => !currentWorkflowJobNames.has(checkContext));
+        if (requiredCheckContexts.length === 0) {
+            info(`No required checks configured for ${pullRequest.base.ref}.`);
+        }
+        else {
+            info(`Required checks configured for ${pullRequest.base.ref}: ${requiredCheckContexts.join(', ')}`);
+        }
+        if (requiredCheckContextsToWaitFor.length !== requiredCheckContexts.length) {
+            info(`Required checks ignored because they belong to this Workflow: ${requiredCheckContexts.length - requiredCheckContextsToWaitFor.length}`);
+        }
         const timeout = parseInt(getInput('timeout'), 10);
         const interval = parseInt(getInput('checks-watch-interval'), 10);
         const failIfTimeout = getBooleanInput('fail-if-timeout');
@@ -38446,20 +38537,28 @@ function handlePullRequest(pullRequestNumber) {
                     info('  ---');
                 }
             }
-            const failedChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
-                !(externalIds === null || externalIds === void 0 ? void 0 : externalIds.includes(checkRun.external_id)) &&
-                checkRun.status === COMPLETED &&
+            const checksToWatch = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
+                !(externalIds === null || externalIds === void 0 ? void 0 : externalIds.includes(checkRun.external_id)));
+            const seenCheckNames = new Set(checksToWatch.map((checkRun) => checkRun.name));
+            const missingRequiredChecks = requiredCheckContextsToWaitFor.filter((requiredCheckContext) => !seenCheckNames.has(requiredCheckContext));
+            const failedChecks = checksToWatch.filter((checkRun) => checkRun.status === COMPLETED &&
                 (checkRun.conclusion === null ||
                     ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
             if (failedChecks.length > 0) {
                 error(`Failed checks: ${failedChecks.length}`);
                 return;
             }
-            const incompleteChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
-                !(externalIds === null || externalIds === void 0 ? void 0 : externalIds.includes(checkRun.external_id)) &&
-                checkRun.status !== COMPLETED);
-            if (incompleteChecks.length > 0) {
-                info(`Incomplete checks: ${incompleteChecks.length}`);
+            const incompleteChecks = checksToWatch.filter((checkRun) => checkRun.status !== COMPLETED);
+            if (incompleteChecks.length > 0 || missingRequiredChecks.length > 0) {
+                if (incompleteChecks.length > 0) {
+                    info(`Incomplete checks: ${incompleteChecks.length}`);
+                }
+                if (missingRequiredChecks.length > 0) {
+                    info(`Required checks not started yet: ${missingRequiredChecks.length}`);
+                    for (const missingRequiredCheck of missingRequiredChecks) {
+                        info(`  Missing required check: ${missingRequiredCheck}`);
+                    }
+                }
                 const executionTime = Math.round(external_node_perf_hooks_.performance.now() / 1000);
                 info(`Execution time: ${FORMATTER.format(executionTime)}`);
                 if (executionTime > timeout) {
