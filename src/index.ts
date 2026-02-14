@@ -30,6 +30,7 @@ import { getPullRequestAutoMergeable } from './getPullRequestAutoMergeable.js';
 import { getPullRequestComments } from './getPullRequestComments.js';
 import { getPullRequestReviewRequests } from './getPullRequestReviewRequests.js';
 import { getPullRequestReviews } from './getPullRequestReviews.js';
+import { getRequiredCheckContexts } from './getRequiredCheckContexts.js';
 import { getWorkflowRunJobs } from './getWorkflowRunJobs.js';
 import { isPullRequestMerged } from './isPullRequestMerged.js';
 import { mergePullRequest } from './mergePullRequest.js';
@@ -157,7 +158,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     octokit,
   );
 
-  let approved = false;
+  let approved: boolean;
   const reviewsSortedByDescendingTime = reviews.sort(
     (x, y) =>
       Date.parse(y.submitted_at ?? '') - Date.parse(x.submitted_at ?? ''),
@@ -297,6 +298,31 @@ async function handlePullRequest(pullRequestNumber: number) {
     }
   }
   const jobIds = jobs.map((job) => job.id);
+  const currentWorkflowJobNames = new Set(jobs.map((job) => job.name));
+
+  const requiredCheckContexts = await getRequiredCheckContexts(
+    owner,
+    repo,
+    pullRequest.base.ref,
+    octokit,
+  );
+  const requiredCheckContextsToWaitFor = requiredCheckContexts.filter(
+    (checkContext) => !currentWorkflowJobNames.has(checkContext),
+  );
+  if (requiredCheckContexts.length === 0) {
+    info(`No required checks configured for ${pullRequest.base.ref}.`);
+  } else {
+    info(
+      `Required checks configured for ${pullRequest.base.ref}: ${requiredCheckContexts.join(', ')}`,
+    );
+  }
+  if (requiredCheckContextsToWaitFor.length !== requiredCheckContexts.length) {
+    info(
+      `Required checks ignored because they belong to this Workflow: ${
+        requiredCheckContexts.length - requiredCheckContextsToWaitFor.length
+      }`,
+    );
+  }
 
   const timeout = parseInt(getInput('timeout'), 10);
   const interval = parseInt(getInput('checks-watch-interval'), 10);
@@ -363,10 +389,20 @@ async function handlePullRequest(pullRequestNumber: number) {
       }
     }
 
-    const failedChecks = checkRuns.filter(
+    const checksToWatch = checkRuns.filter(
       (checkRun) =>
         !jobIds.includes(checkRun.id) &&
-        !externalIds?.includes(checkRun.external_id) &&
+        !externalIds?.includes(checkRun.external_id),
+    );
+    const seenCheckNames = new Set(
+      checksToWatch.map((checkRun) => checkRun.name),
+    );
+    const missingRequiredChecks = requiredCheckContextsToWaitFor.filter(
+      (requiredCheckContext) => !seenCheckNames.has(requiredCheckContext),
+    );
+
+    const failedChecks = checksToWatch.filter(
+      (checkRun) =>
         checkRun.status === COMPLETED &&
         (checkRun.conclusion === null ||
           ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)),
@@ -376,14 +412,21 @@ async function handlePullRequest(pullRequestNumber: number) {
       return;
     }
 
-    const incompleteChecks = checkRuns.filter(
-      (checkRun) =>
-        !jobIds.includes(checkRun.id) &&
-        !externalIds?.includes(checkRun.external_id) &&
-        checkRun.status !== COMPLETED,
+    const incompleteChecks = checksToWatch.filter(
+      (checkRun) => checkRun.status !== COMPLETED,
     );
-    if (incompleteChecks.length > 0) {
-      info(`Incomplete checks: ${incompleteChecks.length}`);
+    if (incompleteChecks.length > 0 || missingRequiredChecks.length > 0) {
+      if (incompleteChecks.length > 0) {
+        info(`Incomplete checks: ${incompleteChecks.length}`);
+      }
+      if (missingRequiredChecks.length > 0) {
+        info(
+          `Required checks not started yet: ${missingRequiredChecks.length}`,
+        );
+        for (const missingRequiredCheck of missingRequiredChecks) {
+          info(`  Missing required check: ${missingRequiredCheck}`);
+        }
+      }
       const executionTime = Math.round(performance.now() / 1000);
       info(`Execution time: ${FORMATTER.format(executionTime)}`);
 
