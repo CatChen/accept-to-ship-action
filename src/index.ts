@@ -401,7 +401,9 @@ async function handlePullRequest(pullRequestNumber: number) {
         !jobIds.includes(checkRun.id) &&
         !externalIds?.includes(checkRun.external_id),
     );
-    const seenCheckNames = new Set(checksToWatch.map((checkRun) => checkRun.name));
+    const seenCheckNames = new Set(
+      checksToWatch.map((checkRun) => checkRun.name),
+    );
     const missingRequiredChecks = requiredCheckContextsToWaitFor.filter(
       (requiredCheckContext) => !seenCheckNames.has(requiredCheckContext),
     );
@@ -425,7 +427,9 @@ async function handlePullRequest(pullRequestNumber: number) {
         info(`Incomplete checks: ${incompleteChecks.length}`);
       }
       if (missingRequiredChecks.length > 0) {
-        info(`Required checks not started yet: ${missingRequiredChecks.length}`);
+        info(
+          `Required checks not started yet: ${missingRequiredChecks.length}`,
+        );
         for (const missingRequiredCheck of missingRequiredChecks) {
           info(`  Missing required check: ${missingRequiredCheck}`);
         }
