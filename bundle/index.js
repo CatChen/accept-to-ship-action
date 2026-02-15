@@ -38296,7 +38296,7 @@ function handlePullRequest(pullRequestNumber) {
             error('`request-zero-accept-zero: true` has no effect when a reviewer is assigned.');
         }
         const reviews = yield getPullRequestReviews(owner, repo, pullRequestNumber, octokit);
-        let approved = false;
+        let approved;
         const reviewsSortedByDescendingTime = reviews.sort((x, y) => { var _a, _b; return Date.parse((_a = y.submitted_at) !== null && _a !== void 0 ? _a : '') - Date.parse((_b = x.submitted_at) !== null && _b !== void 0 ? _b : ''); });
         if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
             if (acceptZeroApprovals) {
@@ -38328,9 +38328,15 @@ function handlePullRequest(pullRequestNumber) {
                     ? `(${(_k = lastReviewPerUserId[user.id]) === null || _k === void 0 ? void 0 : _k.html_url})`
                     : ''}`);
             }
-            approved = reviewUserIds
+            const allRequestedUsersApproved = reviewUserIds
                 .map((userId) => lastReviewPerUserId[userId])
                 .every((review) => (review === null || review === void 0 ? void 0 : review.state) === APPROVED);
+            if (reviewRequests.teams.length > 0) {
+                info(`Pending team reviews: ${reviewRequests.teams
+                    .map((team) => team.name)
+                    .join()}`);
+            }
+            approved = allRequestedUsersApproved && reviewRequests.teams.length === 0;
         }
         if (!approved) {
             return;

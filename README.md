@@ -217,7 +217,7 @@ It can be a Label named `accept2ship` as well. No `#` sign in this case.
 
 ### When is a Pull Request considered approved by this Action?
 
-If reviewers are requested this Action waits for approvals from all requested reviewers. (Team reviewers are ignored in the current version. Support for team reviewers is on the roadmap.)
+If reviewers are requested this Action waits for approvals from all requested reviewers. Requested teams are treated as pending until the team review request is cleared.
 
 If no reviewer is requested then any approval is enough.
 

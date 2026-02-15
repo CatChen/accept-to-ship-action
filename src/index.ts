@@ -157,7 +157,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     octokit,
   );
 
-  let approved = false;
+  let approved: boolean;
   const reviewsSortedByDescendingTime = reviews.sort(
     (x, y) =>
       Date.parse(y.submitted_at ?? '') - Date.parse(x.submitted_at ?? ''),
@@ -196,9 +196,17 @@ async function handlePullRequest(pullRequestNumber: number) {
         }`,
       );
     }
-    approved = reviewUserIds
+    const allRequestedUsersApproved = reviewUserIds
       .map((userId) => lastReviewPerUserId[userId])
       .every((review) => review?.state === APPROVED);
+    if (reviewRequests.teams.length > 0) {
+      info(
+        `Pending team reviews: ${reviewRequests.teams
+          .map((team) => team.name)
+          .join()}`,
+      );
+    }
+    approved = allRequestedUsersApproved && reviewRequests.teams.length === 0;
   }
 
   if (!approved) {
