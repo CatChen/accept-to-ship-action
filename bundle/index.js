@@ -38166,6 +38166,7 @@ async function handlePullRequest(pullRequestNumber) {
     }
     else {
         const reviewUserIds = reviewRequests.users.map((user) => user.id);
+        const reviewUserIdSet = new Set(reviewUserIds);
         const lastReviewPerUserId = reviewsSortedByDescendingTime.reduce((result, review) => {
             const user = review.user;
             if (user) {
@@ -38182,13 +38183,26 @@ async function handlePullRequest(pullRequestNumber) {
         const allRequestedUsersApproved = reviewUserIds
             .map((userId) => lastReviewPerUserId[userId])
             .every((review) => review?.state === APPROVED);
+        const unrequestedChangesRequestedReviews = Object.entries(lastReviewPerUserId)
+            .filter(([userId, review]) => !reviewUserIdSet.has(parseInt(userId, 10)) &&
+            review.state === CHANGES_REQUESTED)
+            .map(([, review]) => review);
+        if (unrequestedChangesRequestedReviews.length > 0) {
+            info(`Blocking reviews from unrequested users:`);
+            for (const review of unrequestedChangesRequestedReviews) {
+                info(`  ${review.user?.login ?? 'Unknown'}: ${review.state}`);
+            }
+        }
         if (reviewRequests.teams.length > 0) {
             info(`Pending team reviews:`);
             for (const team of reviewRequests.teams) {
                 info(`  ${team.name} (${team.slug})`);
             }
         }
-        approved = allRequestedUsersApproved && reviewRequests.teams.length === 0;
+        approved =
+            allRequestedUsersApproved &&
+                unrequestedChangesRequestedReviews.length === 0 &&
+                reviewRequests.teams.length === 0;
     }
     if (!approved) {
         return;

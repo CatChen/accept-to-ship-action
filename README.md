@@ -219,6 +219,8 @@ It can be a Label named `accept2ship` as well. No `#` sign in this case.
 
 If reviewers are requested this Action waits for approvals from all requested reviewers. (Team reviewers are ignored in the current version. Support for team reviewers is on the roadmap.)
 
+If any unrequested reviewer has a latest review state of "CHANGES_REQUESTED" this Action will not merge. The Pull Request can proceed again after that review is dismissed or that reviewer submits a newer review with a different state.
+
 If no reviewer is requested then any approval is enough.
 
 ### Does this Action wait for other checks?
