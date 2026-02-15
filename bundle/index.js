@@ -37404,187 +37404,142 @@ function getOctokit(token, options, ...additionalPlugins) {
 }
 //# sourceMappingURL=github.js.map
 ;// CONCATENATED MODULE: ./src/canRepoAutoMerge.ts
-var canRepoAutoMerge_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-function canRepoAutoMerge(owner, repo, octokit) {
-    return canRepoAutoMerge_awaiter(this, void 0, void 0, function* () {
-        const { repository: { autoMergeAllowed }, } = yield octokit.graphql(`
+async function canRepoAutoMerge(owner, repo, octokit) {
+    const { repository: { autoMergeAllowed }, } = await octokit.graphql(`
       query($owner: String!, $repo: String!) {
         repository(owner: $owner, name: $repo) {
           autoMergeAllowed
         }
       }
     `, {
-            owner,
-            repo,
-        });
-        return autoMergeAllowed;
+        owner,
+        repo,
     });
+    return autoMergeAllowed;
 }
 
 ;// CONCATENATED MODULE: ./src/isPullRequestMerged.ts
-var isPullRequestMerged_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-function isPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
-    return isPullRequestMerged_awaiter(this, void 0, void 0, function* () {
-        try {
-            const { status } = yield octokit.rest.pulls.checkIfMerged({
-                owner,
-                repo,
-                pull_number: pullRequestNumber,
-            });
-            if (status === 204) {
+async function isPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
+    try {
+        const { status } = await octokit.rest.pulls.checkIfMerged({
+            owner,
+            repo,
+            pull_number: pullRequestNumber,
+        });
+        if (status === 204) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    catch (requestError) {
+        if (
+        // It should be `requestError instanceof RequestError`
+        // but  versions are in conflict with each other
+        requestError &&
+            typeof requestError === 'object' &&
+            'status' in requestError &&
+            typeof requestError.status === 'number' &&
+            'message' in requestError &&
+            typeof requestError.message === 'string') {
+            if (requestError.status === 204) {
                 return true;
             }
-            else {
+            else if (requestError.status === 404) {
                 return false;
             }
-        }
-        catch (requestError) {
-            if (
-            // It should be `requestError instanceof RequestError`
-            // but  versions are in conflict with each other
-            requestError &&
-                typeof requestError === 'object' &&
-                'status' in requestError &&
-                typeof requestError.status === 'number' &&
-                'message' in requestError &&
-                typeof requestError.message === 'string') {
-                if (requestError.status === 204) {
-                    return true;
-                }
-                else if (requestError.status === 404) {
-                    return false;
-                }
-                else {
-                    throw new Error(`Failed to check if pull request is merged: [${requestError.status}] ${requestError.message}`);
-                }
-            }
             else {
-                throw requestError;
+                throw new Error(`Failed to check if pull request is merged: [${requestError.status}] ${requestError.message}`, { cause: requestError });
             }
         }
-    });
+        else {
+            throw requestError;
+        }
+    }
 }
 
 ;// CONCATENATED MODULE: ./src/enablePullRequestAutoMerge.ts
-var enablePullRequestAutoMerge_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 
 
 
 
-function enablePullRequestAutoMerge(owner, repo, pullRequest, pullRequestId, mergeMethod, octokit) {
-    return enablePullRequestAutoMerge_awaiter(this, void 0, void 0, function* () {
-        var _a, _b;
-        const pullRequestNumber = pullRequest.number;
-        try {
-            yield octokit.graphql(`
+async function enablePullRequestAutoMerge(owner, repo, pullRequest, pullRequestId, mergeMethod, octokit) {
+    const pullRequestNumber = pullRequest.number;
+    try {
+        await octokit.graphql(`
         mutation($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod) {
           enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: $mergeMethod }) {
             clientMutationId
           }
         }
       `, {
-                pullRequestId,
-                mergeMethod: mergeMethod.toUpperCase(),
+            pullRequestId,
+            mergeMethod: mergeMethod.toUpperCase(),
+        });
+        setOutput('skipped', false);
+        try {
+            info(`Run ID: ${github_context.runId}`);
+            const { data: job } = await octokit.rest.actions.getWorkflowRun({
+                owner,
+                repo,
+                run_id: github_context.runId,
             });
-            setOutput('skipped', false);
-            try {
-                info(`Run ID: ${github_context.runId}`);
-                const { data: job } = yield octokit.rest.actions.getWorkflowRun({
-                    owner,
-                    repo,
-                    run_id: github_context.runId,
-                });
-                info(`Job ID: ${job.id} (${job.html_url})`);
-                const { data: comment } = yield octokit.rest.issues.createComment({
-                    owner,
-                    repo,
-                    issue_number: pullRequestNumber,
-                    body: `Auto-merge is enabled by a [GitHub Action](${job.html_url})`,
-                });
-                info(`Comment is created: ${comment.html_url}`);
-            }
-            catch (requestError) {
-                if (requestError instanceof RequestError) {
-                    info(`Failed to comment on the Pull Request: [${requestError.status}] ${requestError.message}`);
-                }
-            }
+            info(`Job ID: ${job.id} (${job.html_url})`);
+            const { data: comment } = await octokit.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pullRequestNumber,
+                body: `Auto-merge is enabled by a [GitHub Action](${job.html_url})`,
+            });
+            info(`Comment is created: ${comment.html_url}`);
         }
         catch (requestError) {
             if (requestError instanceof RequestError) {
-                warning(`Failed to enable auto-merge for the Pull Request: [${requestError.status}] ${requestError.message}`);
-                // If it's merged by someone else in a race condition we treat it as skipped,
-                // because it's the same as someone else merged it before we try.
-                const merged = yield isPullRequestMerged(owner, repo, pullRequestNumber, octokit);
-                setOutput('skipped', !merged);
-                if (merged) {
-                    try {
-                        const { data: pullRequest } = yield octokit.rest.pulls.get({
-                            owner,
-                            repo,
-                            pull_number: pullRequestNumber,
-                        });
-                        warning(`This Pull Request has been merged by: ${(_a = pullRequest.merged_by) === null || _a === void 0 ? void 0 : _a.login} (${(_b = pullRequest.merged_by) === null || _b === void 0 ? void 0 : _b.html_url})`);
-                    }
-                    catch (_c) {
-                        warning(`This Pull Request has been merged by unknown user.`);
-                    }
+                info(`Failed to comment on the Pull Request: [${requestError.status}] ${requestError.message}`);
+            }
+        }
+    }
+    catch (requestError) {
+        if (requestError instanceof RequestError) {
+            warning(`Failed to enable auto-merge for the Pull Request: [${requestError.status}] ${requestError.message}`);
+            // If it's merged by someone else in a race condition we treat it as skipped,
+            // because it's the same as someone else merged it before we try.
+            const merged = await isPullRequestMerged(owner, repo, pullRequestNumber, octokit);
+            setOutput('skipped', !merged);
+            if (merged) {
+                try {
+                    const { data: pullRequest } = await octokit.rest.pulls.get({
+                        owner,
+                        repo,
+                        pull_number: pullRequestNumber,
+                    });
+                    warning(`This Pull Request has been merged by: ${pullRequest.merged_by?.login} (${pullRequest.merged_by?.html_url})`);
                 }
-                else {
-                    // If it's not merged by someone else in a race condition then we treat it as a real error.
-                    error(`This Pull Request remains unmerged.`);
-                    setFailed(`Failed to merge this Pull Request when conditions are met.`);
+                catch {
+                    warning(`This Pull Request has been merged by unknown user.`);
                 }
             }
             else {
-                throw requestError;
+                // If it's not merged by someone else in a race condition then we treat it as a real error.
+                error(`This Pull Request remains unmerged.`);
+                setFailed(`Failed to merge this Pull Request when conditions are met.`);
             }
         }
-    });
+        else {
+            throw requestError;
+        }
+    }
 }
 
 ;// CONCATENATED MODULE: ./src/getCheckRuns.ts
-var getCheckRuns_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+async function getCheckRuns(owner, repo, ref, octokit) {
+    const response = await octokit.rest.checks.listForRef({
+        owner,
+        repo,
+        ref,
     });
-};
-function getCheckRuns(owner, repo, ref, octokit) {
-    return getCheckRuns_awaiter(this, void 0, void 0, function* () {
-        const response = yield octokit.rest.checks.listForRef({
-            owner,
-            repo,
-            ref,
-        });
-        return response.data.check_runs;
-    });
+    return response.data.check_runs;
 }
 
 ;// CONCATENATED MODULE: ./src/getMergeMethod.ts
@@ -37950,40 +37905,19 @@ function getOcktokit_getOctokit(githubToken) {
 }
 
 ;// CONCATENATED MODULE: ./src/getPullRequest.ts
-var getPullRequest_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+async function getPullRequest(owner, repo, pullRequestNumber, octokit) {
+    const response = await octokit.rest.pulls.get({
+        owner,
+        repo,
+        pull_number: pullRequestNumber,
     });
-};
-function getPullRequest(owner, repo, pullRequestNumber, octokit) {
-    return getPullRequest_awaiter(this, void 0, void 0, function* () {
-        const response = yield octokit.rest.pulls.get({
-            owner,
-            repo,
-            pull_number: pullRequestNumber,
-        });
-        return response.data;
-    });
+    return response.data;
 }
 
 ;// CONCATENATED MODULE: ./src/getPullRequestAutoMergeable.ts
-var getPullRequestAutoMergeable_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-function getPullRequestAutoMergeable(owner, repo, pullRequest, octokit) {
-    return getPullRequestAutoMergeable_awaiter(this, void 0, void 0, function* () {
-        const pullRequestNumber = pullRequest.number;
-        const { repository: { pullRequest: { pullRequestId, viewerCanEnableAutoMerge }, }, } = yield octokit.graphql(`
+async function getPullRequestAutoMergeable(owner, repo, pullRequest, octokit) {
+    const pullRequestNumber = pullRequest.number;
+    const { repository: { pullRequest: { pullRequestId, viewerCanEnableAutoMerge }, }, } = await octokit.graphql(`
         query($owner: String!, $repo: String!, $pullRequestNumber: Int!) {
           repository(owner: $owner, name: $repo) {
             pullRequest(number: $pullRequestNumber) {
@@ -37993,213 +37927,136 @@ function getPullRequestAutoMergeable(owner, repo, pullRequest, octokit) {
           }
         }
       `, {
-            owner,
-            repo,
-            pullRequestNumber,
-        });
-        return {
-            pullRequestId,
-            viewerCanEnableAutoMerge,
-        };
+        owner,
+        repo,
+        pullRequestNumber,
     });
+    return {
+        pullRequestId,
+        viewerCanEnableAutoMerge,
+    };
 }
 
 ;// CONCATENATED MODULE: ./src/getPullRequestComments.ts
-var getPullRequestComments_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+async function getPullRequestComments(owner, repo, pullRequestNumber, octokit) {
+    const response = await octokit.rest.pulls.listReviewComments({
+        owner,
+        repo,
+        pull_number: pullRequestNumber,
     });
-};
-function getPullRequestComments(owner, repo, pullRequestNumber, octokit) {
-    return getPullRequestComments_awaiter(this, void 0, void 0, function* () {
-        const response = yield octokit.rest.pulls.listReviewComments({
-            owner,
-            repo,
-            pull_number: pullRequestNumber,
-        });
-        return response.data;
-    });
+    return response.data;
 }
 
 ;// CONCATENATED MODULE: ./src/getPullRequestReviewRequests.ts
-var getPullRequestReviewRequests_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+async function getPullRequestReviewRequests(owner, repo, pullRequestNumber, octokit) {
+    const response = await octokit.rest.pulls.listRequestedReviewers({
+        owner,
+        repo,
+        pull_number: pullRequestNumber,
     });
-};
-function getPullRequestReviewRequests(owner, repo, pullRequestNumber, octokit) {
-    return getPullRequestReviewRequests_awaiter(this, void 0, void 0, function* () {
-        const response = yield octokit.rest.pulls.listRequestedReviewers({
-            owner,
-            repo,
-            pull_number: pullRequestNumber,
-        });
-        return response.data;
-    });
+    return response.data;
 }
 
 ;// CONCATENATED MODULE: ./src/getPullRequestReviews.ts
-var getPullRequestReviews_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+async function getPullRequestReviews(owner, repo, pullRequestNumber, octokit) {
+    const response = await octokit.rest.pulls.listReviews({
+        owner,
+        repo,
+        pull_number: pullRequestNumber,
     });
-};
-function getPullRequestReviews(owner, repo, pullRequestNumber, octokit) {
-    return getPullRequestReviews_awaiter(this, void 0, void 0, function* () {
-        const response = yield octokit.rest.pulls.listReviews({
-            owner,
-            repo,
-            pull_number: pullRequestNumber,
-        });
-        return response.data;
-    });
+    return response.data;
 }
 
 ;// CONCATENATED MODULE: ./src/getWorkflowRunJobs.ts
-var getWorkflowRunJobs_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 
-function getWorkflowRunJobs(owner, repo, octokit) {
-    return getWorkflowRunJobs_awaiter(this, void 0, void 0, function* () {
-        const { data: { jobs }, } = yield octokit.rest.actions.listJobsForWorkflowRun({
-            owner,
-            repo,
-            run_id: github_context.runId,
-        });
-        return jobs;
+async function getWorkflowRunJobs(owner, repo, octokit) {
+    const { data: { jobs }, } = await octokit.rest.actions.listJobsForWorkflowRun({
+        owner,
+        repo,
+        run_id: github_context.runId,
     });
+    return jobs;
 }
 
 ;// CONCATENATED MODULE: external "console"
 const external_console_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("console");
 ;// CONCATENATED MODULE: ./src/mergePullRequest.ts
-var mergePullRequest_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 
 
 
 
 
-function mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit) {
-    return mergePullRequest_awaiter(this, void 0, void 0, function* () {
-        var _a, _b;
+async function mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit) {
+    try {
+        await octokit.rest.pulls.merge({
+            owner,
+            repo,
+            pull_number: pullRequestNumber,
+            merge_method: mergeMethod,
+        });
+        setOutput('skipped', false);
         try {
-            yield octokit.rest.pulls.merge({
+            (0,external_console_namespaceObject.info)(`Run ID: ${github_context.runId}`);
+            const { data: job } = await octokit.rest.actions.getWorkflowRun({
                 owner,
                 repo,
-                pull_number: pullRequestNumber,
-                merge_method: mergeMethod,
+                run_id: github_context.runId,
             });
-            setOutput('skipped', false);
-            try {
-                (0,external_console_namespaceObject.info)(`Run ID: ${github_context.runId}`);
-                const { data: job } = yield octokit.rest.actions.getWorkflowRun({
-                    owner,
-                    repo,
-                    run_id: github_context.runId,
-                });
-                (0,external_console_namespaceObject.info)(`Job ID: ${job.id} (${job.html_url})`);
-                const { data: comment } = yield octokit.rest.issues.createComment({
-                    owner,
-                    repo,
-                    issue_number: pullRequestNumber,
-                    body: `This Pull Request is closed by a [GitHub Action](${job.html_url})`,
-                });
-                (0,external_console_namespaceObject.info)(`Comment is created: ${comment.html_url}`);
-            }
-            catch (requestError) {
-                if (requestError instanceof RequestError) {
-                    (0,external_console_namespaceObject.info)(`Failed to comment on the Pull Request: [${requestError.status}] ${requestError.message}`);
-                }
-            }
+            (0,external_console_namespaceObject.info)(`Job ID: ${job.id} (${job.html_url})`);
+            const { data: comment } = await octokit.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pullRequestNumber,
+                body: `This Pull Request is closed by a [GitHub Action](${job.html_url})`,
+            });
+            (0,external_console_namespaceObject.info)(`Comment is created: ${comment.html_url}`);
         }
         catch (requestError) {
             if (requestError instanceof RequestError) {
-                warning(`Failed to merge the Pull Request: [${requestError.status}] ${requestError.message}`);
-                // If it's merged by someone else in a race condition we treat it as skipped,
-                // because it's the same as someone else merged it before we try.
-                const merged = yield isPullRequestMerged(owner, repo, pullRequestNumber, octokit);
-                setOutput('skipped', !merged);
-                if (merged) {
-                    try {
-                        const { data: pullRequest } = yield octokit.rest.pulls.get({
-                            owner,
-                            repo,
-                            pull_number: pullRequestNumber,
-                        });
-                        warning(`This Pull Request has been merged by: ${(_a = pullRequest.merged_by) === null || _a === void 0 ? void 0 : _a.login} (${(_b = pullRequest.merged_by) === null || _b === void 0 ? void 0 : _b.html_url})`);
-                    }
-                    catch (_c) {
-                        warning(`This Pull Request has been merged by unknown user.`);
-                    }
+                (0,external_console_namespaceObject.info)(`Failed to comment on the Pull Request: [${requestError.status}] ${requestError.message}`);
+            }
+        }
+    }
+    catch (requestError) {
+        if (requestError instanceof RequestError) {
+            warning(`Failed to merge the Pull Request: [${requestError.status}] ${requestError.message}`);
+            // If it's merged by someone else in a race condition we treat it as skipped,
+            // because it's the same as someone else merged it before we try.
+            const merged = await isPullRequestMerged(owner, repo, pullRequestNumber, octokit);
+            setOutput('skipped', !merged);
+            if (merged) {
+                try {
+                    const { data: pullRequest } = await octokit.rest.pulls.get({
+                        owner,
+                        repo,
+                        pull_number: pullRequestNumber,
+                    });
+                    warning(`This Pull Request has been merged by: ${pullRequest.merged_by?.login} (${pullRequest.merged_by?.html_url})`);
                 }
-                else {
-                    // If it's not merged by someone else in a race condition then we treat it as a real error.
-                    error(`This Pull Request remains unmerged.`);
-                    setFailed(`Failed to merge this Pull Request when conditions are met.`);
+                catch {
+                    warning(`This Pull Request has been merged by unknown user.`);
                 }
             }
             else {
-                throw requestError;
+                // If it's not merged by someone else in a race condition then we treat it as a real error.
+                error(`This Pull Request remains unmerged.`);
+                setFailed(`Failed to merge this Pull Request when conditions are met.`);
             }
         }
-    });
+        else {
+            throw requestError;
+        }
+    }
 }
 
 ;// CONCATENATED MODULE: ./src/sleep.ts
-var sleep_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-function sleep(ms) {
-    return sleep_awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve) => {
-            setTimeout(resolve, ms);
-        });
+async function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
     });
 }
 
 ;// CONCATENATED MODULE: ./src/index.ts
-var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 
 
 
@@ -38229,335 +38086,326 @@ const FORMATTER = new Intl.NumberFormat(LOCALE, {
     unit: 'second',
     unitDisplay: 'long',
 });
-function handlePullRequest(pullRequestNumber) {
-    return src_awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
-        startGroup(`Pull Request number: ${pullRequestNumber}`);
-        const githubToken = getInput('github-token');
-        const octokit = getOcktokit_getOctokit(githubToken);
-        const owner = github_context.repo.owner;
-        const repo = github_context.repo.repo;
-        const mergedBeforeValidations = yield isPullRequestMerged(owner, repo, pullRequestNumber, octokit);
-        if (mergedBeforeValidations) {
-            error(`This Pull Request has been merged already.`);
-            return;
+async function handlePullRequest(pullRequestNumber) {
+    startGroup(`Pull Request number: ${pullRequestNumber}`);
+    const githubToken = getInput('github-token');
+    const octokit = getOcktokit_getOctokit(githubToken);
+    const owner = github_context.repo.owner;
+    const repo = github_context.repo.repo;
+    const mergedBeforeValidations = await isPullRequestMerged(owner, repo, pullRequestNumber, octokit);
+    if (mergedBeforeValidations) {
+        error(`This Pull Request has been merged already.`);
+        return;
+    }
+    const customHashTag = getInput('custom-hashtag') || '#accept2ship';
+    const hashTagLabel = customHashTag.replace(/^#*/, '');
+    const hashTag = `#${hashTagLabel}`;
+    const pullRequest = await getPullRequest(owner, repo, pullRequestNumber, octokit);
+    if (pullRequest.auto_merge !== null) {
+        if (pullRequest.auto_merge.enabled_by !== null) {
+            info(`Auto-merge is enabled by ${pullRequest.auto_merge.enabled_by.login} (${pullRequest.auto_merge.enabled_by.html_url})`);
         }
-        const customHashTag = getInput('custom-hashtag') || '#accept2ship';
-        const hashTagLabel = customHashTag.replace(/^#*/, '');
-        const hashTag = `#${hashTagLabel}`;
-        const pullRequest = yield getPullRequest(owner, repo, pullRequestNumber, octokit);
-        if (pullRequest.auto_merge !== null) {
-            if (pullRequest.auto_merge.enabled_by !== null) {
-                info(`Auto-merge is enabled by ${pullRequest.auto_merge.enabled_by.login} (${pullRequest.auto_merge.enabled_by.html_url})`);
-            }
-            else {
-                info(`Auto-merge is enabled`);
-            }
-            setOutput('skipped', true);
-            return;
+        else {
+            info(`Auto-merge is enabled`);
         }
-        const accept2shipTitle = (_b = (_a = pullRequest.title) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === null || _b === void 0 ? void 0 : _b.includes(hashTag);
-        info(`${hashTag} ${accept2shipTitle ? '' : 'not '}found in title`);
-        const accept2shipBody = (_d = (_c = pullRequest.body) === null || _c === void 0 ? void 0 : _c.toLowerCase()) === null || _d === void 0 ? void 0 : _d.includes(hashTag);
-        info(`${hashTag} ${accept2shipBody ? '' : 'not '}found in body`);
-        const accept2shipLabel = pullRequest.labels.some((label) => label.name.toLowerCase() === hashTagLabel);
-        info(`${hashTag} ${accept2shipLabel ? '' : 'not '}found in labels`);
-        const pullRequestUserId = pullRequest.user.id;
-        const comments = yield getPullRequestComments(owner, repo, pullRequestNumber, octokit);
-        const accept2shipComment = comments.some((comment) => {
-            var _a;
-            return ((_a = comment.user) === null || _a === void 0 ? void 0 : _a.id) === pullRequestUserId &&
-                comment.body.toLowerCase().includes(hashTag);
-        });
-        info(`${hashTag} ${accept2shipComment ? '' : 'not '}found in comments`);
-        const accept2shipTag = accept2shipTitle ||
-            accept2shipBody ||
-            accept2shipLabel ||
-            accept2shipComment;
-        if (!accept2shipTag) {
-            return;
-        }
-        const acceptZeroApprovals = getBooleanInput('request-zero-accept-zero');
-        const reviewRequests = yield getPullRequestReviewRequests(owner, repo, pullRequestNumber, octokit);
-        if (reviewRequests.users.length > 0) {
-            info(`Review requested from users: ${reviewRequests.users
-                .map((user) => `${user.login} (${user.html_url})`)
-                .join()}`);
-        }
-        if (reviewRequests.teams.length > 0) {
-            info(`Review requested from teams: ${reviewRequests.teams
-                .map((team) => team.name)
-                .join()}`);
-        }
-        if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
-            info(`Review not requested.`);
-        }
-        else if (acceptZeroApprovals) {
-            error('`request-zero-accept-zero: true` has no effect when a reviewer is assigned.');
-        }
-        const reviews = yield getPullRequestReviews(owner, repo, pullRequestNumber, octokit);
-        let approved = false;
-        const reviewsSortedByDescendingTime = reviews.sort((x, y) => { var _a, _b; return Date.parse((_a = y.submitted_at) !== null && _a !== void 0 ? _a : '') - Date.parse((_b = x.submitted_at) !== null && _b !== void 0 ? _b : ''); });
-        if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
-            if (acceptZeroApprovals) {
-                approved = reviews.every((review) => review.state !== CHANGES_REQUESTED);
-                info(`Review states: ${reviews.length || 'none'}`);
-                for (const review of reviews) {
-                    info(`  ${(_f = (_e = review.user) === null || _e === void 0 ? void 0 : _e.login) !== null && _f !== void 0 ? _f : 'Unknown'}: ${review.state}`);
-                }
-            }
-            else {
-                const lastReview = reviewsSortedByDescendingTime[0];
-                info(`Last review state: ${(_g = lastReview === null || lastReview === void 0 ? void 0 : lastReview.state) !== null && _g !== void 0 ? _g : 'none'}`);
-                approved = (lastReview === null || lastReview === void 0 ? void 0 : lastReview.state) === APPROVED;
+        setOutput('skipped', true);
+        return;
+    }
+    const accept2shipTitle = pullRequest.title?.toLowerCase()?.includes(hashTag);
+    info(`${hashTag} ${accept2shipTitle ? '' : 'not '}found in title`);
+    const accept2shipBody = pullRequest.body?.toLowerCase()?.includes(hashTag);
+    info(`${hashTag} ${accept2shipBody ? '' : 'not '}found in body`);
+    const accept2shipLabel = pullRequest.labels.some((label) => label.name.toLowerCase() === hashTagLabel);
+    info(`${hashTag} ${accept2shipLabel ? '' : 'not '}found in labels`);
+    const pullRequestUserId = pullRequest.user.id;
+    const comments = await getPullRequestComments(owner, repo, pullRequestNumber, octokit);
+    const accept2shipComment = comments.some((comment) => comment.user?.id === pullRequestUserId &&
+        comment.body.toLowerCase().includes(hashTag));
+    info(`${hashTag} ${accept2shipComment ? '' : 'not '}found in comments`);
+    const accept2shipTag = accept2shipTitle ||
+        accept2shipBody ||
+        accept2shipLabel ||
+        accept2shipComment;
+    if (!accept2shipTag) {
+        return;
+    }
+    const acceptZeroApprovals = getBooleanInput('request-zero-accept-zero');
+    const reviewRequests = await getPullRequestReviewRequests(owner, repo, pullRequestNumber, octokit);
+    if (reviewRequests.users.length > 0) {
+        info(`Review requested from users: ${reviewRequests.users
+            .map((user) => `${user.login} (${user.html_url})`)
+            .join()}`);
+    }
+    if (reviewRequests.teams.length > 0) {
+        info(`Review requested from teams: ${reviewRequests.teams
+            .map((team) => team.name)
+            .join()}`);
+    }
+    if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
+        info(`Review not requested.`);
+    }
+    else if (acceptZeroApprovals) {
+        error('`request-zero-accept-zero: true` has no effect when a reviewer is assigned.');
+    }
+    const reviews = await getPullRequestReviews(owner, repo, pullRequestNumber, octokit);
+    let approved;
+    const reviewsSortedByDescendingTime = reviews.sort((x, y) => Date.parse(y.submitted_at ?? '') - Date.parse(x.submitted_at ?? ''));
+    if (reviewRequests.users.length === 0 && reviewRequests.teams.length === 0) {
+        if (acceptZeroApprovals) {
+            approved = reviews.every((review) => review.state !== CHANGES_REQUESTED);
+            info(`Review states: ${reviews.length || 'none'}`);
+            for (const review of reviews) {
+                info(`  ${review.user?.login ?? 'Unknown'}: ${review.state}`);
             }
         }
         else {
-            const reviewUserIds = reviewRequests.users.map((user) => user.id);
-            const lastReviewPerUserId = reviewsSortedByDescendingTime.reduce((result, review) => {
-                var _a;
-                const user = review.user;
-                if (user) {
-                    result[user.id] = (_a = result[user.id]) !== null && _a !== void 0 ? _a : review;
-                }
-                return result;
-            }, {});
-            info(`Last review by user:`);
-            for (const user of reviewRequests.users) {
-                info(`  ${user.login}: ${(_j = (_h = lastReviewPerUserId[user.id]) === null || _h === void 0 ? void 0 : _h.state) !== null && _j !== void 0 ? _j : 'none'} ${user.id in lastReviewPerUserId
-                    ? `(${(_k = lastReviewPerUserId[user.id]) === null || _k === void 0 ? void 0 : _k.html_url})`
-                    : ''}`);
+            const lastReview = reviewsSortedByDescendingTime[0];
+            info(`Last review state: ${lastReview?.state ?? 'none'}`);
+            approved = lastReview?.state === APPROVED;
+        }
+    }
+    else {
+        const reviewUserIds = reviewRequests.users.map((user) => user.id);
+        const lastReviewPerUserId = reviewsSortedByDescendingTime.reduce((result, review) => {
+            const user = review.user;
+            if (user) {
+                result[user.id] = result[user.id] ?? review;
             }
-            approved = reviewUserIds
-                .map((userId) => lastReviewPerUserId[userId])
-                .every((review) => (review === null || review === void 0 ? void 0 : review.state) === APPROVED);
+            return result;
+        }, {});
+        info(`Last review by user:`);
+        for (const user of reviewRequests.users) {
+            info(`  ${user.login}: ${lastReviewPerUserId[user.id]?.state ?? 'none'} ${user.id in lastReviewPerUserId
+                ? `(${lastReviewPerUserId[user.id]?.html_url})`
+                : ''}`);
         }
-        if (!approved) {
-            return;
-        }
-        endGroup();
-        const useAutoMerge = getBooleanInput('use-auto-merge');
-        if (useAutoMerge) {
-            if (yield canRepoAutoMerge(owner, repo, octokit)) {
-                const pullRequestAutoMergeable = yield getPullRequestAutoMergeable(owner, repo, pullRequest, octokit);
-                if (pullRequestAutoMergeable.viewerCanEnableAutoMerge) {
-                    const mergeMethod = getMergeMethod();
-                    info(`Enabling auto-merge with merge method: ${mergeMethod}`);
-                    yield enablePullRequestAutoMerge(owner, repo, pullRequest, pullRequestAutoMergeable.pullRequestId, mergeMethod, octokit);
-                    summary.addRaw(`Pull Request #${pullRequestNumber} has auto-merge enabled.`, true);
-                    return; // No need to wait for the checks and try to merge.
+        approved = reviewUserIds
+            .map((userId) => lastReviewPerUserId[userId])
+            .every((review) => review?.state === APPROVED);
+    }
+    if (!approved) {
+        return;
+    }
+    endGroup();
+    const useAutoMerge = getBooleanInput('use-auto-merge');
+    if (useAutoMerge) {
+        if (await canRepoAutoMerge(owner, repo, octokit)) {
+            const pullRequestAutoMergeable = await getPullRequestAutoMergeable(owner, repo, pullRequest, octokit);
+            if (pullRequestAutoMergeable.viewerCanEnableAutoMerge) {
+                const mergeMethod = getMergeMethod();
+                info(`Enabling auto-merge with merge method: ${mergeMethod}`);
+                await enablePullRequestAutoMerge(owner, repo, pullRequest, pullRequestAutoMergeable.pullRequestId, mergeMethod, octokit);
+                summary.addRaw(`Pull Request #${pullRequestNumber} has auto-merge enabled.`, true);
+                return; // No need to wait for the checks and try to merge.
+            }
+            else {
+                const pullRequest = await getPullRequest(owner, repo, pullRequestNumber, octokit);
+                if (pullRequest.mergeable) {
+                    info(`Auto-merge is not allowed when the Pull Request is mergeable`);
                 }
                 else {
-                    const pullRequest = yield getPullRequest(owner, repo, pullRequestNumber, octokit);
-                    if (pullRequest.mergeable) {
-                        info(`Auto-merge is not allowed when the Pull Request is mergeable`);
+                    const merged = await isPullRequestMerged(owner, repo, pullRequestNumber, octokit);
+                    setOutput('skipped', !merged);
+                    if (merged) {
+                        info(`Auto-merge is not allowed when the Pull Request is already merged`);
+                        return; // No need to wait for the checks.
                     }
                     else {
-                        const merged = yield isPullRequestMerged(owner, repo, pullRequestNumber, octokit);
-                        setOutput('skipped', !merged);
-                        if (merged) {
-                            info(`Auto-merge is not allowed when the Pull Request is already merged`);
-                            return; // No need to wait for the checks.
-                        }
-                        else {
-                            warning(`Auto-merge is not allowed for this Pull Request`);
-                            warning(`Please set up branch protection for the base branch: ${pullRequest.base.ref}`);
-                        }
+                        warning(`Auto-merge is not allowed for this Pull Request`);
+                        warning(`Please set up branch protection for the base branch: ${pullRequest.base.ref}`);
                     }
+                }
+            }
+        }
+        else {
+            error(`Auto-merge is not enabled for the base repository: ${pullRequest.base.repo.html_url}`);
+        }
+    }
+    const jobs = await getWorkflowRunJobs(owner, repo, octokit);
+    info(`Current workflow name: ${github_context.workflow}`);
+    info(`Current run id: ${github_context.runId}`);
+    info(`Current run number: ${github_context.runNumber}`);
+    info(`Current run attempt: ${parseInt(process.env.GITHUB_RUN_ATTEMPT, 10)}`); // context.runAttempt in the future release of @actions/github
+    info(`Current job static id: ${github_context.job}`);
+    info(`Current step static id: ${github_context.action}`);
+    info(`Jobs in current Workflow: ${jobs.length}`);
+    for (const job of jobs) {
+        info(`  Job id: ${job.id} (${job.html_url})`);
+        info(`  Job name: ${job.name}`);
+        if (job.steps !== undefined) {
+            startGroup(`  Job steps: ${job.steps.length}`);
+            for (const step of job.steps) {
+                info(`    Step number: ${step.number}`);
+                info(`    Step name: ${step.name}`);
+                info(`    Step status/conclusion: ${step.status === COMPLETED ? step.conclusion : step.status}`);
+                info('    ---');
+            }
+            endGroup();
+        }
+    }
+    const jobIds = jobs.map((job) => job.id);
+    const timeout = parseInt(getInput('timeout'), 10);
+    const interval = parseInt(getInput('checks-watch-interval'), 10);
+    const failIfTimeout = getBooleanInput('fail-if-timeout');
+    let worthChecking = true;
+    let externalIds = undefined;
+    while (worthChecking) {
+        const checkRuns = await getCheckRuns(owner, repo, pullRequest.head.sha, octokit);
+        if (externalIds === undefined) {
+            // Two instances of the same job's execution share the same external id but not the same job id.
+            // We use external id to identify other instances of the job.
+            externalIds = checkRuns
+                .filter((checkRun) => {
+                if (checkRun.external_id === null) {
+                    return false;
+                }
+                if (jobIds.includes(checkRun.id)) {
+                    info(`External ID associated with a job in current Workflow: ${checkRun.external_id} (job id: ${checkRun.id})`);
+                    return true;
+                }
+                return false;
+            })
+                .map((checkRun) => checkRun.external_id);
+        }
+        info(`Checks:`);
+        for (const checkRun of checkRuns) {
+            info(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
+            info(`  Check name: ${checkRun.name}`);
+            if (jobIds.includes(checkRun.id)) {
+                info(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`);
+                info('  This check is a job in the current Workflow.');
+                info('  ---');
+            }
+            else if (externalIds?.includes(checkRun.external_id)) {
+                info(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`);
+                info('  This check is a job in another instance of the same Workflow.');
+                info('  ---');
+            }
+            else if (checkRun.status === COMPLETED) {
+                if (checkRun.conclusion !== null &&
+                    [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)) {
+                    info(`  Check status/conclusion: ${checkRun.conclusion}`);
+                    info('  ---');
+                }
+                else {
+                    info(`  Check status/conclusion: ${checkRun.conclusion}`);
+                    info('  ---');
                 }
             }
             else {
-                error(`Auto-merge is not enabled for the base repository: ${pullRequest.base.repo.html_url}`);
+                info(`  Check status/conclusion: ${checkRun.status}`);
+                info('  ---');
             }
         }
-        const jobs = yield getWorkflowRunJobs(owner, repo, octokit);
-        info(`Current workflow name: ${github_context.workflow}`);
-        info(`Current run id: ${github_context.runId}`);
-        info(`Current run number: ${github_context.runNumber}`);
-        info(`Current run attempt: ${parseInt(process.env.GITHUB_RUN_ATTEMPT, 10)}`); // context.runAttempt in the future release of @actions/github
-        info(`Current job static id: ${github_context.job}`);
-        info(`Current step static id: ${github_context.action}`);
-        info(`Jobs in current Workflow: ${jobs.length}`);
-        for (const job of jobs) {
-            info(`  Job id: ${job.id} (${job.html_url})`);
-            info(`  Job name: ${job.name}`);
-            if (job.steps !== undefined) {
-                startGroup(`  Job steps: ${job.steps.length}`);
-                for (const step of job.steps) {
-                    info(`    Step number: ${step.number}`);
-                    info(`    Step name: ${step.name}`);
-                    info(`    Step status/conclusion: ${step.status === COMPLETED ? step.conclusion : step.status}`);
-                    info('    ---');
-                }
-                endGroup();
-            }
+        const failedChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
+            !externalIds?.includes(checkRun.external_id) &&
+            checkRun.status === COMPLETED &&
+            (checkRun.conclusion === null ||
+                ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
+        if (failedChecks.length > 0) {
+            error(`Failed checks: ${failedChecks.length}`);
+            return;
         }
-        const jobIds = jobs.map((job) => job.id);
-        const timeout = parseInt(getInput('timeout'), 10);
-        const interval = parseInt(getInput('checks-watch-interval'), 10);
-        const failIfTimeout = getBooleanInput('fail-if-timeout');
-        let worthChecking = true;
-        let externalIds = undefined;
-        while (worthChecking) {
-            const checkRuns = yield getCheckRuns(owner, repo, pullRequest.head.sha, octokit);
-            if (externalIds === undefined) {
-                // Two instances of the same job's execution share the same external id but not the same job id.
-                // We use external id to identify other instances of the job.
-                externalIds = checkRuns
-                    .filter((checkRun) => {
-                    if (checkRun.external_id === null) {
-                        return false;
-                    }
-                    if (jobIds.includes(checkRun.id)) {
-                        info(`External ID associated with a job in current Workflow: ${checkRun.external_id} (job id: ${checkRun.id})`);
-                        return true;
-                    }
-                    return false;
-                })
-                    .map((checkRun) => checkRun.external_id);
-            }
-            info(`Checks:`);
-            for (const checkRun of checkRuns) {
-                info(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
-                info(`  Check name: ${checkRun.name}`);
-                if (jobIds.includes(checkRun.id)) {
-                    info(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`);
-                    info('  This check is a job in the current Workflow.');
-                    info('  ---');
+        const incompleteChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
+            !externalIds?.includes(checkRun.external_id) &&
+            checkRun.status !== COMPLETED);
+        if (incompleteChecks.length > 0) {
+            info(`Incomplete checks: ${incompleteChecks.length}`);
+            const executionTime = Math.round(external_node_perf_hooks_.performance.now() / 1000);
+            info(`Execution time: ${FORMATTER.format(executionTime)}`);
+            if (executionTime > timeout) {
+                if (failIfTimeout) {
+                    setFailed(`Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(timeout)}`);
                 }
-                else if (externalIds === null || externalIds === void 0 ? void 0 : externalIds.includes(checkRun.external_id)) {
-                    info(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`);
-                    info('  This check is a job in another instance of the same Workflow.');
-                    info('  ---');
-                }
-                else if (checkRun.status === COMPLETED) {
-                    if (checkRun.conclusion !== null &&
-                        [SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)) {
-                        info(`  Check status/conclusion: ${checkRun.conclusion}`);
-                        info('  ---');
-                    }
-                    else {
-                        info(`  Check status/conclusion: ${checkRun.conclusion}`);
-                        info('  ---');
-                    }
-                }
-                else {
-                    info(`  Check status/conclusion: ${checkRun.status}`);
-                    info('  ---');
-                }
-            }
-            const failedChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
-                !(externalIds === null || externalIds === void 0 ? void 0 : externalIds.includes(checkRun.external_id)) &&
-                checkRun.status === COMPLETED &&
-                (checkRun.conclusion === null ||
-                    ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
-            if (failedChecks.length > 0) {
-                error(`Failed checks: ${failedChecks.length}`);
                 return;
             }
-            const incompleteChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
-                !(externalIds === null || externalIds === void 0 ? void 0 : externalIds.includes(checkRun.external_id)) &&
-                checkRun.status !== COMPLETED);
-            if (incompleteChecks.length > 0) {
-                info(`Incomplete checks: ${incompleteChecks.length}`);
-                const executionTime = Math.round(external_node_perf_hooks_.performance.now() / 1000);
-                info(`Execution time: ${FORMATTER.format(executionTime)}`);
-                if (executionTime > timeout) {
-                    if (failIfTimeout) {
-                        setFailed(`Timeout: ${FORMATTER.format(executionTime)} > ${FORMATTER.format(timeout)}`);
-                    }
+            info(`Sleeping: ${FORMATTER.format(interval)}`);
+            info('---');
+            await sleep(interval * 1000);
+        }
+        else {
+            worthChecking = false;
+        }
+    }
+    const mergedAfterValidations = await isPullRequestMerged(owner, repo, pullRequestNumber, octokit);
+    if (mergedAfterValidations) {
+        error(`This Pull Request has been merged already.`);
+        return;
+    }
+    const mergeMethod = getMergeMethod();
+    info(`Merging with merge method: ${mergeMethod}`);
+    await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
+    summary.addRaw(`Pull Request #${pullRequestNumber} has been merged.`, true);
+}
+async function run() {
+    info(`Event name: ${github_context.eventName}`);
+    setOutput('skipped', true);
+    switch (github_context.eventName) {
+        case 'pull_request':
+            await (async () => {
+                const pullRequest = github_context.payload.pull_request;
+                await handlePullRequest(pullRequest.number);
+            })();
+            break;
+        case 'pull_request_review':
+            await (async () => {
+                const pullRequest = github_context.payload
+                    .pull_request;
+                await handlePullRequest(pullRequest.number);
+            })();
+            break;
+        case 'issue_comment':
+            await (async () => {
+                const issue = github_context.payload.issue;
+                if (issue.pull_request !== undefined) {
+                    await handlePullRequest(issue.number);
+                }
+            })();
+            break;
+        case 'check_run':
+            await (async () => {
+                const checkRun = github_context.payload.check_run;
+                if (checkRun.status !== COMPLETED ||
+                    checkRun.conclusion === null ||
+                    ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)) {
                     return;
                 }
-                info(`Sleeping: ${FORMATTER.format(interval)}`);
-                info('---');
-                yield sleep(interval * 1000);
-            }
-            else {
-                worthChecking = false;
-            }
-        }
-        const mergedAfterValidations = yield isPullRequestMerged(owner, repo, pullRequestNumber, octokit);
-        if (mergedAfterValidations) {
-            error(`This Pull Request has been merged already.`);
-            return;
-        }
-        const mergeMethod = getMergeMethod();
-        info(`Merging with merge method: ${mergeMethod}`);
-        yield mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
-        summary.addRaw(`Pull Request #${pullRequestNumber} has been merged.`, true);
-    });
-}
-function run() {
-    return src_awaiter(this, void 0, void 0, function* () {
-        info(`Event name: ${github_context.eventName}`);
-        setOutput('skipped', true);
-        switch (github_context.eventName) {
-            case 'pull_request':
-                yield (() => src_awaiter(this, void 0, void 0, function* () {
-                    const pullRequest = github_context.payload.pull_request;
-                    yield handlePullRequest(pullRequest.number);
-                }))();
-                break;
-            case 'pull_request_review':
-                yield (() => src_awaiter(this, void 0, void 0, function* () {
-                    const pullRequest = github_context.payload
-                        .pull_request;
-                    yield handlePullRequest(pullRequest.number);
-                }))();
-                break;
-            case 'issue_comment':
-                yield (() => src_awaiter(this, void 0, void 0, function* () {
-                    const issue = github_context.payload.issue;
-                    if (issue.pull_request !== undefined) {
-                        yield handlePullRequest(issue.number);
-                    }
-                }))();
-                break;
-            case 'check_run':
-                yield (() => src_awaiter(this, void 0, void 0, function* () {
-                    const checkRun = github_context.payload.check_run;
-                    if (checkRun.status !== COMPLETED ||
-                        checkRun.conclusion === null ||
-                        ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)) {
-                        return;
-                    }
-                    for (const pullRequest of checkRun.pull_requests) {
-                        yield handlePullRequest(pullRequest.number);
-                    }
-                }))();
-                break;
-            case 'check_suite':
-                yield (() => src_awaiter(this, void 0, void 0, function* () {
-                    const checkSuites = github_context.payload.check_suite;
-                    if (checkSuites.status !== COMPLETED ||
-                        checkSuites.conclusion === null ||
-                        ![SUCCESS, NEUTRAL, SKIPPED].includes(checkSuites.conclusion)) {
-                        return;
-                    }
-                    for (const pullRequest of checkSuites.pull_requests) {
-                        yield handlePullRequest(pullRequest.number);
-                    }
-                }))();
-                break;
-            case 'workflow_run':
-                yield (() => src_awaiter(this, void 0, void 0, function* () {
-                    const workflowRun = github_context.payload.workflow_run;
-                    if (workflowRun.status !== COMPLETED ||
-                        workflowRun.conclusion === null ||
-                        ![SUCCESS, NEUTRAL, SKIPPED].includes(workflowRun.conclusion)) {
-                        return;
-                    }
-                    for (const pullRequest of workflowRun.pull_requests) {
-                        yield handlePullRequest(pullRequest.number);
-                    }
-                }))();
-                break;
-            case 'workflow_dispatch':
-            default:
-                error(`Unsupported GitHub Action event: ${github_context.eventName}`);
-                break;
-        }
-    });
+                for (const pullRequest of checkRun.pull_requests) {
+                    await handlePullRequest(pullRequest.number);
+                }
+            })();
+            break;
+        case 'check_suite':
+            await (async () => {
+                const checkSuites = github_context.payload.check_suite;
+                if (checkSuites.status !== COMPLETED ||
+                    checkSuites.conclusion === null ||
+                    ![SUCCESS, NEUTRAL, SKIPPED].includes(checkSuites.conclusion)) {
+                    return;
+                }
+                for (const pullRequest of checkSuites.pull_requests) {
+                    await handlePullRequest(pullRequest.number);
+                }
+            })();
+            break;
+        case 'workflow_run':
+            await (async () => {
+                const workflowRun = github_context.payload.workflow_run;
+                if (workflowRun.status !== COMPLETED ||
+                    workflowRun.conclusion === null ||
+                    ![SUCCESS, NEUTRAL, SKIPPED].includes(workflowRun.conclusion)) {
+                    return;
+                }
+                for (const pullRequest of workflowRun.pull_requests) {
+                    await handlePullRequest(pullRequest.number);
+                }
+            })();
+            break;
+        case 'workflow_dispatch':
+        default:
+            error(`Unsupported GitHub Action event: ${github_context.eventName}`);
+            break;
+    }
 }
 run().catch((error) => setFailed(error));
 

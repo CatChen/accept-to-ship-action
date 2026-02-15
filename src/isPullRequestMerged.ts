@@ -36,6 +36,7 @@ export async function isPullRequestMerged(
       } else {
         throw new Error(
           `Failed to check if pull request is merged: [${requestError.status}] ${requestError.message}`,
+          { cause: requestError },
         );
       }
     } else {
