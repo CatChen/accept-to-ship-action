@@ -196,9 +196,16 @@ async function handlePullRequest(pullRequestNumber: number) {
         }`,
       );
     }
-    approved = reviewUserIds
+    const allRequestedUsersApproved = reviewUserIds
       .map((userId) => lastReviewPerUserId[userId])
       .every((review) => review?.state === APPROVED);
+    if (reviewRequests.teams.length > 0) {
+      info(`Pending team reviews:`);
+      for (const team of reviewRequests.teams) {
+        info(`  ${team.name} (${team.html_url})`);
+      }
+    }
+    approved = allRequestedUsersApproved && reviewRequests.teams.length === 0;
   }
 
   if (!approved) {
