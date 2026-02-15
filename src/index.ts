@@ -157,7 +157,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     octokit,
   );
 
-  let approved = false;
+  let approved: boolean;
   const reviewsSortedByDescendingTime = reviews.sort(
     (x, y) =>
       Date.parse(y.submitted_at ?? '') - Date.parse(x.submitted_at ?? ''),
