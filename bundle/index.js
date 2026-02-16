@@ -38186,7 +38186,8 @@ async function handlePullRequest(pullRequestNumber) {
         const reviewUserIdSet = new Set(Object.keys(lastReviewPerUserId));
         const unrequestedUserIdSet = new Set([...reviewUserIdSet].filter((userId) => !requestedUserIdSet.has(userId)));
         const unrequestedChangesRequestedReviews = Object.entries(lastReviewPerUserId)
-            .filter(([userId, review]) => unrequestedUserIdSet.has(userId) && review.state === CHANGES_REQUESTED)
+            .filter(([userId, review]) => unrequestedUserIdSet.has(userId) &&
+            review.state === CHANGES_REQUESTED)
             .map(([, review]) => review);
         if (unrequestedChangesRequestedReviews.length > 0) {
             info(`Blocking reviews from unrequested users:`);

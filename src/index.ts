@@ -211,7 +211,8 @@ async function handlePullRequest(pullRequestNumber: number) {
     )
       .filter(
         ([userId, review]) =>
-          unrequestedUserIdSet.has(userId) && review.state === CHANGES_REQUESTED,
+          unrequestedUserIdSet.has(userId) &&
+          review.state === CHANGES_REQUESTED,
       )
       .map(([, review]) => review);
     if (unrequestedChangesRequestedReviews.length > 0) {
