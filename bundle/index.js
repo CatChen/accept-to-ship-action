@@ -38165,8 +38165,7 @@ async function handlePullRequest(pullRequestNumber) {
         }
     }
     else {
-        const reviewUserIds = reviewRequests.users.map((user) => user.id);
-        const reviewUserIdSet = new Set(reviewUserIds);
+        const requestedUserIds = reviewRequests.users.map((user) => user.id);
         const lastReviewPerUserId = reviewsSortedByDescendingTime.reduce((result, review) => {
             const user = review.user;
             if (user) {
@@ -38180,19 +38179,12 @@ async function handlePullRequest(pullRequestNumber) {
                 ? `(${lastReviewPerUserId[user.id]?.html_url})`
                 : ''}`);
         }
-        const allRequestedUsersApproved = reviewUserIds
-            .map((userId) => lastReviewPerUserId[userId])
-            .every((review) => review?.state === APPROVED);
-        const unrequestedChangesRequestedReviews = Object.entries(lastReviewPerUserId)
-            .filter(([userId, review]) => !reviewUserIdSet.has(parseInt(userId, 10)) &&
-            review.state === CHANGES_REQUESTED)
-            .map(([, review]) => review);
-        if (unrequestedChangesRequestedReviews.length > 0) {
-            info(`Blocking reviews from unrequested users:`);
-            for (const review of unrequestedChangesRequestedReviews) {
-                info(`  ${review.user?.login ?? 'Unknown'}: ${review.state}`);
-            }
-        }
+        const allRequestedUsersApproved = requestedUserIds.every((userId) => lastReviewPerUserId[userId]?.state === APPROVED);
+        const requestedUserIdSet = new Set(requestedUserIds);
+        const reviewUserIdSet = new Set(Object.keys(lastReviewPerUserId).map(Number));
+        const unrequestedUserIdSet = reviewUserIdSet.difference(requestedUserIdSet);
+        const unrequestedUserIds = Array.from(unrequestedUserIdSet.values());
+        const anyUnrequestedUsesChangesRequested = unrequestedUserIds.some((userId) => lastReviewPerUserId[userId]?.state === CHANGES_REQUESTED);
         if (reviewRequests.teams.length > 0) {
             info(`Pending team reviews:`);
             for (const team of reviewRequests.teams) {
@@ -38201,7 +38193,7 @@ async function handlePullRequest(pullRequestNumber) {
         }
         approved =
             allRequestedUsersApproved &&
-                unrequestedChangesRequestedReviews.length === 0 &&
+                !anyUnrequestedUsesChangesRequested &&
                 reviewRequests.teams.length === 0;
     }
     if (!approved) {
