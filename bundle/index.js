@@ -38184,7 +38184,7 @@ async function handlePullRequest(pullRequestNumber) {
         const reviewUserIdSet = new Set(Object.keys(lastReviewPerUserId).map(Number));
         const unrequestedUserIdSet = reviewUserIdSet.difference(requestedUserIdSet);
         const unrequestedUserIds = Array.from(unrequestedUserIdSet.values());
-        const anyUnrequestedUsesChangesRequested = unrequestedUserIds.some((userId) => lastReviewPerUserId[userId]?.state === CHANGES_REQUESTED);
+        const anyUnrequestedUsersChangesRequested = unrequestedUserIds.some((userId) => lastReviewPerUserId[userId]?.state === CHANGES_REQUESTED);
         if (reviewRequests.teams.length > 0) {
             info(`Pending team reviews:`);
             for (const team of reviewRequests.teams) {
@@ -38193,7 +38193,7 @@ async function handlePullRequest(pullRequestNumber) {
         }
         approved =
             allRequestedUsersApproved &&
-                !anyUnrequestedUsesChangesRequested &&
+                !anyUnrequestedUsersChangesRequested &&
                 reviewRequests.teams.length === 0;
     }
     if (!approved) {
