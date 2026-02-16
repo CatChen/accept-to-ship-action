@@ -206,7 +206,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     );
     const unrequestedUserIdSet = reviewUserIdSet.difference(requestedUserIdSet);
     const unrequestedUserIds = Array.from(unrequestedUserIdSet.values());
-    const anyUnrequestedUsesChangesRequested = unrequestedUserIds.some(
+    const anyUnrequestedUsersChangesRequested = unrequestedUserIds.some(
       (userId) => lastReviewPerUserId[userId]?.state === CHANGES_REQUESTED,
     );
 
@@ -218,7 +218,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     }
     approved =
       allRequestedUsersApproved &&
-      !anyUnrequestedUsesChangesRequested &&
+      !anyUnrequestedUsersChangesRequested &&
       reviewRequests.teams.length === 0;
   }
 
