@@ -176,7 +176,9 @@ async function handlePullRequest(pullRequestNumber: number) {
     }
   } else {
     const reviewUserIds = reviewRequests.users.map((user) => user.id);
-    const reviewUserIdSet = new Set(reviewUserIds);
+    const requestedUserIdSet = new Set(
+      reviewUserIds.map((userId) => userId.toString()),
+    );
     const lastReviewPerUserId = reviewsSortedByDescendingTime.reduce(
       (result, review) => {
         const user = review.user;
@@ -200,13 +202,16 @@ async function handlePullRequest(pullRequestNumber: number) {
     const allRequestedUsersApproved = reviewUserIds
       .map((userId) => lastReviewPerUserId[userId])
       .every((review) => review?.state === APPROVED);
+    const reviewUserIdSet = new Set(Object.keys(lastReviewPerUserId));
+    const unrequestedUserIdSet = new Set(
+      [...reviewUserIdSet].filter((userId) => !requestedUserIdSet.has(userId)),
+    );
     const unrequestedChangesRequestedReviews = Object.entries(
       lastReviewPerUserId,
     )
       .filter(
         ([userId, review]) =>
-          !reviewUserIdSet.has(parseInt(userId, 10)) &&
-          review.state === CHANGES_REQUESTED,
+          unrequestedUserIdSet.has(userId) && review.state === CHANGES_REQUESTED,
       )
       .map(([, review]) => review);
     if (unrequestedChangesRequestedReviews.length > 0) {
