@@ -164,7 +164,7 @@ jobs:
             "/repos/$REPO/commits/$TEST_HEAD_COMMIT/check-runs" |
             jq -r '[.check_runs[] | pick (.name, .conclusion, .status) | select (.name | contains("Test in Pull Request"))] | length')
 
-          while [[ -n "$PENDING" && -n "$$TEST_IN_PR_JOB_COUNT" && $PENDING -gt 0 || $TEST_IN_PR_JOB_COUNT -lt 2 ]]
+          while [[ -n "$PENDING" && -n "$TEST_IN_PR_JOB_COUNT" && $PENDING -gt 0 || $TEST_IN_PR_JOB_COUNT -lt 2 ]]
           do
             echo "::group::Pending checks: $PENDING; expected jobs: $TEST_IN_PR_JOB_COUNT/2"
             gh pr checks $TEST_HEAD_PR_NUMBER --watch --fail-fast | tee -a $CHECKS_TEMP_FILE
