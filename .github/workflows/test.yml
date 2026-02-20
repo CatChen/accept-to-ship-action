@@ -169,7 +169,7 @@ jobs:
 
           while [[ -n "$PENDING" && -n "$TEST_IN_PR_JOB_COUNT" && $PENDING -gt 0 || $TEST_IN_PR_JOB_COUNT -ne 1 ]]
           do
-            echo "::group::Pending checks: $PENDING; expected jobs: $TEST_IN_PR_JOB_COUNT/1 ($EXPECTED_CHECK_NAME)"
+            echo "::group::Pending checks: $PENDING; expected jobs: $TEST_IN_PR_JOB_COUNT"
             gh pr checks $TEST_HEAD_PR_NUMBER --watch --fail-fast | tee -a $CHECKS_TEMP_FILE
 
             sleep 10
