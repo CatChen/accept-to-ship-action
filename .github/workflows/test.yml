@@ -53,7 +53,7 @@ jobs:
       TEST_BASE_BRANCH_NAME: ${{ format('workflows/tests/{0}/base/id-{1}/run-{2}/attempt-{3}/sha-{4}', matrix.config.id, github.run_id, github.run_number, github.run_attempt, github.sha) }}
       TEST_HEAD_BRANCH_NAME: ${{ format('workflows/tests/{0}/head/id-{1}/run-{2}/attempt-{3}/sha-{4}', matrix.config.id, github.run_id, github.run_number, github.run_attempt, github.sha) }}
       CONFIG_TYPE: ${{ matrix.config.name }}
-      EXPECTED_CHECK_NAME: ${{ matrix.config.expected-check-name }}
+      EXPECTED_CHECK_NAME: ${{ matrix.config['expected-check-name'] }}
 
     steps:
       - uses: actions/checkout@v6
