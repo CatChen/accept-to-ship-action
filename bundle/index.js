@@ -37971,6 +37971,73 @@ async function getPullRequestReviews(owner, repo, pullRequestNumber, octokit) {
     return response.data;
 }
 
+;// CONCATENATED MODULE: ./src/getRequiredCheckContexts.ts
+
+function getStatusCode(error) {
+    if (typeof error !== 'object' || error === null) {
+        return undefined;
+    }
+    if (!('status' in error)) {
+        return undefined;
+    }
+    if (typeof error.status !== 'number') {
+        return undefined;
+    }
+    return error.status;
+}
+function getErrorMessage(error) {
+    if (error instanceof Error) {
+        return error.message;
+    }
+    return 'Unknown error';
+}
+function uniqueContexts(contexts) {
+    return [...new Set(contexts)];
+}
+async function getRequiredCheckContexts(owner, repo, branch, octokit) {
+    try {
+        const response = await octokit.request('GET /repos/{owner}/{repo}/rules/branches/{branch}', {
+            owner,
+            repo,
+            branch,
+            per_page: 100,
+        });
+        const rules = response.data;
+        const contexts = rules
+            .filter((rule) => rule.type === 'required_status_checks')
+            .flatMap((rule) => rule.parameters?.required_status_checks ?? [])
+            .map((requiredStatusCheck) => requiredStatusCheck.context)
+            .filter((context) => context !== undefined && context.trim().length > 0);
+        return uniqueContexts(contexts);
+    }
+    catch (error) {
+        const status = getStatusCode(error);
+        if (status !== 404) {
+            warning(`Failed to fetch required checks from rules API for ${owner}/${repo}#${branch}: ${getErrorMessage(error)}`);
+            return [];
+        }
+    }
+    try {
+        const response = await octokit.request('GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks', {
+            owner,
+            repo,
+            branch,
+        });
+        const policy = response.data;
+        return uniqueContexts([
+            ...policy.contexts,
+            ...policy.checks.map((check) => check.context),
+        ]);
+    }
+    catch (error) {
+        const status = getStatusCode(error);
+        if (status !== 403 && status !== 404) {
+            warning(`Failed to fetch required checks from branch protection API for ${owner}/${repo}#${branch}: ${getErrorMessage(error)}`);
+        }
+        return [];
+    }
+}
+
 ;// CONCATENATED MODULE: ./src/getWorkflowRunJobs.ts
 
 async function getWorkflowRunJobs(owner, repo, octokit) {
@@ -38061,6 +38128,7 @@ async function sleep(ms) {
 }
 
 ;// CONCATENATED MODULE: ./src/index.ts
+
 
 
 
@@ -38255,6 +38323,18 @@ async function handlePullRequest(pullRequestNumber) {
         }
     }
     const jobIds = jobs.map((job) => job.id);
+    const currentWorkflowJobNames = new Set(jobs.map((job) => job.name));
+    const requiredCheckContexts = await getRequiredCheckContexts(owner, repo, pullRequest.base.ref, octokit);
+    const requiredCheckContextsToWaitFor = requiredCheckContexts.filter((checkContext) => !currentWorkflowJobNames.has(checkContext));
+    if (requiredCheckContexts.length === 0) {
+        info(`No required checks configured for ${pullRequest.base.ref}.`);
+    }
+    else {
+        info(`Required checks configured for ${pullRequest.base.ref}: ${requiredCheckContexts.join(', ')}`);
+    }
+    if (requiredCheckContextsToWaitFor.length !== requiredCheckContexts.length) {
+        info(`Required checks ignored because they belong to this Workflow: ${requiredCheckContexts.length - requiredCheckContextsToWaitFor.length}`);
+    }
     const timeout = parseInt(getInput('timeout'), 10);
     const interval = parseInt(getInput('checks-watch-interval'), 10);
     const failIfTimeout = getBooleanInput('fail-if-timeout');
@@ -38308,20 +38388,28 @@ async function handlePullRequest(pullRequestNumber) {
                 info('  ---');
             }
         }
-        const failedChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
-            !externalIds?.includes(checkRun.external_id) &&
-            checkRun.status === COMPLETED &&
+        const checksToWatch = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
+            !externalIds?.includes(checkRun.external_id));
+        const seenCheckNames = new Set(checksToWatch.map((checkRun) => checkRun.name));
+        const missingRequiredChecks = requiredCheckContextsToWaitFor.filter((requiredCheckContext) => !seenCheckNames.has(requiredCheckContext));
+        const failedChecks = checksToWatch.filter((checkRun) => checkRun.status === COMPLETED &&
             (checkRun.conclusion === null ||
                 ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
         if (failedChecks.length > 0) {
             error(`Failed checks: ${failedChecks.length}`);
             return;
         }
-        const incompleteChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
-            !externalIds?.includes(checkRun.external_id) &&
-            checkRun.status !== COMPLETED);
-        if (incompleteChecks.length > 0) {
-            info(`Incomplete checks: ${incompleteChecks.length}`);
+        const incompleteChecks = checksToWatch.filter((checkRun) => checkRun.status !== COMPLETED);
+        if (incompleteChecks.length > 0 || missingRequiredChecks.length > 0) {
+            if (incompleteChecks.length > 0) {
+                info(`Incomplete checks: ${incompleteChecks.length}`);
+            }
+            if (missingRequiredChecks.length > 0) {
+                info(`Required checks not started yet: ${missingRequiredChecks.length}`);
+                for (const missingRequiredCheck of missingRequiredChecks) {
+                    info(`  Missing required check: ${missingRequiredCheck}`);
+                }
+            }
             const executionTime = Math.round(external_node_perf_hooks_.performance.now() / 1000);
             info(`Execution time: ${FORMATTER.format(executionTime)}`);
             if (executionTime > timeout) {
