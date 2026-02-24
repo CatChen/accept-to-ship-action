@@ -37973,48 +37973,34 @@ async function getPullRequestReviews(owner, repo, pullRequestNumber, octokit) {
 
 ;// CONCATENATED MODULE: ./src/getRequiredCheckContexts.ts
 
-function getStatusCode(error) {
-    if (typeof error !== 'object' || error === null) {
-        return undefined;
-    }
-    if (!('status' in error)) {
-        return undefined;
-    }
-    if (typeof error.status !== 'number') {
-        return undefined;
-    }
-    return error.status;
-}
-function getErrorMessage(error) {
-    if (error instanceof Error) {
-        return error.message;
-    }
-    return 'Unknown error';
-}
+
 function uniqueContexts(contexts) {
     return [...new Set(contexts)];
 }
 async function getRequiredCheckContexts(owner, repo, branch, octokit) {
+    const requiredCheckContexts = [];
     try {
         const response = await octokit.rest.repos.getBranchRules({
             owner,
             repo,
             branch,
         });
-        const contexts = response.data
+        requiredCheckContexts.push(...response.data
             .filter((rule) => rule.type === 'required_status_checks')
             .flatMap((rule) => 'parameters' in rule
             ? (rule.parameters?.required_status_checks ?? [])
             : [])
             .map((requiredStatusCheck) => requiredStatusCheck.context)
-            .filter((context) => context.trim().length > 0);
-        return uniqueContexts(contexts);
+            .filter((context) => context.trim().length > 0));
     }
-    catch (error) {
-        const status = getStatusCode(error);
-        if (status !== 404) {
-            warning(`Failed to fetch required checks from rules API for ${owner}/${repo}#${branch}: ${getErrorMessage(error)}`);
-            return [];
+    catch (requestError) {
+        if (requestError instanceof RequestError) {
+            if (requestError.status !== 404) {
+                warning(`Failed to fetch required checks from rules API for ${owner}/${repo}#${branch}: [${requestError.status}] ${requestError.message}`);
+            }
+        }
+        else {
+            throw requestError;
         }
     }
     try {
@@ -38023,18 +38009,19 @@ async function getRequiredCheckContexts(owner, repo, branch, octokit) {
             repo,
             branch,
         });
-        return uniqueContexts([
-            ...response.data.contexts,
-            ...response.data.checks.map((check) => check.context),
-        ]);
+        requiredCheckContexts.push(...response.data.contexts, ...response.data.checks.map((check) => check.context));
     }
-    catch (error) {
-        const status = getStatusCode(error);
-        if (status !== 403 && status !== 404) {
-            warning(`Failed to fetch required checks from branch protection API for ${owner}/${repo}#${branch}: ${getErrorMessage(error)}`);
+    catch (requestError) {
+        if (requestError instanceof RequestError) {
+            if (requestError.status !== 403 && requestError.status !== 404) {
+                warning(`Failed to fetch required checks from branch protection API for ${owner}/${repo}#${branch}: [${requestError.status}] ${requestError.message}`);
+            }
         }
-        return [];
+        else {
+            throw requestError;
+        }
     }
+    return uniqueContexts(requiredCheckContexts);
 }
 
 ;// CONCATENATED MODULE: ./src/getWorkflowRunJobs.ts
