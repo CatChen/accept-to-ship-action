@@ -30,7 +30,7 @@ import { getPullRequestAutoMergeable } from './getPullRequestAutoMergeable.js';
 import { getPullRequestComments } from './getPullRequestComments.js';
 import { getPullRequestReviewRequests } from './getPullRequestReviewRequests.js';
 import { getPullRequestReviews } from './getPullRequestReviews.js';
-import { getRequiredCheckContexts } from './getRequiredCheckContexts.js';
+import { getRequiredChecks } from './getRequiredChecks.js';
 import { getWorkflowRunJobs } from './getWorkflowRunJobs.js';
 import { isPullRequestMerged } from './isPullRequestMerged.js';
 import { mergePullRequest } from './mergePullRequest.js';
@@ -307,26 +307,26 @@ async function handlePullRequest(pullRequestNumber: number) {
   const jobIds = jobs.map((job) => job.id);
   const currentWorkflowJobNames = new Set(jobs.map((job) => job.name));
 
-  const requiredCheckContexts = await getRequiredCheckContexts(
+  const requiredChecks = await getRequiredChecks(
     owner,
     repo,
     pullRequest.base.ref,
     octokit,
   );
-  const requiredCheckContextsToWaitFor = requiredCheckContexts.filter(
+  const requiredChecksToWaitFor = requiredChecks.filter(
     (checkContext) => !currentWorkflowJobNames.has(checkContext),
   );
-  if (requiredCheckContexts.length === 0) {
+  if (requiredChecks.length === 0) {
     info(`No required checks configured for ${pullRequest.base.ref}.`);
   } else {
     info(
-      `Required checks configured for ${pullRequest.base.ref}: ${requiredCheckContexts.join(', ')}`,
+      `Required checks configured for ${pullRequest.base.ref}: ${requiredChecks.join(', ')}`,
     );
   }
-  if (requiredCheckContextsToWaitFor.length !== requiredCheckContexts.length) {
+  if (requiredChecksToWaitFor.length !== requiredChecks.length) {
     info(
       `Required checks ignored because they belong to this Workflow: ${
-        requiredCheckContexts.length - requiredCheckContextsToWaitFor.length
+        requiredChecks.length - requiredChecksToWaitFor.length
       }`,
     );
   }
@@ -401,12 +401,6 @@ async function handlePullRequest(pullRequestNumber: number) {
         !jobIds.includes(checkRun.id) &&
         !externalIds?.includes(checkRun.external_id),
     );
-    const seenCheckNames = new Set(
-      checksToWatch.map((checkRun) => checkRun.name),
-    );
-    const missingRequiredChecks = requiredCheckContextsToWaitFor.filter(
-      (requiredCheckContext) => !seenCheckNames.has(requiredCheckContext),
-    );
 
     const failedChecks = checksToWatch.filter(
       (checkRun) =>
@@ -421,6 +415,12 @@ async function handlePullRequest(pullRequestNumber: number) {
 
     const incompleteChecks = checksToWatch.filter(
       (checkRun) => checkRun.status !== COMPLETED,
+    );
+    const seenCheckNames = new Set(
+      checksToWatch.map((checkRun) => checkRun.name),
+    );
+    const missingRequiredChecks = requiredChecksToWaitFor.filter(
+      (requiredCheck) => !seenCheckNames.has(requiredCheck),
     );
     if (incompleteChecks.length > 0 || missingRequiredChecks.length > 0) {
       if (incompleteChecks.length > 0) {

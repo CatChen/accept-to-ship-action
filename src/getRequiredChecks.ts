@@ -7,13 +7,13 @@ function uniqueContexts(contexts: string[]) {
   return [...new Set(contexts)];
 }
 
-export async function getRequiredCheckContexts(
+export async function getRequiredChecks(
   owner: string,
   repo: string,
   branch: string,
   octokit: Octokit & Api,
 ) {
-  const requiredCheckContexts: string[] = [];
+  const requiredChecks: string[] = [];
 
   try {
     const response = await octokit.rest.repos.getBranchRules({
@@ -21,17 +21,16 @@ export async function getRequiredCheckContexts(
       repo,
       branch,
     });
-    requiredCheckContexts.push(
+    requiredChecks.push(
       ...response.data
-      .filter((rule) => rule.type === 'required_status_checks')
-      .flatMap(
-        (rule) =>
+        .filter((rule) => rule.type === 'required_status_checks')
+        .flatMap((rule) =>
           'parameters' in rule
             ? (rule.parameters?.required_status_checks ?? [])
             : [],
-      )
-      .map((requiredStatusCheck) => requiredStatusCheck.context)
-      .filter((context) => context.trim().length > 0),
+        )
+        .map((requiredStatusCheck) => requiredStatusCheck.context)
+        .filter((context) => context.trim().length > 0),
     );
   } catch (requestError) {
     if (requestError instanceof RequestError) {
@@ -51,7 +50,7 @@ export async function getRequiredCheckContexts(
       repo,
       branch,
     });
-    requiredCheckContexts.push(
+    requiredChecks.push(
       ...response.data.contexts,
       ...response.data.checks.map((check) => check.context),
     );
@@ -67,5 +66,5 @@ export async function getRequiredCheckContexts(
     }
   }
 
-  return uniqueContexts(requiredCheckContexts);
+  return uniqueContexts(requiredChecks);
 }
