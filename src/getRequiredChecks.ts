@@ -3,10 +3,6 @@ import type { Api } from '@octokit/plugin-rest-endpoint-methods';
 import { warning } from '@actions/core';
 import { RequestError } from '@octokit/request-error';
 
-function uniqueContexts(contexts: string[]) {
-  return [...new Set(contexts)];
-}
-
 export async function getRequiredChecks(
   owner: string,
   repo: string,
@@ -66,5 +62,5 @@ export async function getRequiredChecks(
     }
   }
 
-  return uniqueContexts(requiredChecks);
+  return [...new Set(requiredChecks)];
 }

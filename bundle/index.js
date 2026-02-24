@@ -37974,9 +37974,6 @@ async function getPullRequestReviews(owner, repo, pullRequestNumber, octokit) {
 ;// CONCATENATED MODULE: ./src/getRequiredChecks.ts
 
 
-function uniqueContexts(contexts) {
-    return [...new Set(contexts)];
-}
 async function getRequiredChecks(owner, repo, branch, octokit) {
     const requiredChecks = [];
     try {
@@ -38021,7 +38018,7 @@ async function getRequiredChecks(owner, repo, branch, octokit) {
             throw requestError;
         }
     }
-    return uniqueContexts(requiredChecks);
+    return [...new Set(requiredChecks)];
 }
 
 ;// CONCATENATED MODULE: ./src/getWorkflowRunJobs.ts
@@ -38308,7 +38305,7 @@ async function handlePullRequest(pullRequestNumber) {
             endGroup();
         }
     }
-    const jobIds = jobs.map((job) => job.id);
+    const currentWorkflowJobIds = jobs.map((job) => job.id);
     const currentWorkflowJobNames = new Set(jobs.map((job) => job.name));
     const requiredChecks = await getRequiredChecks(owner, repo, pullRequest.base.ref, octokit);
     const requiredChecksToWaitFor = requiredChecks.filter((checkContext) => !currentWorkflowJobNames.has(checkContext));
@@ -38336,7 +38333,7 @@ async function handlePullRequest(pullRequestNumber) {
                 if (checkRun.external_id === null) {
                     return false;
                 }
-                if (jobIds.includes(checkRun.id)) {
+                if (currentWorkflowJobIds.includes(checkRun.id)) {
                     info(`External ID associated with a job in current Workflow: ${checkRun.external_id} (job id: ${checkRun.id})`);
                     return true;
                 }
@@ -38348,7 +38345,7 @@ async function handlePullRequest(pullRequestNumber) {
         for (const checkRun of checkRuns) {
             info(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
             info(`  Check name: ${checkRun.name}`);
-            if (jobIds.includes(checkRun.id)) {
+            if (currentWorkflowJobIds.includes(checkRun.id)) {
                 info(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`);
                 info('  This check is a job in the current Workflow.');
                 info('  ---');
@@ -38374,17 +38371,22 @@ async function handlePullRequest(pullRequestNumber) {
                 info('  ---');
             }
         }
-        const checksToWatch = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
-            !externalIds?.includes(checkRun.external_id));
-        const failedChecks = checksToWatch.filter((checkRun) => checkRun.status === COMPLETED &&
+        const failedChecks = checkRuns.filter((checkRun) => !currentWorkflowJobIds.includes(checkRun.id) &&
+            !externalIds?.includes(checkRun.external_id) &&
+            checkRun.status === COMPLETED &&
             (checkRun.conclusion === null ||
                 ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
         if (failedChecks.length > 0) {
             error(`Failed checks: ${failedChecks.length}`);
             return;
         }
-        const incompleteChecks = checksToWatch.filter((checkRun) => checkRun.status !== COMPLETED);
-        const seenCheckNames = new Set(checksToWatch.map((checkRun) => checkRun.name));
+        const incompleteChecks = checkRuns.filter((checkRun) => !currentWorkflowJobIds.includes(checkRun.id) &&
+            !externalIds?.includes(checkRun.external_id) &&
+            checkRun.status !== COMPLETED);
+        const seenCheckNames = new Set(checkRuns
+            .filter((checkRun) => !currentWorkflowJobIds.includes(checkRun.id) &&
+            !externalIds?.includes(checkRun.external_id))
+            .map((checkRun) => checkRun.name));
         const missingRequiredChecks = requiredChecksToWaitFor.filter((requiredCheck) => !seenCheckNames.has(requiredCheck));
         if (incompleteChecks.length > 0 || missingRequiredChecks.length > 0) {
             if (incompleteChecks.length > 0) {
