@@ -37971,21 +37971,21 @@ async function getPullRequestReviews(owner, repo, pullRequestNumber, octokit) {
     return response.data;
 }
 
-;// CONCATENATED MODULE: ./src/getRequiredCheckContexts.ts
+;// CONCATENATED MODULE: ./src/getRequiredChecks.ts
 
 
 function uniqueContexts(contexts) {
     return [...new Set(contexts)];
 }
-async function getRequiredCheckContexts(owner, repo, branch, octokit) {
-    const requiredCheckContexts = [];
+async function getRequiredChecks(owner, repo, branch, octokit) {
+    const requiredChecks = [];
     try {
         const response = await octokit.rest.repos.getBranchRules({
             owner,
             repo,
             branch,
         });
-        requiredCheckContexts.push(...response.data
+        requiredChecks.push(...response.data
             .filter((rule) => rule.type === 'required_status_checks')
             .flatMap((rule) => 'parameters' in rule
             ? (rule.parameters?.required_status_checks ?? [])
@@ -38009,7 +38009,7 @@ async function getRequiredCheckContexts(owner, repo, branch, octokit) {
             repo,
             branch,
         });
-        requiredCheckContexts.push(...response.data.contexts, ...response.data.checks.map((check) => check.context));
+        requiredChecks.push(...response.data.contexts, ...response.data.checks.map((check) => check.context));
     }
     catch (requestError) {
         if (requestError instanceof RequestError) {
@@ -38021,7 +38021,7 @@ async function getRequiredCheckContexts(owner, repo, branch, octokit) {
             throw requestError;
         }
     }
-    return uniqueContexts(requiredCheckContexts);
+    return uniqueContexts(requiredChecks);
 }
 
 ;// CONCATENATED MODULE: ./src/getWorkflowRunJobs.ts
@@ -38310,16 +38310,16 @@ async function handlePullRequest(pullRequestNumber) {
     }
     const jobIds = jobs.map((job) => job.id);
     const currentWorkflowJobNames = new Set(jobs.map((job) => job.name));
-    const requiredCheckContexts = await getRequiredCheckContexts(owner, repo, pullRequest.base.ref, octokit);
-    const requiredCheckContextsToWaitFor = requiredCheckContexts.filter((checkContext) => !currentWorkflowJobNames.has(checkContext));
-    if (requiredCheckContexts.length === 0) {
+    const requiredChecks = await getRequiredChecks(owner, repo, pullRequest.base.ref, octokit);
+    const requiredChecksToWaitFor = requiredChecks.filter((checkContext) => !currentWorkflowJobNames.has(checkContext));
+    if (requiredChecks.length === 0) {
         info(`No required checks configured for ${pullRequest.base.ref}.`);
     }
     else {
-        info(`Required checks configured for ${pullRequest.base.ref}: ${requiredCheckContexts.join(', ')}`);
+        info(`Required checks configured for ${pullRequest.base.ref}: ${requiredChecks.join(', ')}`);
     }
-    if (requiredCheckContextsToWaitFor.length !== requiredCheckContexts.length) {
-        info(`Required checks ignored because they belong to this Workflow: ${requiredCheckContexts.length - requiredCheckContextsToWaitFor.length}`);
+    if (requiredChecksToWaitFor.length !== requiredChecks.length) {
+        info(`Required checks ignored because they belong to this Workflow: ${requiredChecks.length - requiredChecksToWaitFor.length}`);
     }
     const timeout = parseInt(getInput('timeout'), 10);
     const interval = parseInt(getInput('checks-watch-interval'), 10);
@@ -38376,8 +38376,6 @@ async function handlePullRequest(pullRequestNumber) {
         }
         const checksToWatch = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
             !externalIds?.includes(checkRun.external_id));
-        const seenCheckNames = new Set(checksToWatch.map((checkRun) => checkRun.name));
-        const missingRequiredChecks = requiredCheckContextsToWaitFor.filter((requiredCheckContext) => !seenCheckNames.has(requiredCheckContext));
         const failedChecks = checksToWatch.filter((checkRun) => checkRun.status === COMPLETED &&
             (checkRun.conclusion === null ||
                 ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
@@ -38386,6 +38384,8 @@ async function handlePullRequest(pullRequestNumber) {
             return;
         }
         const incompleteChecks = checksToWatch.filter((checkRun) => checkRun.status !== COMPLETED);
+        const seenCheckNames = new Set(checksToWatch.map((checkRun) => checkRun.name));
+        const missingRequiredChecks = requiredChecksToWaitFor.filter((requiredCheck) => !seenCheckNames.has(requiredCheck));
         if (incompleteChecks.length > 0 || missingRequiredChecks.length > 0) {
             if (incompleteChecks.length > 0) {
                 info(`Incomplete checks: ${incompleteChecks.length}`);
