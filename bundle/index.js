@@ -37996,18 +37996,18 @@ function uniqueContexts(contexts) {
 }
 async function getRequiredCheckContexts(owner, repo, branch, octokit) {
     try {
-        const response = await octokit.request('GET /repos/{owner}/{repo}/rules/branches/{branch}', {
+        const response = await octokit.rest.repos.getBranchRules({
             owner,
             repo,
             branch,
-            per_page: 100,
         });
-        const rules = response.data;
-        const contexts = rules
+        const contexts = response.data
             .filter((rule) => rule.type === 'required_status_checks')
-            .flatMap((rule) => rule.parameters?.required_status_checks ?? [])
+            .flatMap((rule) => 'parameters' in rule
+            ? (rule.parameters?.required_status_checks ?? [])
+            : [])
             .map((requiredStatusCheck) => requiredStatusCheck.context)
-            .filter((context) => context !== undefined && context.trim().length > 0);
+            .filter((context) => context.trim().length > 0);
         return uniqueContexts(contexts);
     }
     catch (error) {
@@ -38018,15 +38018,14 @@ async function getRequiredCheckContexts(owner, repo, branch, octokit) {
         }
     }
     try {
-        const response = await octokit.request('GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks', {
+        const response = await octokit.rest.repos.getStatusChecksProtection({
             owner,
             repo,
             branch,
         });
-        const policy = response.data;
         return uniqueContexts([
-            ...policy.contexts,
-            ...policy.checks.map((check) => check.context),
+            ...response.data.contexts,
+            ...response.data.checks.map((check) => check.context),
         ]);
     }
     catch (error) {

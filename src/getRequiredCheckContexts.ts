@@ -2,22 +2,6 @@ import type { Octokit } from '@octokit/core';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods';
 import { warning } from '@actions/core';
 
-type RuleWithRequiredStatusChecks = {
-  type: string;
-  parameters?: {
-    required_status_checks?: Array<{
-      context?: string;
-    }>;
-  };
-};
-
-type RequiredStatusChecksPolicy = {
-  contexts: string[];
-  checks: Array<{
-    context: string;
-  }>;
-};
-
 function getStatusCode(error: unknown): number | undefined {
   if (typeof error !== 'object' || error === null) {
     return undefined;
@@ -49,23 +33,22 @@ export async function getRequiredCheckContexts(
   octokit: Octokit & Api,
 ) {
   try {
-    const response = await octokit.request(
-      'GET /repos/{owner}/{repo}/rules/branches/{branch}',
-      {
-        owner,
-        repo,
-        branch,
-        per_page: 100,
-      },
-    );
-    const rules = response.data as RuleWithRequiredStatusChecks[];
-    const contexts = rules
+    const response = await octokit.rest.repos.getBranchRules({
+      owner,
+      repo,
+      branch,
+    });
+    const contexts = response.data
       .filter((rule) => rule.type === 'required_status_checks')
-      .flatMap((rule) => rule.parameters?.required_status_checks ?? [])
+      .flatMap(
+        (rule) =>
+          'parameters' in rule
+            ? (rule.parameters?.required_status_checks ?? [])
+            : [],
+      )
       .map((requiredStatusCheck) => requiredStatusCheck.context)
       .filter(
-        (context): context is string =>
-          context !== undefined && context.trim().length > 0,
+        (context): context is string => context.trim().length > 0,
       );
     return uniqueContexts(contexts);
   } catch (error: unknown) {
@@ -81,18 +64,14 @@ export async function getRequiredCheckContexts(
   }
 
   try {
-    const response = await octokit.request(
-      'GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks',
-      {
-        owner,
-        repo,
-        branch,
-      },
-    );
-    const policy = response.data as RequiredStatusChecksPolicy;
+    const response = await octokit.rest.repos.getStatusChecksProtection({
+      owner,
+      repo,
+      branch,
+    });
     return uniqueContexts([
-      ...policy.contexts,
-      ...policy.checks.map((check) => check.context),
+      ...response.data.contexts,
+      ...response.data.checks.map((check) => check.context),
     ]);
   } catch (error: unknown) {
     const status = getStatusCode(error);
