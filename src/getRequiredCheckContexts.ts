@@ -1,26 +1,7 @@
 import type { Octokit } from '@octokit/core';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods';
 import { warning } from '@actions/core';
-
-function getStatusCode(error: unknown): number | undefined {
-  if (typeof error !== 'object' || error === null) {
-    return undefined;
-  }
-  if (!('status' in error)) {
-    return undefined;
-  }
-  if (typeof error.status !== 'number') {
-    return undefined;
-  }
-  return error.status;
-}
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return 'Unknown error';
-}
+import { RequestError } from '@octokit/request-error';
 
 function uniqueContexts(contexts: string[]) {
   return [...new Set(contexts)];
@@ -32,13 +13,16 @@ export async function getRequiredCheckContexts(
   branch: string,
   octokit: Octokit & Api,
 ) {
+  const requiredCheckContexts: string[] = [];
+
   try {
     const response = await octokit.rest.repos.getBranchRules({
       owner,
       repo,
       branch,
     });
-    const contexts = response.data
+    requiredCheckContexts.push(
+      ...response.data
       .filter((rule) => rule.type === 'required_status_checks')
       .flatMap(
         (rule) =>
@@ -47,19 +31,17 @@ export async function getRequiredCheckContexts(
             : [],
       )
       .map((requiredStatusCheck) => requiredStatusCheck.context)
-      .filter(
-        (context): context is string => context.trim().length > 0,
-      );
-    return uniqueContexts(contexts);
-  } catch (error: unknown) {
-    const status = getStatusCode(error);
-    if (status !== 404) {
-      warning(
-        `Failed to fetch required checks from rules API for ${owner}/${repo}#${branch}: ${getErrorMessage(
-          error,
-        )}`,
-      );
-      return [];
+      .filter((context) => context.trim().length > 0),
+    );
+  } catch (requestError) {
+    if (requestError instanceof RequestError) {
+      if (requestError.status !== 404) {
+        warning(
+          `Failed to fetch required checks from rules API for ${owner}/${repo}#${branch}: [${requestError.status}] ${requestError.message}`,
+        );
+      }
+    } else {
+      throw requestError;
     }
   }
 
@@ -69,19 +51,21 @@ export async function getRequiredCheckContexts(
       repo,
       branch,
     });
-    return uniqueContexts([
+    requiredCheckContexts.push(
       ...response.data.contexts,
       ...response.data.checks.map((check) => check.context),
-    ]);
-  } catch (error: unknown) {
-    const status = getStatusCode(error);
-    if (status !== 403 && status !== 404) {
-      warning(
-        `Failed to fetch required checks from branch protection API for ${owner}/${repo}#${branch}: ${getErrorMessage(
-          error,
-        )}`,
-      );
+    );
+  } catch (requestError) {
+    if (requestError instanceof RequestError) {
+      if (requestError.status !== 403 && requestError.status !== 404) {
+        warning(
+          `Failed to fetch required checks from branch protection API for ${owner}/${repo}#${branch}: [${requestError.status}] ${requestError.message}`,
+        );
+      }
+    } else {
+      throw requestError;
     }
-    return [];
   }
+
+  return uniqueContexts(requiredCheckContexts);
 }
