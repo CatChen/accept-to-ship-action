@@ -304,7 +304,7 @@ async function handlePullRequest(pullRequestNumber: number) {
       endGroup();
     }
   }
-  const jobIds = jobs.map((job) => job.id);
+  const currentWorkflowJobIds = jobs.map((job) => job.id);
   const currentWorkflowJobNames = new Set(jobs.map((job) => job.name));
 
   const requiredChecks = await getRequiredChecks(
@@ -352,7 +352,7 @@ async function handlePullRequest(pullRequestNumber: number) {
           if (checkRun.external_id === null) {
             return false;
           }
-          if (jobIds.includes(checkRun.id)) {
+          if (currentWorkflowJobIds.includes(checkRun.id)) {
             info(
               `External ID associated with a job in current Workflow: ${checkRun.external_id} (job id: ${checkRun.id})`,
             );
@@ -367,7 +367,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     for (const checkRun of checkRuns) {
       info(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
       info(`  Check name: ${checkRun.name}`);
-      if (jobIds.includes(checkRun.id)) {
+      if (currentWorkflowJobIds.includes(checkRun.id)) {
         info(
           `  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`,
         );
@@ -396,14 +396,10 @@ async function handlePullRequest(pullRequestNumber: number) {
       }
     }
 
-    const checksToWatch = checkRuns.filter(
+    const failedChecks = checkRuns.filter(
       (checkRun) =>
-        !jobIds.includes(checkRun.id) &&
-        !externalIds?.includes(checkRun.external_id),
-    );
-
-    const failedChecks = checksToWatch.filter(
-      (checkRun) =>
+        !currentWorkflowJobIds.includes(checkRun.id) &&
+        !externalIds?.includes(checkRun.external_id) &&
         checkRun.status === COMPLETED &&
         (checkRun.conclusion === null ||
           ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)),
@@ -413,11 +409,20 @@ async function handlePullRequest(pullRequestNumber: number) {
       return;
     }
 
-    const incompleteChecks = checksToWatch.filter(
-      (checkRun) => checkRun.status !== COMPLETED,
+    const incompleteChecks = checkRuns.filter(
+      (checkRun) =>
+        !currentWorkflowJobIds.includes(checkRun.id) &&
+        !externalIds?.includes(checkRun.external_id) &&
+        checkRun.status !== COMPLETED,
     );
     const seenCheckNames = new Set(
-      checksToWatch.map((checkRun) => checkRun.name),
+      checkRuns
+        .filter(
+          (checkRun) =>
+            !currentWorkflowJobIds.includes(checkRun.id) &&
+            !externalIds?.includes(checkRun.external_id),
+        )
+        .map((checkRun) => checkRun.name),
     );
     const missingRequiredChecks = requiredChecksToWaitFor.filter(
       (requiredCheck) => !seenCheckNames.has(requiredCheck),
