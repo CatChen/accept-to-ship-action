@@ -38306,17 +38306,13 @@ async function handlePullRequest(pullRequestNumber) {
         }
     }
     const currentWorkflowJobIds = jobs.map((job) => job.id);
-    const currentWorkflowJobNames = new Set(jobs.map((job) => job.name));
+    const currentWorkflowJobNames = jobs.map((job) => job.name);
     const requiredChecks = await getRequiredChecks(owner, repo, pullRequest.base.ref, octokit);
-    const requiredChecksToWaitFor = requiredChecks.filter((checkContext) => !currentWorkflowJobNames.has(checkContext));
     if (requiredChecks.length === 0) {
-        info(`No required checks configured for ${pullRequest.base.ref}.`);
+        info(`No required checks for ${pullRequest.base.ref}.`);
     }
     else {
-        info(`Required checks configured for ${pullRequest.base.ref}: ${requiredChecks.join(', ')}`);
-    }
-    if (requiredChecksToWaitFor.length !== requiredChecks.length) {
-        info(`Required checks ignored because they belong to this Workflow: ${requiredChecks.length - requiredChecksToWaitFor.length}`);
+        info(`Required checks for ${pullRequest.base.ref}: ${requiredChecks.join(', ')}`);
     }
     const timeout = parseInt(getInput('timeout'), 10);
     const interval = parseInt(getInput('checks-watch-interval'), 10);
@@ -38383,11 +38379,9 @@ async function handlePullRequest(pullRequestNumber) {
         const incompleteChecks = checkRuns.filter((checkRun) => !currentWorkflowJobIds.includes(checkRun.id) &&
             !externalIds?.includes(checkRun.external_id) &&
             checkRun.status !== COMPLETED);
-        const seenCheckNames = new Set(checkRuns
-            .filter((checkRun) => !currentWorkflowJobIds.includes(checkRun.id) &&
-            !externalIds?.includes(checkRun.external_id))
-            .map((checkRun) => checkRun.name));
-        const missingRequiredChecks = requiredChecksToWaitFor.filter((requiredCheck) => !seenCheckNames.has(requiredCheck));
+        const checkRunNames = checkRuns.map((checkRun) => checkRun.name);
+        const missingRequiredChecks = requiredChecks.filter((requiredCheck) => !currentWorkflowJobNames.includes(requiredCheck) &&
+            !checkRunNames.includes(requiredCheck));
         if (incompleteChecks.length > 0 || missingRequiredChecks.length > 0) {
             if (incompleteChecks.length > 0) {
                 info(`Incomplete checks: ${incompleteChecks.length}`);
