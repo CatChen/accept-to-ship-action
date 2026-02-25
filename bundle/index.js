@@ -37971,6 +37971,56 @@ async function getPullRequestReviews(owner, repo, pullRequestNumber, octokit) {
     return response.data;
 }
 
+;// CONCATENATED MODULE: ./src/getRequiredChecks.ts
+
+
+async function getRequiredChecks(owner, repo, branch, octokit) {
+    const requiredChecks = [];
+    try {
+        const response = await octokit.rest.repos.getBranchRules({
+            owner,
+            repo,
+            branch,
+        });
+        requiredChecks.push(...response.data
+            .filter((rule) => rule.type === 'required_status_checks')
+            .flatMap((rule) => 'parameters' in rule
+            ? (rule.parameters?.required_status_checks ?? [])
+            : [])
+            .map((requiredStatusCheck) => requiredStatusCheck.context)
+            .filter((context) => context.trim().length > 0));
+    }
+    catch (requestError) {
+        if (requestError instanceof RequestError) {
+            if (requestError.status !== 404) {
+                warning(`Failed to fetch required checks from rules API for ${owner}/${repo}#${branch}: [${requestError.status}] ${requestError.message}`);
+            }
+        }
+        else {
+            throw requestError;
+        }
+    }
+    try {
+        const response = await octokit.rest.repos.getStatusChecksProtection({
+            owner,
+            repo,
+            branch,
+        });
+        requiredChecks.push(...response.data.contexts, ...response.data.checks.map((check) => check.context));
+    }
+    catch (requestError) {
+        if (requestError instanceof RequestError) {
+            if (requestError.status !== 403 && requestError.status !== 404) {
+                warning(`Failed to fetch required checks from branch protection API for ${owner}/${repo}#${branch}: [${requestError.status}] ${requestError.message}`);
+            }
+        }
+        else {
+            throw requestError;
+        }
+    }
+    return [...new Set(requiredChecks)];
+}
+
 ;// CONCATENATED MODULE: ./src/getWorkflowRunJobs.ts
 
 async function getWorkflowRunJobs(owner, repo, octokit) {
@@ -38061,6 +38111,7 @@ async function sleep(ms) {
 }
 
 ;// CONCATENATED MODULE: ./src/index.ts
+
 
 
 
@@ -38254,7 +38305,15 @@ async function handlePullRequest(pullRequestNumber) {
             endGroup();
         }
     }
-    const jobIds = jobs.map((job) => job.id);
+    const currentWorkflowJobIds = jobs.map((job) => job.id);
+    const currentWorkflowJobNames = jobs.map((job) => job.name);
+    const requiredChecks = await getRequiredChecks(owner, repo, pullRequest.base.ref, octokit);
+    if (requiredChecks.length === 0) {
+        info(`No required checks for ${pullRequest.base.ref}.`);
+    }
+    else {
+        info(`Required checks for ${pullRequest.base.ref}: ${requiredChecks.join(', ')}`);
+    }
     const timeout = parseInt(getInput('timeout'), 10);
     const interval = parseInt(getInput('checks-watch-interval'), 10);
     const failIfTimeout = getBooleanInput('fail-if-timeout');
@@ -38270,7 +38329,7 @@ async function handlePullRequest(pullRequestNumber) {
                 if (checkRun.external_id === null) {
                     return false;
                 }
-                if (jobIds.includes(checkRun.id)) {
+                if (currentWorkflowJobIds.includes(checkRun.id)) {
                     info(`External ID associated with a job in current Workflow: ${checkRun.external_id} (job id: ${checkRun.id})`);
                     return true;
                 }
@@ -38282,7 +38341,7 @@ async function handlePullRequest(pullRequestNumber) {
         for (const checkRun of checkRuns) {
             info(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
             info(`  Check name: ${checkRun.name}`);
-            if (jobIds.includes(checkRun.id)) {
+            if (currentWorkflowJobIds.includes(checkRun.id)) {
                 info(`  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`);
                 info('  This check is a job in the current Workflow.');
                 info('  ---');
@@ -38308,7 +38367,7 @@ async function handlePullRequest(pullRequestNumber) {
                 info('  ---');
             }
         }
-        const failedChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
+        const failedChecks = checkRuns.filter((checkRun) => !currentWorkflowJobIds.includes(checkRun.id) &&
             !externalIds?.includes(checkRun.external_id) &&
             checkRun.status === COMPLETED &&
             (checkRun.conclusion === null ||
@@ -38317,11 +38376,22 @@ async function handlePullRequest(pullRequestNumber) {
             error(`Failed checks: ${failedChecks.length}`);
             return;
         }
-        const incompleteChecks = checkRuns.filter((checkRun) => !jobIds.includes(checkRun.id) &&
+        const incompleteChecks = checkRuns.filter((checkRun) => !currentWorkflowJobIds.includes(checkRun.id) &&
             !externalIds?.includes(checkRun.external_id) &&
             checkRun.status !== COMPLETED);
-        if (incompleteChecks.length > 0) {
-            info(`Incomplete checks: ${incompleteChecks.length}`);
+        const checkRunNames = checkRuns.map((checkRun) => checkRun.name);
+        const missingRequiredChecks = requiredChecks.filter((requiredCheck) => !currentWorkflowJobNames.includes(requiredCheck) &&
+            !checkRunNames.includes(requiredCheck));
+        if (incompleteChecks.length > 0 || missingRequiredChecks.length > 0) {
+            if (incompleteChecks.length > 0) {
+                info(`Incomplete checks: ${incompleteChecks.length}`);
+            }
+            if (missingRequiredChecks.length > 0) {
+                info(`Required checks not started yet: ${missingRequiredChecks.length}`);
+                for (const missingRequiredCheck of missingRequiredChecks) {
+                    info(`  Missing required check: ${missingRequiredCheck}`);
+                }
+            }
             const executionTime = Math.round(external_node_perf_hooks_.performance.now() / 1000);
             info(`Execution time: ${FORMATTER.format(executionTime)}`);
             if (executionTime > timeout) {

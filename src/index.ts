@@ -30,6 +30,7 @@ import { getPullRequestAutoMergeable } from './getPullRequestAutoMergeable.js';
 import { getPullRequestComments } from './getPullRequestComments.js';
 import { getPullRequestReviewRequests } from './getPullRequestReviewRequests.js';
 import { getPullRequestReviews } from './getPullRequestReviews.js';
+import { getRequiredChecks } from './getRequiredChecks.js';
 import { getWorkflowRunJobs } from './getWorkflowRunJobs.js';
 import { isPullRequestMerged } from './isPullRequestMerged.js';
 import { mergePullRequest } from './mergePullRequest.js';
@@ -303,7 +304,22 @@ async function handlePullRequest(pullRequestNumber: number) {
       endGroup();
     }
   }
-  const jobIds = jobs.map((job) => job.id);
+  const currentWorkflowJobIds = jobs.map((job) => job.id);
+  const currentWorkflowJobNames = jobs.map((job) => job.name);
+
+  const requiredChecks = await getRequiredChecks(
+    owner,
+    repo,
+    pullRequest.base.ref,
+    octokit,
+  );
+  if (requiredChecks.length === 0) {
+    info(`No required checks for ${pullRequest.base.ref}.`);
+  } else {
+    info(
+      `Required checks for ${pullRequest.base.ref}: ${requiredChecks.join(', ')}`,
+    );
+  }
 
   const timeout = parseInt(getInput('timeout'), 10);
   const interval = parseInt(getInput('checks-watch-interval'), 10);
@@ -326,7 +342,7 @@ async function handlePullRequest(pullRequestNumber: number) {
           if (checkRun.external_id === null) {
             return false;
           }
-          if (jobIds.includes(checkRun.id)) {
+          if (currentWorkflowJobIds.includes(checkRun.id)) {
             info(
               `External ID associated with a job in current Workflow: ${checkRun.external_id} (job id: ${checkRun.id})`,
             );
@@ -341,7 +357,7 @@ async function handlePullRequest(pullRequestNumber: number) {
     for (const checkRun of checkRuns) {
       info(`  Check id: ${checkRun.id} (${checkRun.html_url})`);
       info(`  Check name: ${checkRun.name}`);
-      if (jobIds.includes(checkRun.id)) {
+      if (currentWorkflowJobIds.includes(checkRun.id)) {
         info(
           `  Check status/conclusion: ${checkRun.status === COMPLETED ? checkRun.conclusion : checkRun.status}`,
         );
@@ -372,7 +388,7 @@ async function handlePullRequest(pullRequestNumber: number) {
 
     const failedChecks = checkRuns.filter(
       (checkRun) =>
-        !jobIds.includes(checkRun.id) &&
+        !currentWorkflowJobIds.includes(checkRun.id) &&
         !externalIds?.includes(checkRun.external_id) &&
         checkRun.status === COMPLETED &&
         (checkRun.conclusion === null ||
@@ -385,12 +401,28 @@ async function handlePullRequest(pullRequestNumber: number) {
 
     const incompleteChecks = checkRuns.filter(
       (checkRun) =>
-        !jobIds.includes(checkRun.id) &&
+        !currentWorkflowJobIds.includes(checkRun.id) &&
         !externalIds?.includes(checkRun.external_id) &&
         checkRun.status !== COMPLETED,
     );
-    if (incompleteChecks.length > 0) {
-      info(`Incomplete checks: ${incompleteChecks.length}`);
+    const checkRunNames = checkRuns.map((checkRun) => checkRun.name);
+    const missingRequiredChecks = requiredChecks.filter(
+      (requiredCheck) =>
+        !currentWorkflowJobNames.includes(requiredCheck) &&
+        !checkRunNames.includes(requiredCheck),
+    );
+    if (incompleteChecks.length > 0 || missingRequiredChecks.length > 0) {
+      if (incompleteChecks.length > 0) {
+        info(`Incomplete checks: ${incompleteChecks.length}`);
+      }
+      if (missingRequiredChecks.length > 0) {
+        info(
+          `Required checks not started yet: ${missingRequiredChecks.length}`,
+        );
+        for (const missingRequiredCheck of missingRequiredChecks) {
+          info(`  Missing required check: ${missingRequiredCheck}`);
+        }
+      }
       const executionTime = Math.round(performance.now() / 1000);
       info(`Execution time: ${FORMATTER.format(executionTime)}`);
 
