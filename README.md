@@ -233,6 +233,14 @@ The check from the Workflow that runs this Action doesn't count. It will always 
 
 Please list your other Workflows in the `workflows` field under the `workflow_run` trigger. Put them into the empty bracket in the example from above. When they complete they will trigger this Action.
 
+### A Pull Request merged by this Action doesn't trigger my downstream Workflows.
+
+When this Action merges a Pull Request with the default `${{ github.token }}` (`GITHUB_TOKEN`), downstream Workflows (for example `on: push` on `main`) are not triggered.
+
+This is the same GitHub behavior described above: events triggered by `GITHUB_TOKEN` do not create new workflow runs.
+
+If you need a merge from this Action to trigger downstream Workflows, provide `github-token` with a different token (for example a PAT or GitHub App token) instead of the default `GITHUB_TOKEN`.
+
 ### How do I use Action this with stacked Pull Requests?
 
 Limit this Action to the branches that are directly based on the main branch (usually `main` or `master`). It will merge the bottom Pull Request to the main branch. The Pull Request right above that will become the new bottom Pull Request. This Action will start merging that Pull Request, too. This process will continue itself until all mergeable Pull Requests in the stack are merged. See the `jobs.accept-to-ship.if` block in the example from above as a reference.
