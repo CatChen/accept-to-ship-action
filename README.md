@@ -227,11 +227,19 @@ Yes. It waits for other checks. Other checks need to be completed and their conc
 
 The check from the Workflow that runs this Action doesn't count. It will always be in progress without conclusion when this Action is running. This Action ignores the Workflow instance that's running this Action and all instances of the same Workflow.
 
-### The successful completion of my other Workflow doesn't trigger this Workflow.
+### Why doesn't the successful completion of my other Workflow trigger this Workflow?
 
 > When you use the repository's `GITHUB_TOKEN` to perform tasks, events triggered by the `GITHUB_TOKEN` will not create a new workflow run. This prevents you from accidentally creating recursive workflow runs. -- [Source](https://docs.github.com/en/actions/security-guides/automatic-token-authentication)
 
 Please list your other Workflows in the `workflows` field under the `workflow_run` trigger. Put them into the empty bracket in the example from above. When they complete they will trigger this Action.
+
+### Why doesn't a Pull Request merged by this Action trigger my downstream Workflows?
+
+When this Action merges a Pull Request with the default `${{ github.token }}` (`GITHUB_TOKEN`), downstream Workflows (for example `on: push` on `main`) are not triggered.
+
+This is the same GitHub behavior described above: events triggered by `GITHUB_TOKEN` do not create new workflow runs.
+
+If you need a merge from this Action to trigger downstream Workflows, provide `github-token` with a different token (for example a PAT or GitHub App token) instead of the default `GITHUB_TOKEN`.
 
 ### How do I use Action this with stacked Pull Requests?
 
