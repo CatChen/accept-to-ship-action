@@ -37403,19 +37403,77 @@ function getOctokit(token, options, ...additionalPlugins) {
     return new GitHubWithPlugins(getOctokitOptions(token, options));
 }
 //# sourceMappingURL=github.js.map
+;// CONCATENATED MODULE: ./src/__graphql__/graphql.ts
+class TypedDocumentString extends String {
+    __apiType;
+    value;
+    __meta__;
+    constructor(value, __meta__) {
+        super(value);
+        this.value = value;
+        this.__meta__ = __meta__;
+    }
+    toString() {
+        return this.value;
+    }
+}
+const CanRepoAutoMergeDocument = new TypedDocumentString(`
+    query CanRepoAutoMerge($owner: String!, $repo: String!) {
+  repository(owner: $owner, name: $repo) {
+    id
+    autoMergeAllowed
+  }
+}
+    `);
+const EnablePullRequestAutoMergeDocument = new TypedDocumentString(`
+    mutation EnablePullRequestAutoMerge($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod) {
+  enablePullRequestAutoMerge(
+    input: {pullRequestId: $pullRequestId, mergeMethod: $mergeMethod}
+  ) {
+    clientMutationId
+  }
+}
+    `);
+const PullRequestAutoMergeableDocument = new TypedDocumentString(`
+    query PullRequestAutoMergeable($owner: String!, $repo: String!, $pullRequestNumber: Int!) {
+  repository(owner: $owner, name: $repo) {
+    id
+    pullRequest(number: $pullRequestNumber) {
+      pullRequestId: id
+      viewerCanEnableAutoMerge
+    }
+  }
+}
+    `);
+
+;// CONCATENATED MODULE: ./src/__graphql__/gql.ts
+/* eslint-disable */
+
+const documents = {
+    '\n  query CanRepoAutoMerge($owner: String!, $repo: String!) {\n    repository(owner: $owner, name: $repo) {\n      id\n      autoMergeAllowed\n    }\n  }\n': CanRepoAutoMergeDocument,
+    '\n  mutation EnablePullRequestAutoMerge(\n    $pullRequestId: ID!\n    $mergeMethod: PullRequestMergeMethod\n  ) {\n    enablePullRequestAutoMerge(\n      input: { pullRequestId: $pullRequestId, mergeMethod: $mergeMethod }\n    ) {\n      clientMutationId\n    }\n  }\n': EnablePullRequestAutoMergeDocument,
+    '\n  query PullRequestAutoMergeable(\n    $owner: String!\n    $repo: String!\n    $pullRequestNumber: Int!\n  ) {\n    repository(owner: $owner, name: $repo) {\n      id\n      pullRequest(number: $pullRequestNumber) {\n        pullRequestId: id\n        viewerCanEnableAutoMerge\n      }\n    }\n  }\n': PullRequestAutoMergeableDocument,
+};
+function gql_graphql(source) {
+    return documents[source] ?? {};
+}
+
 ;// CONCATENATED MODULE: ./src/canRepoAutoMerge.ts
+
+const queryCanRepoAutoMerge = gql_graphql(`
+  query CanRepoAutoMerge($owner: String!, $repo: String!) {
+    repository(owner: $owner, name: $repo) {
+      id
+      autoMergeAllowed
+    }
+  }
+`);
 async function canRepoAutoMerge(owner, repo, octokit) {
-    const { repository: { autoMergeAllowed }, } = await octokit.graphql(`
-      query($owner: String!, $repo: String!) {
-        repository(owner: $owner, name: $repo) {
-          autoMergeAllowed
-        }
-      }
-    `, {
+    const { repository } = await octokit.graphql(queryCanRepoAutoMerge.toString(), {
         owner,
         repo,
     });
-    return autoMergeAllowed;
+    return repository?.autoMergeAllowed ?? false;
 }
 
 ;// CONCATENATED MODULE: ./src/isPullRequestMerged.ts
@@ -37464,16 +37522,23 @@ async function isPullRequestMerged(owner, repo, pullRequestNumber, octokit) {
 
 
 
+
+const mutationEnablePullRequestAutoMerge = gql_graphql(`
+  mutation EnablePullRequestAutoMerge(
+    $pullRequestId: ID!
+    $mergeMethod: PullRequestMergeMethod
+  ) {
+    enablePullRequestAutoMerge(
+      input: { pullRequestId: $pullRequestId, mergeMethod: $mergeMethod }
+    ) {
+      clientMutationId
+    }
+  }
+`);
 async function enablePullRequestAutoMerge(owner, repo, pullRequest, pullRequestId, mergeMethod, octokit) {
     const pullRequestNumber = pullRequest.number;
     try {
-        await octokit.graphql(`
-        mutation($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod) {
-          enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: $mergeMethod }) {
-            clientMutationId
-          }
-        }
-      `, {
+        await octokit.graphql(mutationEnablePullRequestAutoMerge.toString(), {
             pullRequestId,
             mergeMethod: mergeMethod.toUpperCase(),
         });
@@ -37919,22 +37984,33 @@ async function getPullRequest(owner, repo, pullRequestNumber, octokit) {
 }
 
 ;// CONCATENATED MODULE: ./src/getPullRequestAutoMergeable.ts
+
+const queryPullRequestAutoMergeable = gql_graphql(`
+  query PullRequestAutoMergeable(
+    $owner: String!
+    $repo: String!
+    $pullRequestNumber: Int!
+  ) {
+    repository(owner: $owner, name: $repo) {
+      id
+      pullRequest(number: $pullRequestNumber) {
+        pullRequestId: id
+        viewerCanEnableAutoMerge
+      }
+    }
+  }
+`);
 async function getPullRequestAutoMergeable(owner, repo, pullRequest, octokit) {
     const pullRequestNumber = pullRequest.number;
-    const { repository: { pullRequest: { pullRequestId, viewerCanEnableAutoMerge }, }, } = await octokit.graphql(`
-        query($owner: String!, $repo: String!, $pullRequestNumber: Int!) {
-          repository(owner: $owner, name: $repo) {
-            pullRequest(number: $pullRequestNumber) {
-              pullRequestId: id
-              viewerCanEnableAutoMerge
-            }
-          }
-        }
-      `, {
+    const { repository } = await octokit.graphql(queryPullRequestAutoMergeable.toString(), {
         owner,
         repo,
         pullRequestNumber,
     });
+    if (repository?.pullRequest == null) {
+        throw new Error(`Failed to check if the pull request is auto-mergeable through GraphQL`);
+    }
+    const { pullRequestId, viewerCanEnableAutoMerge } = repository.pullRequest;
     return {
         pullRequestId,
         viewerCanEnableAutoMerge,

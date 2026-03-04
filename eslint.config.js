@@ -2,6 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
+import graphqlPlugin from '@graphql-eslint/eslint-plugin';
 import ts from 'typescript-eslint';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -34,6 +35,9 @@ export default ts.config(
       'dist/**/*',
       'bundle/**/*',
       'eslint.config.js',
+      'codegen.ts',
+      'schema.graphql',
+      'src/__graphql__/**',
     ],
     overrides: [
       {
@@ -41,5 +45,25 @@ export default ts.config(
       },
     ],
   }),
-  ...ts.configs.recommendedTypeChecked,
+  ...ts.configs.recommendedTypeChecked.map((config) => ({
+    ...config,
+    files: ['**/*.ts'],
+    processor: graphqlPlugin.processor,
+  })),
+  {
+    files: ['**/*.graphql'],
+    languageOptions: {
+      parser: graphqlPlugin.parser,
+      parserOptions: {
+        graphQLConfig: {
+          schema: './schema.graphql',
+          documents: ['src/**/*.ts', '!src/__graphql__/**', '!**/*.d.ts'],
+        },
+      },
+    },
+    plugins: {
+      '@graphql-eslint': graphqlPlugin,
+    },
+    rules: graphqlPlugin.configs['flat/operations-recommended'].rules,
+  },
 );

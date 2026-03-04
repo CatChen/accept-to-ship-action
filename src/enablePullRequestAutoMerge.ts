@@ -1,3 +1,4 @@
+import type { ResultOf, VariablesOf } from '@graphql-typed-document-node/core';
 import type { Octokit } from '@octokit/core';
 import type {
   Api,
@@ -6,8 +7,22 @@ import type {
 import { error, info, setFailed, setOutput, warning } from '@actions/core';
 import { context } from '@actions/github';
 import { RequestError } from '@octokit/request-error';
+import { graphql } from './__graphql__/gql.js';
 import { getMergeMethod } from './getMergeMethod.js';
 import { isPullRequestMerged } from './isPullRequestMerged.js';
+
+const mutationEnablePullRequestAutoMerge = graphql(`
+  mutation EnablePullRequestAutoMerge(
+    $pullRequestId: ID!
+    $mergeMethod: PullRequestMergeMethod
+  ) {
+    enablePullRequestAutoMerge(
+      input: { pullRequestId: $pullRequestId, mergeMethod: $mergeMethod }
+    ) {
+      clientMutationId
+    }
+  }
+`);
 
 export async function enablePullRequestAutoMerge(
   owner: string,
@@ -19,18 +34,12 @@ export async function enablePullRequestAutoMerge(
 ) {
   const pullRequestNumber = pullRequest.number;
   try {
-    await octokit.graphql<unknown>(
-      `
-        mutation($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod) {
-          enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: $mergeMethod }) {
-            clientMutationId
-          }
-        }
-      `,
+    await octokit.graphql<ResultOf<typeof mutationEnablePullRequestAutoMerge>>(
+      mutationEnablePullRequestAutoMerge.toString(),
       {
         pullRequestId,
         mergeMethod: mergeMethod.toUpperCase() as Uppercase<typeof mergeMethod>,
-      },
+      } satisfies VariablesOf<typeof mutationEnablePullRequestAutoMerge>,
     );
 
     setOutput('skipped', false);
