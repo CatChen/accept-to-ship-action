@@ -32,7 +32,6 @@
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^10.0.1",
     "@graphql-codegen/cli": "6.1.2",
-    "@graphql-codegen/near-operation-file-preset": "^4.0.0",
     "@graphql-codegen/typescript": "5.0.8",
     "@graphql-codegen/typescript-document-nodes": "5.0.8",
     "@graphql-eslint/eslint-plugin": "^4.4.0",

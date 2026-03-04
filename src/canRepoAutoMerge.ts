@@ -23,5 +23,10 @@ export async function canRepoAutoMerge(
     owner,
     repo,
   } satisfies VariablesOf<typeof queryCanRepoAutoMerge>);
-  return repository?.autoMergeAllowed ?? false;
+  if (repository == null) {
+    throw new Error(
+      `Failed to check if the repo is auto-mergeable through GraphQL: ${owner}/${repo}`,
+    );
+  }
+  return repository.autoMergeAllowed;
 }

@@ -37473,7 +37473,10 @@ async function canRepoAutoMerge(owner, repo, octokit) {
         owner,
         repo,
     });
-    return repository?.autoMergeAllowed ?? false;
+    if (repository == null) {
+        throw new Error(`Failed to check if the repo is auto-mergeable through GraphQL: ${owner}/${repo}`);
+    }
+    return repository.autoMergeAllowed;
 }
 
 ;// CONCATENATED MODULE: ./src/isPullRequestMerged.ts
@@ -38008,7 +38011,7 @@ async function getPullRequestAutoMergeable(owner, repo, pullRequest, octokit) {
         pullRequestNumber,
     });
     if (repository?.pullRequest == null) {
-        throw new Error(`Failed to check if the pull request is auto-mergeable through GraphQL`);
+        throw new Error(`Failed to check if the pull request is auto-mergeable through GraphQL: ${owner}/${repo}#${pullRequestNumber}`);
     }
     const { pullRequestId, viewerCanEnableAutoMerge } = repository.pullRequest;
     return {

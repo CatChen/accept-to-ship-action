@@ -41,7 +41,7 @@ export async function getPullRequestAutoMergeable(
   } satisfies VariablesOf<typeof queryPullRequestAutoMergeable>);
   if (repository?.pullRequest == null) {
     throw new Error(
-      `Failed to check if the pull request is auto-mergeable through GraphQL`,
+      `Failed to check if the pull request is auto-mergeable through GraphQL: ${owner}/${repo}#${pullRequestNumber}`,
     );
   }
   const { pullRequestId, viewerCanEnableAutoMerge } = repository.pullRequest;
