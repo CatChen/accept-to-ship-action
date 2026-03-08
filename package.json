@@ -1,6 +1,6 @@
 {
   "name": "accept-to-ship-action",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "This GitHub Action automatically merges approved pull requests when they include an #accept2ship trigger.",
   "packageManager": "yarn@4.13.0",
   "main": "dist/index.js",
