@@ -841,6 +841,8 @@ export type Agentic = {
     viewerCopilotAgentCreatesChannel?: Maybe<Scalars['String']['output']>;
     /** Channel value for subscribing to live updates for session log updates. */
     viewerCopilotAgentLogUpdatesChannel?: Maybe<Scalars['String']['output']>;
+    /** Channel value for subscribing to live updates for task updates. */
+    viewerCopilotAgentTaskUpdatesChannel?: Maybe<Scalars['String']['output']>;
     /** Channel value for subscribing to live updates for session updates. */
     viewerCopilotAgentUpdatesChannel?: Maybe<Scalars['String']['output']>;
 };
@@ -24518,7 +24520,7 @@ export type Repository = Node & PackageOwner & ProjectOwner & ProjectV2Recent & 
     interactionAbility?: Maybe<RepositoryInteractionAbility>;
     /** Indicates if the repository is unmaintained. */
     isArchived: Scalars['Boolean']['output'];
-    /** Returns true if blank issue creation is allowed */
+    /** Returns true if the viewer can create a blank issue in this repository */
     isBlankIssuesEnabled: Scalars['Boolean']['output'];
     /** Returns whether or not this repository disabled. */
     isDisabled: Scalars['Boolean']['output'];
@@ -32401,6 +32403,8 @@ export type User = Actor & Agentic & Node & PackageOwner & ProfileOwner & Projec
     viewerCopilotAgentCreatesChannel?: Maybe<Scalars['String']['output']>;
     /** Channel value for subscribing to live updates for session log updates. */
     viewerCopilotAgentLogUpdatesChannel?: Maybe<Scalars['String']['output']>;
+    /** Channel value for subscribing to live updates for task updates. */
+    viewerCopilotAgentTaskUpdatesChannel?: Maybe<Scalars['String']['output']>;
     /** Channel value for subscribing to live updates for session updates. */
     viewerCopilotAgentUpdatesChannel?: Maybe<Scalars['String']['output']>;
     /** Whether or not this user is followed by the viewer. Inverse of isFollowingViewer. */
