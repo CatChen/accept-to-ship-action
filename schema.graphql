@@ -1365,6 +1365,10 @@ interface Agentic {
   """
   viewerCopilotAgentLogUpdatesChannel: String
   """
+  Channel value for subscribing to live updates for task updates.
+  """
+  viewerCopilotAgentTaskUpdatesChannel: String
+  """
   Channel value for subscribing to live updates for session updates.
   """
   viewerCopilotAgentUpdatesChannel: String
@@ -44547,7 +44551,7 @@ type Repository implements Node & PackageOwner & ProjectOwner & ProjectV2Recent 
   """
   isArchived: Boolean!
   """
-  Returns true if blank issue creation is allowed
+  Returns true if the viewer can create a blank issue in this repository
   """
   isBlankIssuesEnabled: Boolean!
   """
@@ -60315,6 +60319,10 @@ type User implements Actor & Agentic & Node & PackageOwner & ProfileOwner & Proj
   Channel value for subscribing to live updates for session log updates.
   """
   viewerCopilotAgentLogUpdatesChannel: String
+  """
+  Channel value for subscribing to live updates for task updates.
+  """
+  viewerCopilotAgentTaskUpdatesChannel: String
   """
   Channel value for subscribing to live updates for session updates.
   """
