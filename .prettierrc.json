@@ -12,5 +12,5 @@
     "<THIRD_PARTY_MODULES>",
     "^[./]"
   ],
-  "plugins": ["@ianvs/prettier-plugin-sort-imports"]
+  "plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-package"]
 }
