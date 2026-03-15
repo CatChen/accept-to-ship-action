@@ -2,33 +2,39 @@
   "name": "accept-to-ship-action",
   "version": "0.8.1",
   "description": "This GitHub Action automatically merges approved pull requests when they include an #accept2ship trigger.",
-  "packageManager": "yarn@4.13.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.js",
-  "type": "module",
-  "scripts": {
-    "codegen": "rm -rf src/__graphql__ && graphql-codegen-esm --config codegen.ts",
-    "format": "prettier --write .",
-    "build": "rm -rf dist && tsc",
-    "bundle": "rm -rf bundle && ncc build src/index.ts --source-map --license licenses.txt --out bundle",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint -c eslint.config.js",
-    "prepublishOnly": "pinst --disable && yarn build",
-    "postpublish": "pinst --enable",
-    "preversion": "yarn && yarn build && yarn bundle",
-    "prepare": "is-ci || husky"
-  },
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/CatChen/accept-to-ship-action.git"
   },
   "author": "Cat Chen",
-  "license": "MIT",
+  "homepage": "https://github.com/CatChen/accept-to-ship-action#readme",
   "bugs": {
     "url": "https://github.com/CatChen/accept-to-ship-action/issues"
   },
-  "homepage": "https://github.com/CatChen/accept-to-ship-action#readme",
-  "funding": "https://github.com/CatChen/accept-to-ship-action?sponsor=1",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "bundle": "rm -rf bundle && ncc build src/index.ts --source-map --license licenses.txt --out bundle",
+    "codegen": "rm -rf src/__graphql__ && graphql-codegen-esm --config codegen.ts",
+    "format": "prettier --write .",
+    "lint": "eslint -c eslint.config.js",
+    "postpublish": "pinst --enable",
+    "prepare": "is-ci || husky",
+    "prepublishOnly": "pinst --disable && yarn build",
+    "preversion": "yarn && yarn build && yarn bundle",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.0",
+    "@actions/github": "^9.0.0",
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "@octokit/core": "^7.0.0",
+    "@octokit/plugin-retry": "^8.0.1",
+    "@octokit/plugin-throttling": "^11.0.1",
+    "@octokit/webhooks-types": "^7.6.1"
+  },
   "devDependencies": {
     "@0no-co/graphqlsp": "^1.12.12",
     "@eslint/eslintrc": "^3.3.3",
@@ -51,23 +57,18 @@
     "lint-staged": "^16.3.2",
     "pinst": "^3.0.0",
     "prettier": "^3.3.2",
+    "prettier-plugin-package": "^2.0.0",
     "typescript": "^5.0.2",
     "typescript-eslint": "^8.0.0"
   },
-  "dependencies": {
-    "@actions/core": "^3.0.0",
-    "@actions/github": "^9.0.0",
-    "@graphql-typed-document-node/core": "^3.2.0",
-    "@octokit/core": "^7.0.0",
-    "@octokit/plugin-retry": "^8.0.1",
-    "@octokit/plugin-throttling": "^11.0.1",
-    "@octokit/webhooks-types": "^7.6.1"
-  },
+  "types": "dist/index.d.js",
+  "funding": "https://github.com/CatChen/accept-to-ship-action?sponsor=1",
   "lint-staged": {
-    "*.(ts,js)": "yarn lint --fix",
-    "*.json": "yarn prettier -w",
-    "*.(yml,yaml)": "yarn prettier -w",
-    "*.(md,markdown)": "yarn prettier -w",
-    "*.(svg)": "yarn prettier -w"
-  }
+    "*.{ts,js}": [
+      "yarn format",
+      "yarn lint --fix"
+    ],
+    "*.{json,yml,yaml,md,markdown,svg}": "yarn format"
+  },
+  "packageManager": "yarn@4.13.0"
 }
