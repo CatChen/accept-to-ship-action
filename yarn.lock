@@ -1995,17 +1995,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prettier/plugin-xml@npm:^3.4.1":
-  version: 3.4.2
-  resolution: "@prettier/plugin-xml@npm:3.4.2"
-  dependencies:
-    "@xml-tools/parser": "npm:^1.0.11"
-  peerDependencies:
-    prettier: ^3.0.0
-  checksum: 10c0/e5343e71b3c2850d879bb4390d9918dab1238eb79adefb1357a4e4c7207a19a1ac8192a967112325e1280f0d6bda397014fd83df6f8844e0afac5e2d747a814b
-  languageName: node
-  linkType: hard
-
 "@repeaterjs/repeater@npm:^3.0.4, @repeaterjs/repeater@npm:^3.0.6":
   version: 3.0.6
   resolution: "@repeaterjs/repeater@npm:3.0.6"
@@ -2253,15 +2242,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xml-tools/parser@npm:^1.0.11":
-  version: 1.0.11
-  resolution: "@xml-tools/parser@npm:1.0.11"
-  dependencies:
-    chevrotain: "npm:7.1.1"
-  checksum: 10c0/5abc75163d6b2ac8e9006a54576523513535953237463297137c5a3665ce1b9d220b77b6dbb68ab93df3fab40bbc98bbb10e90dd690fd7646fdb021323827971
-  languageName: node
-  linkType: hard
-
 "abbrev@npm:^4.0.0":
   version: 4.0.0
   resolution: "abbrev@npm:4.0.0"
@@ -2288,7 +2268,6 @@ __metadata:
     "@octokit/plugin-retry": "npm:^8.0.1"
     "@octokit/plugin-throttling": "npm:^11.0.1"
     "@octokit/webhooks-types": "npm:^7.6.1"
-    "@prettier/plugin-xml": "npm:^3.4.1"
     "@types/node": "npm:^25.3.5"
     "@typescript-eslint/eslint-plugin": "npm:^8.0.0"
     "@typescript-eslint/parser": "npm:^8.0.0"
@@ -2635,15 +2614,6 @@ __metadata:
   version: 2.1.1
   resolution: "chardet@npm:2.1.1"
   checksum: 10c0/d8391dd412338442b3de0d3a488aa9327f8bcf74b62b8723d6bd0b85c4084d50b731320e0a7c710edb1d44de75969995d2784b80e4c13b004a6c7a0db4c6e793
-  languageName: node
-  linkType: hard
-
-"chevrotain@npm:7.1.1":
-  version: 7.1.1
-  resolution: "chevrotain@npm:7.1.1"
-  dependencies:
-    regexp-to-ast: "npm:0.5.0"
-  checksum: 10c0/3fbbb7a30fb87a4cd141a28bdfa2851f54fde4099aa92071442b47605dfc5974eee0388ec25a517087fcea4dcc1f0ce6b371bc975591346327829aa83b3c843d
   languageName: node
   linkType: hard
 
@@ -4514,13 +4484,6 @@ __metadata:
   version: 1.2.3
   resolution: "queue-microtask@npm:1.2.3"
   checksum: 10c0/900a93d3cdae3acd7d16f642c29a642aea32c2026446151f0778c62ac089d4b8e6c986811076e1ae180a694cedf077d453a11b58ff0a865629a4f82ab558e102
-  languageName: node
-  linkType: hard
-
-"regexp-to-ast@npm:0.5.0":
-  version: 0.5.0
-  resolution: "regexp-to-ast@npm:0.5.0"
-  checksum: 10c0/16d3c3905fb24866c3bff689ab177c1e63a7283a3cd1ba95987ef86020526f9827f5c60794197311f0e8a967889131142fe7a2e5ed3523ffe2ac9f55052e1566
   languageName: node
   linkType: hard
 
