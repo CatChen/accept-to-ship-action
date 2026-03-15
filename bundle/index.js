@@ -38111,10 +38111,7 @@ async function getWorkflowRunJobs(owner, repo, octokit) {
     return jobs;
 }
 
-;// CONCATENATED MODULE: external "console"
-const external_console_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("console");
 ;// CONCATENATED MODULE: ./src/mergePullRequest.ts
-
 
 
 
@@ -38129,24 +38126,24 @@ async function mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, oct
         });
         setOutput('skipped', false);
         try {
-            (0,external_console_namespaceObject.info)(`Run ID: ${github_context.runId}`);
+            info(`Run ID: ${github_context.runId}`);
             const { data: job } = await octokit.rest.actions.getWorkflowRun({
                 owner,
                 repo,
                 run_id: github_context.runId,
             });
-            (0,external_console_namespaceObject.info)(`Job ID: ${job.id} (${job.html_url})`);
+            info(`Job ID: ${job.id} (${job.html_url})`);
             const { data: comment } = await octokit.rest.issues.createComment({
                 owner,
                 repo,
                 issue_number: pullRequestNumber,
                 body: `This Pull Request is closed by a [GitHub Action](${job.html_url})`,
             });
-            (0,external_console_namespaceObject.info)(`Comment is created: ${comment.html_url}`);
+            info(`Comment is created: ${comment.html_url}`);
         }
         catch (requestError) {
             if (requestError instanceof RequestError) {
-                (0,external_console_namespaceObject.info)(`Failed to comment on the Pull Request: [${requestError.status}] ${requestError.message}`);
+                info(`Failed to comment on the Pull Request: [${requestError.status}] ${requestError.message}`);
             }
         }
     }
