@@ -8,6 +8,7 @@
   "type": "module",
   "scripts": {
     "codegen": "rm -rf src/__graphql__ && graphql-codegen-esm --config codegen.ts",
+    "format": "prettier --write .",
     "build": "rm -rf dist && tsc",
     "bundle": "rm -rf bundle && ncc build src/index.ts --source-map --license licenses.txt --out bundle",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -37,8 +38,8 @@
     "@graphql-codegen/typescript": "5.0.9",
     "@graphql-codegen/typescript-document-nodes": "5.0.9",
     "@graphql-eslint/eslint-plugin": "^4.4.0",
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "@prettier/plugin-xml": "^3.4.1",
-    "@serverless-guru/prettier-plugin-import-order": "^0.4.1",
     "@types/node": "^25.3.5",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
@@ -59,6 +60,7 @@
     "@actions/core": "^3.0.0",
     "@actions/github": "^9.0.0",
     "@graphql-typed-document-node/core": "^3.2.0",
+    "@octokit/core": "^7.0.0",
     "@octokit/plugin-retry": "^8.0.1",
     "@octokit/plugin-throttling": "^11.0.1",
     "@octokit/webhooks-types": "^7.6.1"

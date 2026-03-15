@@ -1,7 +1,6 @@
 import type { Octokit } from '@octokit/core';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods';
-import { info } from 'console';
-import { error, setFailed, setOutput, warning } from '@actions/core';
+import { error, info, setFailed, setOutput, warning } from '@actions/core';
 import { context } from '@actions/github';
 import { RequestError } from '@octokit/request-error';
 import { getMergeMethod } from './getMergeMethod.js';
