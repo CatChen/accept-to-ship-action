@@ -1,6 +1,6 @@
 {
   "name": "accept-to-ship-action",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "This GitHub Action automatically merges approved pull requests when they include an #accept2ship trigger.",
   "license": "MIT",
   "repository": {
