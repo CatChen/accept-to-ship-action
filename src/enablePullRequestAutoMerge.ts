@@ -6,6 +6,7 @@ import type {
 } from '@octokit/plugin-rest-endpoint-methods';
 import { error, info, setFailed, setOutput, warning } from '@actions/core';
 import { context } from '@actions/github';
+import { GraphqlResponseError } from '@octokit/graphql';
 import { RequestError } from '@octokit/request-error';
 import { graphql } from './__graphql__/gql.js';
 import { getMergeMethod } from './getMergeMethod.js';
@@ -70,36 +71,42 @@ export async function enablePullRequestAutoMerge(
       warning(
         `Failed to enable auto-merge for the Pull Request: [${requestError.status}] ${requestError.message}`,
       );
-
-      // If it's merged by someone else in a race condition we treat it as skipped,
-      // because it's the same as someone else merged it before we try.
-      const merged = await isPullRequestMerged(
-        owner,
-        repo,
-        pullRequestNumber,
-        octokit,
-      );
-      setOutput('skipped', !merged);
-      if (merged) {
-        try {
-          const { data: pullRequest } = await octokit.rest.pulls.get({
-            owner,
-            repo,
-            pull_number: pullRequestNumber,
-          });
-          warning(
-            `This Pull Request has been merged by: ${pullRequest.merged_by?.login} (${pullRequest.merged_by?.html_url})`,
-          );
-        } catch {
-          warning(`This Pull Request has been merged by unknown user.`);
-        }
-      } else {
-        // If it's not merged by someone else in a race condition then we treat it as a real error.
-        error(`This Pull Request remains unmerged.`);
-        setFailed(`Failed to merge this Pull Request when conditions are met.`);
+    } else if (requestError instanceof GraphqlResponseError) {
+      for (const graphqlError of requestError.errors ?? []) {
+        warning(
+          `Failed to enable auto-merge for the Pull Request: ${graphqlError.message}`,
+        );
       }
     } else {
       throw requestError;
+    }
+
+    // If it's merged by someone else in a race condition we treat it as skipped,
+    // because it's the same as someone else merged it before we try.
+    const merged = await isPullRequestMerged(
+      owner,
+      repo,
+      pullRequestNumber,
+      octokit,
+    );
+    setOutput('skipped', !merged);
+    if (merged) {
+      try {
+        const { data: pullRequest } = await octokit.rest.pulls.get({
+          owner,
+          repo,
+          pull_number: pullRequestNumber,
+        });
+        warning(
+          `This Pull Request has been merged by: ${pullRequest.merged_by?.login} (${pullRequest.merged_by?.html_url})`,
+        );
+      } catch {
+        warning(`This Pull Request has been merged by unknown user.`);
+      }
+    } else {
+      // If it's not merged by someone else in a race condition then we treat it as a real error.
+      error(`This Pull Request remains unmerged.`);
+      setFailed(`Failed to merge this Pull Request when conditions are met.`);
     }
   }
 }
