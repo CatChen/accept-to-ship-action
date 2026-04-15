@@ -33278,7 +33278,7 @@ function setCommandEcho(enabled) {
  */
 function setFailed(message) {
     process.exitCode = ExitCode.Failure;
-    core_error(message);
+    error(message);
 }
 //-----------------------------------------------------------------------
 // Logging Commands
@@ -33301,7 +33301,7 @@ function core_debug(message) {
  * @param message error issue message. Errors will be converted to string via toString()
  * @param properties optional properties to add to the annotation.
  */
-function core_error(message, properties = {}) {
+function error(message, properties = {}) {
     command_issueCommand('error', utils_toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 /**
@@ -37676,17 +37676,17 @@ async function enablePullRequestAutoMerge(owner, repo, pullRequest, pullRequestI
             }
         }
     }
-    catch (error) {
-        if (error instanceof RequestError) {
-            warning(`Failed to enable auto-merge for the Pull Request: [${error.status}] ${error.message}`);
+    catch (requestError) {
+        if (requestError instanceof RequestError) {
+            warning(`Failed to enable auto-merge for the Pull Request: [${requestError.status}] ${requestError.message}`);
         }
-        else if (error instanceof GraphqlResponseError) {
-            for (const graphqlError of error.errors ?? []) {
+        else if (requestError instanceof GraphqlResponseError) {
+            for (const graphqlError of requestError.errors ?? []) {
                 warning(`Failed to enable auto-merge for the Pull Request: ${graphqlError.message}`);
             }
         }
         else {
-            throw error;
+            throw requestError;
         }
         // If it's merged by someone else in a race condition we treat it as skipped,
         // because it's the same as someone else merged it before we try.
@@ -37707,7 +37707,7 @@ async function enablePullRequestAutoMerge(owner, repo, pullRequest, pullRequestI
         }
         else {
             // If it's not merged by someone else in a race condition then we treat it as a real error.
-            core_error(`This Pull Request remains unmerged.`);
+            error(`This Pull Request remains unmerged.`);
             setFailed(`Failed to merge this Pull Request when conditions are met.`);
         }
     }
@@ -38282,7 +38282,7 @@ async function mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, oct
             }
             else {
                 // If it's not merged by someone else in a race condition then we treat it as a real error.
-                core_error(`This Pull Request remains unmerged.`);
+                error(`This Pull Request remains unmerged.`);
                 setFailed(`Failed to merge this Pull Request when conditions are met.`);
             }
         }
@@ -38338,7 +38338,7 @@ async function handlePullRequest(pullRequestNumber) {
     const repo = github_context.repo.repo;
     const mergedBeforeValidations = await isPullRequestMerged(owner, repo, pullRequestNumber, octokit);
     if (mergedBeforeValidations) {
-        core_error(`This Pull Request has been merged already.`);
+        error(`This Pull Request has been merged already.`);
         return;
     }
     const customHashTag = getInput('custom-hashtag') || '#accept2ship';
@@ -38389,7 +38389,7 @@ async function handlePullRequest(pullRequestNumber) {
         info(`Review not requested.`);
     }
     else if (acceptZeroApprovals) {
-        core_error('`request-zero-accept-zero: true` has no effect when a reviewer is assigned.');
+        error('`request-zero-accept-zero: true` has no effect when a reviewer is assigned.');
     }
     const reviews = await getPullRequestReviews(owner, repo, pullRequestNumber, octokit);
     let approved;
@@ -38469,7 +38469,7 @@ async function handlePullRequest(pullRequestNumber) {
             }
         }
         else {
-            core_error(`Auto-merge is not enabled for the base repository: ${pullRequest.base.repo.html_url}`);
+            error(`Auto-merge is not enabled for the base repository: ${pullRequest.base.repo.html_url}`);
         }
     }
     const jobs = await getWorkflowRunJobs(owner, repo, octokit);
@@ -38562,7 +38562,7 @@ async function handlePullRequest(pullRequestNumber) {
             (checkRun.conclusion === null ||
                 ![SUCCESS, NEUTRAL, SKIPPED].includes(checkRun.conclusion)));
         if (failedChecks.length > 0) {
-            core_error(`Failed checks: ${failedChecks.length}`);
+            error(`Failed checks: ${failedChecks.length}`);
             return;
         }
         const incompleteChecks = checkRuns.filter((checkRun) => !currentWorkflowJobIds.includes(checkRun.id) &&
@@ -38599,7 +38599,7 @@ async function handlePullRequest(pullRequestNumber) {
     }
     const mergedAfterValidations = await isPullRequestMerged(owner, repo, pullRequestNumber, octokit);
     if (mergedAfterValidations) {
-        core_error(`This Pull Request has been merged already.`);
+        error(`This Pull Request has been merged already.`);
         return;
     }
     const mergeMethod = getMergeMethod();
@@ -38673,7 +38673,7 @@ async function run() {
             break;
         case 'workflow_dispatch':
         default:
-            core_error(`Unsupported GitHub Action event: ${github_context.eventName}`);
+            error(`Unsupported GitHub Action event: ${github_context.eventName}`);
             break;
     }
 }
