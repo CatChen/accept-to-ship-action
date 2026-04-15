@@ -37675,6 +37675,7 @@ async function enablePullRequestAutoMerge(owner, repo, pullRequest, pullRequestI
                 info(`Failed to comment on the Pull Request: [${requestError.status}] ${requestError.message}`);
             }
         }
+        return true;
     }
     catch (requestError) {
         if (requestError instanceof RequestError) {
@@ -37704,11 +37705,13 @@ async function enablePullRequestAutoMerge(owner, repo, pullRequest, pullRequestI
             catch {
                 warning(`This Pull Request has been merged by unknown user.`);
             }
+            return false;
         }
         else {
             // If it's not merged by someone else in a race condition then we treat it as a real error.
             error(`This Pull Request remains unmerged.`);
-            setFailed(`Failed to merge this Pull Request when conditions are met.`);
+            setFailed(`Failed to enable auto-merge for this Pull Request when conditions are met.`);
+            return false;
         }
     }
 }
@@ -38445,8 +38448,12 @@ async function handlePullRequest(pullRequestNumber) {
             if (pullRequestAutoMergeable.viewerCanEnableAutoMerge) {
                 const mergeMethod = getMergeMethod();
                 info(`Enabling auto-merge with merge method: ${mergeMethod}`);
-                await enablePullRequestAutoMerge(owner, repo, pullRequest, pullRequestAutoMergeable.pullRequestId, mergeMethod, octokit);
-                summary.addRaw(`Pull Request #${pullRequestNumber} has auto-merge enabled.`, true);
+                const autoMergeEnabled = await enablePullRequestAutoMerge(owner, repo, pullRequest, pullRequestAutoMergeable.pullRequestId, mergeMethod, octokit);
+                if (autoMergeEnabled) {
+                    await summary
+                        .addRaw(`Pull Request #${pullRequestNumber} has auto-merge enabled.`, true)
+                        .write();
+                }
                 return; // No need to wait for the checks and try to merge.
             }
             else {
@@ -38605,7 +38612,9 @@ async function handlePullRequest(pullRequestNumber) {
     const mergeMethod = getMergeMethod();
     info(`Merging with merge method: ${mergeMethod}`);
     await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
-    summary.addRaw(`Pull Request #${pullRequestNumber} has been merged.`, true);
+    await summary
+        .addRaw(`Pull Request #${pullRequestNumber} has been merged.`, true)
+        .write();
 }
 async function run() {
     info(`Event name: ${github_context.eventName}`);

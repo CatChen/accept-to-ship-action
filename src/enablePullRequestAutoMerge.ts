@@ -32,7 +32,7 @@ export async function enablePullRequestAutoMerge(
   pullRequestId: string,
   mergeMethod: ReturnType<typeof getMergeMethod>,
   octokit: Octokit & Api,
-) {
+): Promise<boolean> {
   const pullRequestNumber = pullRequest.number;
   try {
     await octokit.graphql<ResultOf<typeof mutationEnablePullRequestAutoMerge>>(
@@ -66,6 +66,7 @@ export async function enablePullRequestAutoMerge(
         );
       }
     }
+    return true;
   } catch (requestError) {
     if (requestError instanceof RequestError) {
       warning(
@@ -103,10 +104,14 @@ export async function enablePullRequestAutoMerge(
       } catch {
         warning(`This Pull Request has been merged by unknown user.`);
       }
+      return false;
     } else {
       // If it's not merged by someone else in a race condition then we treat it as a real error.
       error(`This Pull Request remains unmerged.`);
-      setFailed(`Failed to merge this Pull Request when conditions are met.`);
+      setFailed(
+        `Failed to enable auto-merge for this Pull Request when conditions are met.`,
+      );
+      return false;
     }
   }
 }

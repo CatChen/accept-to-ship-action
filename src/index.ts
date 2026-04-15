@@ -226,7 +226,7 @@ async function handlePullRequest(pullRequestNumber: number) {
       if (pullRequestAutoMergeable.viewerCanEnableAutoMerge) {
         const mergeMethod = getMergeMethod();
         info(`Enabling auto-merge with merge method: ${mergeMethod}`);
-        await enablePullRequestAutoMerge(
+        const autoMergeEnabled = await enablePullRequestAutoMerge(
           owner,
           repo,
           pullRequest,
@@ -234,10 +234,14 @@ async function handlePullRequest(pullRequestNumber: number) {
           mergeMethod,
           octokit,
         );
-        summary.addRaw(
-          `Pull Request #${pullRequestNumber} has auto-merge enabled.`,
-          true,
-        );
+        if (autoMergeEnabled) {
+          await summary
+            .addRaw(
+              `Pull Request #${pullRequestNumber} has auto-merge enabled.`,
+              true,
+            )
+            .write();
+        }
         return; // No need to wait for the checks and try to merge.
       } else {
         const pullRequest = await getPullRequest(
@@ -459,7 +463,9 @@ async function handlePullRequest(pullRequestNumber: number) {
   const mergeMethod = getMergeMethod();
   info(`Merging with merge method: ${mergeMethod}`);
   await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
-  summary.addRaw(`Pull Request #${pullRequestNumber} has been merged.`, true);
+  await summary
+    .addRaw(`Pull Request #${pullRequestNumber} has been merged.`, true)
+    .write();
 }
 
 async function run(): Promise<void> {
