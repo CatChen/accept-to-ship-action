@@ -38450,7 +38450,9 @@ async function handlePullRequest(pullRequestNumber) {
                 info(`Enabling auto-merge with merge method: ${mergeMethod}`);
                 const autoMergeEnabled = await enablePullRequestAutoMerge(owner, repo, pullRequest, pullRequestAutoMergeable.pullRequestId, mergeMethod, octokit);
                 if (autoMergeEnabled) {
-                    summary.addRaw(`Pull Request #${pullRequestNumber} has auto-merge enabled.`, true);
+                    await summary
+                        .addRaw(`Pull Request #${pullRequestNumber} has auto-merge enabled.`, true)
+                        .write();
                 }
                 return; // No need to wait for the checks and try to merge.
             }
@@ -38610,7 +38612,9 @@ async function handlePullRequest(pullRequestNumber) {
     const mergeMethod = getMergeMethod();
     info(`Merging with merge method: ${mergeMethod}`);
     await mergePullRequest(owner, repo, pullRequestNumber, mergeMethod, octokit);
-    summary.addRaw(`Pull Request #${pullRequestNumber} has been merged.`, true);
+    await summary
+        .addRaw(`Pull Request #${pullRequestNumber} has been merged.`, true)
+        .write();
 }
 async function run() {
     info(`Event name: ${github_context.eventName}`);
