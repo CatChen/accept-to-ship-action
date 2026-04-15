@@ -2223,6 +2223,7 @@ __metadata:
     "@graphql-typed-document-node/core": "npm:^3.2.0"
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.7.1"
     "@octokit/core": "npm:^7.0.0"
+    "@octokit/graphql": "npm:^9.0.3"
     "@octokit/plugin-retry": "npm:^8.0.1"
     "@octokit/plugin-throttling": "npm:^11.0.1"
     "@octokit/webhooks-types": "npm:^7.6.1"
