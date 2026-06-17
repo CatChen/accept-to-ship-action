@@ -18,15 +18,15 @@ __metadata:
   linkType: hard
 
 "@0no-co/graphqlsp@npm:^1.12.12":
-  version: 1.17.2
-  resolution: "@0no-co/graphqlsp@npm:1.17.2"
+  version: 1.17.3
+  resolution: "@0no-co/graphqlsp@npm:1.17.3"
   dependencies:
     "@gql.tada/internal": "npm:^1.2.0"
     graphql: "npm:^15.5.0 || ^16.0.0 || ^17.0.0"
   peerDependencies:
     graphql: ^15.5.0 || ^16.0.0 || ^17.0.0
     typescript: ^5.0.0 || ^6.0.0
-  checksum: 10c0/4de404dc4ceeec0ba1dd5ebb02eb194bb2d7112a485bc3544f55a861f87a1ad0e0e1ca381ea847b13ae4361e3f68868309a23c516798bfcf72822659f42b87f7
+  checksum: 10c0/fa0f2d74275827e1c8aee36e07aaa0d86138b9f450e3e06e51be05cd507a95c1f7e7f603eaf611f6defdb2634f19acd0c2be16c222eff4802c67916ca77d4d7d
   languageName: node
   linkType: hard
 
@@ -3335,17 +3335,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql@npm:^15.5.0 || ^16.0.0 || ^17.0.0":
-  version: 16.14.2
-  resolution: "graphql@npm:16.14.2"
-  checksum: 10c0/a95a96961eaff55cc9fe9d31fae6f33499ac988b972d07ea5085024cb1333f515b902f376e7393a5489aa82200a8aff3eb96580e4d1b69d702ed19b6eb1ce97a
-  languageName: node
-  linkType: hard
-
-"graphql@npm:^17.0.0":
-  version: 17.0.0
-  resolution: "graphql@npm:17.0.0"
-  checksum: 10c0/48bba773db5a10f314ee081e58823c5a0ce8e97eec5ce750f25b4e723c650e0c630206f27b3af5de7d320b440403b63552f20a3aa539f59f1e0fb1f7fe3375cc
+"graphql@npm:^15.5.0 || ^16.0.0 || ^17.0.0, graphql@npm:^17.0.0":
+  version: 17.0.1
+  resolution: "graphql@npm:17.0.1"
+  checksum: 10c0/95e4766eefa97bbc37cb4452527d24e12068f170e03c564611a3911f30a77361dfcfbdbfeea00f643c82585c02312c1f41ba6a6263049996d279c49951454980
   languageName: node
   linkType: hard
 
