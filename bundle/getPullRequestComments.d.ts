@@ -3,8 +3,8 @@ import type { components } from '@octokit/openapi-types';
 import type { Api } from '@octokit/plugin-rest-endpoint-methods';
 export declare function getPullRequestComments(owner: string, repo: string, pullRequestNumber: number, octokit: Octokit & Api): Promise<{
     url: string;
-    pull_request_review_id: number | null;
-    id: number;
+    pull_request_review_id: number | bigint | null;
+    id: number | bigint;
     node_id: string;
     diff_hunk: string;
     path: string;
