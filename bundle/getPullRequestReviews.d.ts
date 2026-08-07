@@ -3,7 +3,30 @@ import type { Api } from '@octokit/plugin-rest-endpoint-methods';
 export declare function getPullRequestReviews(owner: string, repo: string, pullRequestNumber: number, octokit: Octokit & Api): Promise<{
     id: number;
     node_id: string;
-    user: import("@octokit/openapi-types").components["schemas"]["nullable-simple-user"];
+    user: {
+        name?: string | null;
+        email?: string | null;
+        login: string;
+        id: number;
+        node_id: string;
+        avatar_url: string;
+        gravatar_id: string | null;
+        url: string;
+        html_url: string;
+        followers_url: string;
+        following_url: string;
+        gists_url: string;
+        starred_url: string;
+        subscriptions_url: string;
+        organizations_url: string;
+        repos_url: string;
+        events_url: string;
+        received_events_url: string;
+        type: string;
+        site_admin: boolean;
+        starred_at?: string;
+        user_view_type?: string;
+    } | null;
     body: string;
     state: string;
     html_url: string;
@@ -20,5 +43,5 @@ export declare function getPullRequestReviews(owner: string, repo: string, pullR
     commit_id: string | null;
     body_html?: string;
     body_text?: string;
-    author_association: import("@octokit/openapi-types").components["schemas"]["author-association"];
+    author_association: "COLLABORATOR" | "CONTRIBUTOR" | "FIRST_TIMER" | "FIRST_TIME_CONTRIBUTOR" | "MANNEQUIN" | "MEMBER" | "NONE" | "OWNER";
 }[]>;
