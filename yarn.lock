@@ -1954,18 +1954,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@octokit/graphql@npm:^9.0.3":
-  version: 9.0.3
-  resolution: "@octokit/graphql@npm:9.0.3"
-  dependencies:
-    "@octokit/request": "npm:^10.0.6"
-    "@octokit/types": "npm:^16.0.0"
-    universal-user-agent: "npm:^7.0.0"
-  checksum: 10c0/58588d3fb2834f64244fa5376ca7922a30117b001b621e141fab0d52806370803ab0c046ac99b120fa5f45b770f52a815157fb6ffc147fc6c1da4047c1f1af49
-  languageName: node
-  linkType: hard
-
-"@octokit/graphql@npm:^9.0.4":
+"@octokit/graphql@npm:^9.0.3, @octokit/graphql@npm:^9.0.4":
   version: 9.0.4
   resolution: "@octokit/graphql@npm:9.0.4"
   dependencies:
@@ -2069,7 +2058,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@octokit/request@npm:^10.0.6, @octokit/request@npm:^10.0.7":
+"@octokit/request@npm:^10.0.7":
   version: 10.0.7
   resolution: "@octokit/request@npm:10.0.7"
   dependencies:
