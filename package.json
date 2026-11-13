@@ -41,7 +41,7 @@
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^10.0.1",
     "@graphql-codegen/cli": "8.0.0",
-    "@graphql-codegen/typescript": "7.0.0",
+    "@graphql-codegen/typescript": "7.0.1",
     "@graphql-codegen/typescript-document-nodes": "7.0.0",
     "@graphql-eslint/eslint-plugin": "^4.4.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
