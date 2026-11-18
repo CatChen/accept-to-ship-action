@@ -100,7 +100,7 @@ export const CanRepoAutoMergeDocument = new TypedDocumentString(`
 export const EnablePullRequestAutoMergeDocument = new TypedDocumentString(`
     mutation EnablePullRequestAutoMerge($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod) {
   enablePullRequestAutoMerge(
-    input: {pullRequestId: $pullRequestId, mergeMethod: $mergeMethod}
+    input: { pullRequestId: $pullRequestId, mergeMethod: $mergeMethod }
   ) {
     clientMutationId
   }
