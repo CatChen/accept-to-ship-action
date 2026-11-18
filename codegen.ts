@@ -10,6 +10,7 @@ const config: CodegenConfig = {
     './src/__graphql__/': {
       preset: 'client',
       config: {
+        importExtension: '.js',
         useTypeImports: true,
         enumsAsTypes: true,
         dedupeFragments: true,
@@ -21,6 +22,7 @@ const config: CodegenConfig = {
       plugins: ['schema-ast'],
       config: {
         includeDirectives: true,
+        skipDocumentsValidation: true,
       },
     },
   },

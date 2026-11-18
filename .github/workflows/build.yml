@@ -47,6 +47,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Codegen
+        run: yarn codegen
+
       - name: Reformat
         run: |
           yarn prettier --write .
